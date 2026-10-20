@@ -1,0 +1,1694 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:sigil-query:v1",
+  "title": "Native Sigil ledger and proof observations with exact source scope",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "result",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.query.v1"
+        },
+        "operation": {
+          "enum": [
+            "list",
+            "history",
+            "blame"
+          ]
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "present",
+            "records",
+            "matching_records",
+            "physical_lines",
+            "source_bytes",
+            "offset",
+            "limit",
+            "next_offset",
+            "selection",
+            "pattern",
+            "verification_scope"
+          ],
+          "properties": {
+            "path": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            "present": {
+              "type": "boolean"
+            },
+            "records": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/record"
+              },
+              "maxItems": 256
+            },
+            "matching_records": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "physical_lines": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "source_bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 256
+            },
+            "next_offset": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "selection": {
+              "enum": [
+                "tail",
+                "page"
+              ]
+            },
+            "pattern": {
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64",
+                          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "verification_scope": {
+              "const": "syntax-only; hashes and tags not verified"
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "result",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.query.v1"
+        },
+        "operation": {
+          "const": "diff"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "before",
+            "after",
+            "command_equal",
+            "exit_code_equal",
+            "comparison_scope"
+          ],
+          "properties": {
+            "before": {
+              "$ref": "#/$defs/record"
+            },
+            "after": {
+              "$ref": "#/$defs/record"
+            },
+            "command_equal": {
+              "type": "boolean"
+            },
+            "exit_code_equal": {
+              "type": "boolean"
+            },
+            "comparison_scope": {
+              "const": "recorded-command-and-exit-code; no filesystem comparison"
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "result",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.query.v1"
+        },
+        "operation": {
+          "const": "bisect"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "first_failure",
+            "records_scanned_until_result",
+            "matching_records",
+            "range_from",
+            "range_to",
+            "executed",
+            "search_scope"
+          ],
+          "properties": {
+            "first_failure": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/record"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "records_scanned_until_result": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "matching_records": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "range_from": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "range_to": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "executed": {
+              "const": false
+            },
+            "search_scope": {
+              "const": "first recorded nonzero exit code in file order"
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "result",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.query.v1"
+        },
+        "operation": {
+          "const": "verify"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "valid",
+            "failure",
+            "at_sequence",
+            "entries_verified",
+            "entries_unattested",
+            "entries_detected",
+            "fragments",
+            "sequence_restarts",
+            "ratchet_advances",
+            "witness_entries",
+            "witness_scope",
+            "boundaries",
+            "missing",
+            "source_bytes",
+            "errno",
+            "checks",
+            "range_from",
+            "range_to",
+            "range_verified",
+            "verification_scope",
+            "limits"
+          ],
+          "properties": {
+            "path": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            "valid": {
+              "type": "boolean"
+            },
+            "failure": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "at_sequence": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "entries_verified": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "entries_unattested": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "entries_detected": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "fragments": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "sequence_restarts": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "ratchet_advances": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "witness_entries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "witness_scope": {
+              "enum": [
+                "unavailable",
+                "whole_chain",
+                "current_segment"
+              ]
+            },
+            "boundaries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "missing": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "source_bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "errno": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "checks": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "hash_chain",
+                "attested_seq_monotonicity",
+                "ratchet_position",
+                "per_entry_tags"
+              ],
+              "properties": {
+                "hash_chain": {
+                  "enum": [
+                    "pass",
+                    "fail",
+                    "not-established"
+                  ]
+                },
+                "attested_seq_monotonicity": {
+                  "enum": [
+                    "pass",
+                    "fail",
+                    "not-established"
+                  ]
+                },
+                "ratchet_position": {
+                  "enum": [
+                    "pass",
+                    "fail",
+                    "not-established"
+                  ]
+                },
+                "per_entry_tags": {
+                  "const": "not-verified"
+                }
+              }
+            },
+            "range_from": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "range_to": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "range_verified": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "verification_scope": {
+              "const": "whole-chain hash and sequence walk plus current ratchet witness; requested range is an observation within that walk"
+            },
+            "limits": {
+              "const": "forward-secure historical tags cannot be recomputed; deleting chain and witness together is indistinguishable from fresh state without external proof"
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "result",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.query.v1"
+        },
+        "operation": {
+          "const": "caps"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "modules",
+            "count"
+          ],
+          "properties": {
+            "modules": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "version",
+                  "declared_mask",
+                  "used_mask",
+                  "declared",
+                  "used",
+                  "undeclared_mask",
+                  "declaration_matches"
+                ],
+                "properties": {
+                  "name": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64",
+                            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "version": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64",
+                            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "declared_mask": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 18446744073709551615
+                  },
+                  "used_mask": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 18446744073709551615
+                  },
+                  "declared": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 32
+                  },
+                  "used": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 32
+                  },
+                  "undeclared_mask": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 18446744073709551615
+                  },
+                  "declaration_matches": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "maxItems": 256
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "result",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.query.v1"
+        },
+        "operation": {
+          "const": "proof.identity"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "available",
+            "algorithm",
+            "key_fingerprint"
+          ],
+          "properties": {
+            "available": {
+              "type": "boolean"
+            },
+            "algorithm": {
+              "const": "ed25519"
+            },
+            "key_fingerprint": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "result",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.query.v1"
+        },
+        "operation": {
+          "const": "proof.show"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "content",
+            "bytes",
+            "sha256",
+            "verified"
+          ],
+          "properties": {
+            "path": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            "content": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "verified": {
+              "const": false
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "result",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.query.v1"
+        },
+        "operation": {
+          "const": "proof.verify"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "format",
+            "algorithm",
+            "signature_valid",
+            "public_key",
+            "identity_trusted",
+            "identity_authenticated",
+            "trust_source",
+            "payload_type",
+            "signed_payload",
+            "chain_binding_available",
+            "chain_entries",
+            "chain_tip",
+            "live_chain_tip",
+            "live_chain_status",
+            "proof_scope"
+          ],
+          "properties": {
+            "path": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            "format": {
+              "enum": [
+                "dsse",
+                "jashproof/1"
+              ]
+            },
+            "algorithm": {
+              "const": "ed25519"
+            },
+            "signature_valid": {
+              "type": "boolean"
+            },
+            "public_key": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "identity_trusted": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "identity_authenticated": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "trust_source": {
+              "type": "string"
+            },
+            "payload_type": {
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64",
+                          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "signed_payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            },
+            "chain_binding_available": {
+              "type": "boolean"
+            },
+            "chain_entries": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "chain_tip": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "live_chain_tip": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "live_chain_status": {
+              "enum": [
+                "not-checked",
+                "matches",
+                "obsolete",
+                "diverged-or-unavailable"
+              ]
+            },
+            "proof_scope": {
+              "const": "signature over payload; no execution correctness guarantee"
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "result",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.query.v1"
+        },
+        "operation": {
+          "const": "quarantine.status"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "chain",
+            "ratchet",
+            "chain_present",
+            "ratchet_present",
+            "active_reason",
+            "scan",
+            "witness",
+            "invalid_migration",
+            "quarantined",
+            "recovery_artifacts",
+            "verification_scope"
+          ],
+          "properties": {
+            "chain": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            "ratchet": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            "chain_present": {
+              "type": "boolean"
+            },
+            "ratchet_present": {
+              "type": "boolean"
+            },
+            "active_reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "scan": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "attested",
+                "unattested",
+                "fragments",
+                "malformed",
+                "legacy"
+              ],
+              "properties": {
+                "attested": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "unattested": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "fragments": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "malformed": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "legacy": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                }
+              }
+            },
+            "witness": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "available",
+                "position",
+                "scope",
+                "entries",
+                "ratchet_advances"
+              ],
+              "properties": {
+                "available": {
+                  "type": "boolean"
+                },
+                "position": {
+                  "enum": [
+                    "unavailable",
+                    "mismatch",
+                    "match"
+                  ]
+                },
+                "scope": {
+                  "enum": [
+                    "unavailable",
+                    "current_segment",
+                    "whole_chain"
+                  ]
+                },
+                "entries": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 18446744073709551615
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "ratchet_advances": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 18446744073709551615
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
+            "invalid_migration": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "path",
+                    "reason",
+                    "entries",
+                    "fragments"
+                  ],
+                  "properties": {
+                    "path": {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "encoding",
+                            "data"
+                          ],
+                          "properties": {
+                            "encoding": {
+                              "const": "base64"
+                            },
+                            "data": {
+                              "type": "string",
+                              "contentEncoding": "base64",
+                              "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "reason": {
+                      "const": "invalid_migration_v1"
+                    },
+                    "entries": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 18446744073709551615
+                    },
+                    "fragments": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 18446744073709551615
+                    }
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "quarantined": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64",
+                        "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                      }
+                    }
+                  }
+                ]
+              },
+              "maxItems": 256
+            },
+            "recovery_artifacts": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64",
+                        "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                      }
+                    }
+                  }
+                ]
+              },
+              "maxItems": 256
+            },
+            "verification_scope": {
+              "const": "structural scan and witness count; hashes and historical tags not verified"
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "timestamp_ns",
+        "command",
+        "stored_exit_code",
+        "chain_hash",
+        "tag",
+        "attested_record",
+        "physical_line",
+        "verified"
+      ],
+      "properties": {
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "timestamp_ns": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "command": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "stored_exit_code": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "chain_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "tag": {
+          "type": "string"
+        },
+        "attested_record": {
+          "type": "boolean"
+        },
+        "physical_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "verified": {
+          "const": false
+        }
+      }
+    }
+  }
+}

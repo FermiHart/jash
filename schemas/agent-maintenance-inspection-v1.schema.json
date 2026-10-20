@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:agent-maintenance-inspection:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "id", "op", "target_id", "observation", "state", "reason", "blocked_ref", "operation", "resolution_eligible", "eligibility_scope", "maintenance_complete", "intent", "result", "terminal_receipt_ref", "receipt_pubkey", "scan_complete", "entries_scanned", "files", "ok", "error"],
+  "properties": {
+    "schema": {"const": "jash.agent-maintenance-inspection.v1"},
+    "id": {"type": "string"}, "op": {"const": "store.inspect"},
+    "target_id": {"type": "string", "minLength": 1, "maxLength": 47},
+    "observation": {"const": "live"},
+    "state": {"enum": ["committed", "recoverable", "closable", "unresolved"]},
+    "effect_protocol": {"enum": ["unknown", "legacy", "admission-v1"]},
+    "effect_admission": {"enum": ["intent_missing", "intent_invalid", "intent_unverified", "legacy", "decision_missing", "decision_invalid", "admitted", "closed"]},
+    "decision_ref": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}\\.maintenance-decision\\.dsse$"},
+    "reason": {"type": ["string", "null"]}, "blocked_ref": {"type": ["string", "null"]},
+    "operation": {"enum": [null, "store.gc", "store.quota", "store.release", "store.journal.quota", "store.journal.gc"]},
+    "resolution_eligible": {"type": "boolean"}, "eligibility_scope": {"const": "evidence-only"},
+    "maintenance_complete": {"type": "boolean"},
+    "intent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ref", "status", "receipt_ref", "receipt_status"],
+      "properties": {
+        "ref": {"type": "string", "pattern": "^[0-9a-f]{64}\\.intent$"},
+        "status": {"enum": ["missing", "unreadable", "readable"]},
+        "receipt_ref": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}\\.maintenance-intent\\.dsse$"},
+        "receipt_status": {"enum": ["unknown", "missing", "unreadable", "invalid", "verified"]}
+      }
+    },
+    "result": {
+      "type": "object", "additionalProperties": false, "required": ["ref", "status"],
+      "properties": {
+        "ref": {"type": "string", "pattern": "^[0-9a-f]{64}\\.result$"},
+        "status": {"enum": ["missing", "unreadable", "unverified", "invalid", "verified"]}
+      }
+    },
+    "terminal_receipt_ref": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}\\.[0-9a-f]{64}\\.maintenance-terminal\\.dsse$"},
+    "receipt_pubkey": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "scan_complete": {"type": "boolean"}, "entries_scanned": {"type": "integer", "minimum": 0, "maximum": 4096},
+    "files": {"type": "array", "maxItems": 4096, "items": {
+      "type": "object", "additionalProperties": false, "required": ["ref", "role", "safety", "bytes"],
+      "properties": {
+        "ref": {"type": "string", "maxLength": 255},
+        "role": {"enum": ["intent", "result", "intent_staging", "result_staging", "result_gc_hold"]},
+        "safety": {"enum": ["private_regular", "unsafe", "unreadable"]},
+        "bytes": {"oneOf": [{"type": "null"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}, {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"}]}
+      }
+    }},
+    "ok": {"type": "boolean"}, "error": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {"if": {"properties": {"resolution_eligible": {"const": true}}},
+     "then": {"properties": {"scan_complete": {"const": true}, "reason": {"type": "null"}, "state": {"enum": ["committed", "recoverable", "closable"]}}}},
+    {"if": {"properties": {"ok": {"const": true}}},
+     "then": {"properties": {"error": {"type": "null"}, "scan_complete": {"const": true}}},
+     "else": {"properties": {"error": {"type": "string"}, "scan_complete": {"const": false}}}}
+  ]
+}

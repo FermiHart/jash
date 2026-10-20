@@ -1,0 +1,1674 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:graph:v1",
+  "title": "Observed graph queries and publication receipts",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "repository_key",
+        "source_present",
+        "source_basis",
+        "result",
+        "publication",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "operation": {
+          "const": "stats"
+        },
+        "repository_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "source_present": {
+          "type": "boolean"
+        },
+        "source_basis": {
+          "const": "persisted_graph_with_recorded_mtime_and_size"
+        },
+        "result": {
+          "$ref": "#/$defs/counts"
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "repository_key",
+        "source_present",
+        "source_basis",
+        "result",
+        "publication",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "operation": {
+          "const": "build"
+        },
+        "repository_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "source_present": {
+          "type": "boolean"
+        },
+        "source_basis": {
+          "const": "persisted_graph_with_recorded_mtime_and_size"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "root",
+            "counts",
+            "reused",
+            "reparsed",
+            "gone",
+            "skipped",
+            "visited",
+            "recognized_source_bytes",
+            "excluded",
+            "reuse_basis",
+            "truncated"
+          ],
+          "properties": {
+            "root": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64"
+                    }
+                  }
+                }
+              ]
+            },
+            "counts": {
+              "$ref": "#/$defs/counts"
+            },
+            "reused": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reparsed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "gone": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "skipped": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "visited": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "recognized_source_bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "excluded": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reuse_basis": {
+              "const": "recorded_mtime_seconds_and_size"
+            },
+            "truncated": {
+              "type": "boolean"
+            }
+          }
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "repository_key",
+        "source_present",
+        "source_basis",
+        "result",
+        "publication",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "operation": {
+          "const": "explain"
+        },
+        "repository_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "source_present": {
+          "type": "boolean"
+        },
+        "source_basis": {
+          "const": "persisted_graph_with_recorded_mtime_and_size"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "query",
+            "lookup_basis",
+            "found",
+            "node",
+            "edges",
+            "connections",
+            "returned",
+            "has_more"
+          ],
+          "properties": {
+            "query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64"
+                    }
+                  }
+                }
+              ]
+            },
+            "lookup_basis": {
+              "const": "exact_then_prefix_then_substring_nonmodules_first"
+            },
+            "found": {
+              "type": "boolean"
+            },
+            "node": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/node"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "edges": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/edge"
+              }
+            },
+            "connections": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "returned": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "has_more": {
+              "type": "boolean"
+            }
+          }
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "repository_key",
+        "source_present",
+        "source_basis",
+        "result",
+        "publication",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "operation": {
+          "const": "path"
+        },
+        "repository_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "source_present": {
+          "type": "boolean"
+        },
+        "source_basis": {
+          "const": "persisted_graph_with_recorded_mtime_and_size"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "from_query",
+            "to_query",
+            "from",
+            "to",
+            "search_basis",
+            "found",
+            "searched",
+            "hops"
+          ],
+          "properties": {
+            "from_query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64"
+                    }
+                  }
+                }
+              ]
+            },
+            "to_query": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64"
+                    }
+                  }
+                }
+              ]
+            },
+            "from": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/node"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "to": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/node"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "search_basis": {
+              "const": "breadth_first_undirected_all_relations"
+            },
+            "found": {
+              "type": "boolean"
+            },
+            "searched": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "hops": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/edge"
+              }
+            }
+          }
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "repository_key",
+        "source_present",
+        "source_basis",
+        "result",
+        "publication",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "operation": {
+          "const": "god-nodes"
+        },
+        "repository_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "source_present": {
+          "type": "boolean"
+        },
+        "source_basis": {
+          "const": "persisted_graph_with_recorded_mtime_and_size"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "total",
+            "returned",
+            "has_more",
+            "rank_basis",
+            "nodes"
+          ],
+          "properties": {
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "returned": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "has_more": {
+              "type": "boolean"
+            },
+            "rank_basis": {
+              "const": "total_undirected_degree_then_store_index"
+            },
+            "nodes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/node"
+              }
+            }
+          }
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "repository_key",
+        "source_present",
+        "source_basis",
+        "result",
+        "publication",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "operation": {
+          "const": "communities"
+        },
+        "repository_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "source_present": {
+          "type": "boolean"
+        },
+        "source_basis": {
+          "const": "persisted_graph_with_recorded_mtime_and_size"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "total",
+            "returned",
+            "has_more",
+            "communities"
+          ],
+          "properties": {
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "returned": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "has_more": {
+              "type": "boolean"
+            },
+            "communities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "id",
+                  "size",
+                  "top_nodes"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "top_nodes": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/node"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "repository_key",
+        "source_present",
+        "source_basis",
+        "result",
+        "publication",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "operation": {
+          "const": "hot"
+        },
+        "repository_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "source_present": {
+          "type": "boolean"
+        },
+        "source_basis": {
+          "const": "persisted_graph_with_recorded_mtime_and_size"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "chain_path",
+            "chain_present",
+            "chain_records",
+            "cryptographically_verified",
+            "gap_source",
+            "match_basis",
+            "gap_match_basis",
+            "pain_formula",
+            "files_touched",
+            "file_failure_matches",
+            "returned",
+            "has_more",
+            "files"
+          ],
+          "properties": {
+            "chain_path": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64"
+                    }
+                  }
+                }
+              ]
+            },
+            "chain_present": {
+              "type": "boolean"
+            },
+            "chain_records": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cryptographically_verified": {
+              "const": false
+            },
+            "gap_source": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/gap_source"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "match_basis": {
+              "const": "recorded_command_path_components_and_basenames"
+            },
+            "gap_match_basis": {
+              "const": "tried_or_expected_substring_of_basename_or_top_node"
+            },
+            "pain_formula": {
+              "const": "touches_plus_three_times_failures"
+            },
+            "files_touched": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "file_failure_matches": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "returned": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "has_more": {
+              "type": "boolean"
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "file",
+                  "pain",
+                  "touches",
+                  "failures",
+                  "top_node",
+                  "gap_match"
+                ],
+                "properties": {
+                  "file": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "pain": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "touches": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "failures": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "top_node": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/node"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "gap_match": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "repository_key",
+        "source_present",
+        "source_basis",
+        "result",
+        "publication",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "operation": {
+          "const": "help"
+        },
+        "repository_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "source_present": {
+          "type": "boolean"
+        },
+        "source_basis": {
+          "const": "persisted_graph_with_recorded_mtime_and_size"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "usage",
+            "node_limit",
+            "edge_limit",
+            "file_limit",
+            "source_file_bytes",
+            "source_total_bytes",
+            "store_bytes",
+            "relative_path_bytes",
+            "function_name_bytes",
+            "source_scope"
+          ],
+          "properties": {
+            "usage": {
+              "type": "string"
+            },
+            "node_limit": {
+              "const": 32768
+            },
+            "edge_limit": {
+              "const": 131072
+            },
+            "file_limit": {
+              "const": 8192
+            },
+            "source_file_bytes": {
+              "const": 1048576
+            },
+            "source_total_bytes": {
+              "const": 134217728
+            },
+            "store_bytes": {
+              "const": 33554432
+            },
+            "relative_path_bytes": {
+              "const": 383
+            },
+            "function_name_bytes": {
+              "const": 119
+            },
+            "source_scope": {
+              "type": "string"
+            }
+          }
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "repository_key",
+        "source_present",
+        "source_basis",
+        "result",
+        "publication",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "operation": {
+          "const": "push"
+        },
+        "repository_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "source_present": {
+          "type": "boolean"
+        },
+        "source_basis": {
+          "const": "persisted_graph_with_recorded_mtime_and_size"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "counts",
+            "nodes_added_from_fleet",
+            "edges_added_from_fleet",
+            "confidence_upgrades",
+            "destination"
+          ],
+          "properties": {
+            "counts": {
+              "$ref": "#/$defs/counts"
+            },
+            "nodes_added_from_fleet": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "edges_added_from_fleet": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "confidence_upgrades": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "destination": {
+              "const": "fleet"
+            }
+          }
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "repository_key",
+        "source_present",
+        "source_basis",
+        "result",
+        "publication",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "operation": {
+          "const": "sync"
+        },
+        "repository_key": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "source_present": {
+          "type": "boolean"
+        },
+        "source_basis": {
+          "const": "persisted_graph_with_recorded_mtime_and_size"
+        },
+        "result": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "counts",
+            "nodes_added_from_fleet",
+            "edges_added_from_fleet",
+            "confidence_upgrades",
+            "destination"
+          ],
+          "properties": {
+            "counts": {
+              "$ref": "#/$defs/counts"
+            },
+            "nodes_added_from_fleet": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "edges_added_from_fleet": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "confidence_upgrades": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "destination": {
+              "const": "local"
+            }
+          }
+        },
+        "publication": {
+          "$ref": "#/$defs/publication"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.graph.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer"
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "$ref": "urn:jash:builtin-error:v1"
+    }
+  ],
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "type",
+        "file",
+        "line",
+        "community",
+        "degree"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "type": {
+          "enum": [
+            "F",
+            "S",
+            "E",
+            "T",
+            "M"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "community": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "degree": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to",
+        "relation",
+        "direction",
+        "confidence"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/node"
+        },
+        "to": {
+          "$ref": "#/$defs/node"
+        },
+        "relation": {
+          "enum": [
+            "calls",
+            "contains",
+            "includes"
+          ]
+        },
+        "direction": {
+          "enum": [
+            "forward",
+            "reverse"
+          ]
+        },
+        "confidence": {
+          "enum": [
+            "EXTRACTED",
+            "INFERRED"
+          ]
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "nodes",
+        "edges",
+        "communities",
+        "functions",
+        "structs",
+        "enums",
+        "typedefs",
+        "modules",
+        "calls",
+        "contains",
+        "includes",
+        "extracted",
+        "inferred"
+      ],
+      "properties": {
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nodes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "edges": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "communities": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "functions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "structs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "enums": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "typedefs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "modules": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "calls": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contains": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "includes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extracted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inferred": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "gap_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "present",
+        "directory_present",
+        "read_complete",
+        "bytes",
+        "records",
+        "format",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "directory_present": {
+          "type": "boolean"
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "records": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "format": {
+          "const": "legacy-tsv-v1"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attempted",
+        "applied",
+        "durable",
+        "metadata_may_have_changed"
+      ],
+      "properties": {
+        "attempted": {
+          "type": "boolean"
+        },
+        "applied": {
+          "type": "boolean"
+        },
+        "durable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata_may_have_changed": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

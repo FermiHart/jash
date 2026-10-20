@@ -1,0 +1,1304 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:mem:v1",
+  "title": "Native memory inference, actual stored cards, and publication receipts",
+  "description": "Leading --json or --data/--data-v2. Shared deterministic engine, bounded previews and explicit excluded self-records. Source parsing and replayed references do not establish cryptographic verification or causal truth. Store metadata is from before the operation; applied/durable describe observed publication phases. attestation_requested records invocation only, not verified chain persistence. Truncated indicates requested page continuation. DATA has explicit resource limits and bypasses presentation budget.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "store",
+        "chain_source",
+        "results",
+        "matched",
+        "offset",
+        "next_offset",
+        "truncated",
+        "distillation",
+        "verification",
+        "brief",
+        "applied",
+        "durable",
+        "changed",
+        "attestation_requested",
+        "inference_scope",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.mem.v1"
+        },
+        "operation": {
+          "enum": [
+            "distill",
+            "timeline",
+            "show",
+            "search",
+            "brief",
+            "verify"
+          ]
+        },
+        "store": {
+          "$ref": "#/$defs/store"
+        },
+        "chain_source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/chain_source"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/result"
+          },
+          "maxItems": 128
+        },
+        "matched": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "next_offset": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "distillation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/distillation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "verification": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/verification"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "brief": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/brief"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "applied": {
+          "type": "boolean"
+        },
+        "durable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "changed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attestation_requested": {
+          "type": "boolean"
+        },
+        "inference_scope": {
+          "const": "bounded_deterministic_heuristics_not_causal_proof"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "distill"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/result"
+                },
+                "maxItems": 0
+              },
+              "verification": {
+                "type": "null"
+              },
+              "brief": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "verify"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/result"
+                },
+                "maxItems": 0
+              },
+              "distillation": {
+                "type": "null"
+              },
+              "brief": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "brief"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/result"
+                },
+                "maxItems": 0
+              },
+              "distillation": {
+                "type": "null"
+              },
+              "verification": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "enum": [
+                  "timeline",
+                  "show",
+                  "search"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "distillation": {
+                "type": "null"
+              },
+              "verification": {
+                "type": "null"
+              },
+              "brief": {
+                "type": "null"
+              },
+              "applied": {
+                "const": false
+              },
+              "durable": {
+                "type": "null"
+              },
+              "changed": {
+                "type": "null"
+              },
+              "attestation_requested": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.mem.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.mem.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "chain_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "present",
+        "read_complete",
+        "bytes",
+        "records",
+        "session_markers",
+        "cryptographically_verified",
+        "command_fidelity",
+        "cwd_fidelity",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "records": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "session_markers": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "cryptographically_verified": {
+          "const": false
+        },
+        "command_fidelity": {
+          "const": "recorded_bytes_only"
+        },
+        "cwd_fidelity": {
+          "const": "legacy_may_replace_spaces_with_underscores"
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "card_id",
+        "type",
+        "detail_preview",
+        "sequence_a",
+        "sequence_b",
+        "inferred"
+      ],
+      "properties": {
+        "card_id": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "type": {
+          "enum": [
+            "bugfix",
+            "discovery",
+            "change"
+          ]
+        },
+        "detail_preview": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "sequence_a": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "sequence_b": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "inferred": {
+          "const": true
+        }
+      }
+    },
+    "card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "session",
+        "first_timestamp",
+        "last_timestamp",
+        "first_sequence",
+        "last_sequence",
+        "commands",
+        "failed",
+        "files_preview",
+        "files_inventory_complete",
+        "observations"
+      ],
+      "properties": {
+        "id": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "session": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "first_timestamp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "last_timestamp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "first_sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "last_sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "commands": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "files_preview": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "files_inventory_complete": {
+          "const": false
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/observation"
+          },
+          "maxItems": 1024
+        }
+      }
+    },
+    "store": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "present",
+        "read_complete",
+        "bytes",
+        "cards",
+        "observations",
+        "observation_time",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "cards": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observations": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1024
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observation_time": {
+          "const": "before_operation"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "score",
+        "card",
+        "observation"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "card",
+            "observation"
+          ]
+        },
+        "score": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "card": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/card"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "observation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/observation"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "card"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "card": {
+                "$ref": "#/$defs/card"
+              },
+              "observation": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "observation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "observation": {
+                "$ref": "#/$defs/observation"
+              },
+              "card": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "distillation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cards",
+        "observations",
+        "bugfix",
+        "discovery",
+        "change",
+        "chain_records",
+        "skipped_self_records",
+        "excluded_commands",
+        "serialized_bytes",
+        "command_signature_capacity",
+        "files_preview_capacity",
+        "detail_preview_capacity"
+      ],
+      "properties": {
+        "cards": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "observations": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "bugfix": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "discovery": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "change": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "chain_records": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "skipped_self_records": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "excluded_commands": {
+          "const": "mem_verb_subcommands_and_mem_hyphen_prefix"
+        },
+        "serialized_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "command_signature_capacity": {
+          "const": 299
+        },
+        "files_preview_capacity": {
+          "const": 239
+        },
+        "detail_preview_capacity": {
+          "const": 279
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "card_id",
+        "consistent",
+        "claims_replayed",
+        "drift_sequence",
+        "reason",
+        "cryptographically_verified",
+        "heuristic_truth_verified",
+        "scope"
+      ],
+      "properties": {
+        "card_id": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "consistent": {
+          "type": "boolean"
+        },
+        "claims_replayed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "drift_sequence": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cryptographically_verified": {
+          "const": false
+        },
+        "heuristic_truth_verified": {
+          "const": false
+        },
+        "scope": {
+          "const": "recorded_references_sessions_outcomes_counts_and_timestamps"
+        }
+      }
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "present",
+        "bytes",
+        "metadata_complete",
+        "content_verified",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "present": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata_complete": {
+          "type": "boolean"
+        },
+        "content_verified": {
+          "const": false
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "gap_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "present",
+        "directory_present",
+        "read_complete",
+        "bytes",
+        "records",
+        "format",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "directory_present": {
+          "type": "boolean"
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "records": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "format": {
+          "const": "legacy-tsv-v1"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "gaps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "open",
+        "fixed",
+        "status_basis"
+      ],
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/gap_source"
+        },
+        "open": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fixed": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status_basis": {
+          "const": "stored-status-not-reverified"
+        }
+      }
+    },
+    "mesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "present",
+        "read_complete",
+        "observed_at",
+        "open",
+        "ready",
+        "claimed",
+        "done",
+        "failed",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "present": {
+          "type": "boolean"
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "observed_at": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "open": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ready": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "claimed": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "done": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "failed": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "signature_preview",
+        "count",
+        "matching",
+        "classification"
+      ],
+      "properties": {
+        "signature_preview": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matching": {
+          "const": "stored_sequence_range_and_session"
+        },
+        "classification": {
+          "const": "bounded_verb_and_first_nonoption_argument_heuristic"
+        }
+      }
+    },
+    "brief": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "last_card",
+        "top_failure",
+        "gaps",
+        "mesh_tasks",
+        "graph"
+      ],
+      "properties": {
+        "last_card": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/card"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "top_failure": {
+          "$ref": "#/$defs/failure"
+        },
+        "gaps": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/gaps"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mesh_tasks": {
+          "$ref": "#/$defs/mesh"
+        },
+        "graph": {
+          "$ref": "#/$defs/graph"
+        }
+      }
+    }
+  }
+}

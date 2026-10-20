@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:calc:v1",
+  "title": "Jash calc v1",
+  "description": "JSON document and JSON projection of native JTV2 share the declared fields. Native kinds, logical credits, framing and authoritative terminal are verified separately; a JSON projection cannot establish those properties. The exact rational sign, numerator and nonzero denominator are explicit. A finite approximate result is significand * 2^exponent2; negative_zero records the sign of zero. Arithmetic/domain failures use the common builtin error contract or a failed native terminal, never a fabricated result.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "expression",
+    "exact",
+    "result"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.calc.v1"
+    },
+    "expression": {
+      "type": "string",
+      "maxLength": 16384
+    },
+    "exact": {
+      "type": "boolean"
+    },
+    "result": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "negative",
+            "numerator",
+            "denominator"
+          ],
+          "properties": {
+            "schema": {
+              "const": "jash.number.rational.v1"
+            },
+            "negative": {
+              "type": "boolean"
+            },
+            "numerator": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "denominator": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 18446744073709551615
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "significand",
+            "exponent2",
+            "negative_zero"
+          ],
+          "properties": {
+            "schema": {
+              "const": "jash.number.binary64.v1"
+            },
+            "significand": {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            "exponent2": {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            "negative_zero": {
+              "type": "boolean"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "exact": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "negative",
+              "numerator",
+              "denominator"
+            ],
+            "properties": {
+              "schema": {
+                "const": "jash.number.rational.v1"
+              },
+              "negative": {
+                "type": "boolean"
+              },
+              "numerator": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 18446744073709551615
+              },
+              "denominator": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 18446744073709551615
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "significand",
+              "exponent2",
+              "negative_zero"
+            ],
+            "properties": {
+              "schema": {
+                "const": "jash.number.binary64.v1"
+              },
+              "significand": {
+                "type": "integer",
+                "minimum": -9223372036854775808,
+                "maximum": 9223372036854775807
+              },
+              "exponent2": {
+                "type": "integer",
+                "minimum": -9223372036854775808,
+                "maximum": 9223372036854775807
+              },
+              "negative_zero": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

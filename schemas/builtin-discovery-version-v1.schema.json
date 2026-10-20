@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:discovery:version:v1",
+  "title": "version semantic query report",
+  "description": "complete describes collection of all requested observations; status and per-item errors describe the operation outcome.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "command",
+    "complete",
+    "status",
+    "items"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.discovery.v1"
+    },
+    "command": {
+      "const": "version"
+    },
+    "complete": {
+      "const": true
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "version",
+          "codename",
+          "build_date",
+          "build_timestamp",
+          "git",
+          "target",
+          "binary_path",
+          "sha256",
+          "error"
+        ],
+        "properties": {
+          "version": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "codename": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "build_date": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "build_timestamp": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "git": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "target": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "binary_path": {
+            "oneOf": [
+              {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sha256": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "error": {
+            "enum": [
+              "binary_path_unavailable",
+              "binary_hash_unavailable",
+              null
+            ]
+          }
+        }
+      },
+      "minItems": 1
+    }
+  }
+}

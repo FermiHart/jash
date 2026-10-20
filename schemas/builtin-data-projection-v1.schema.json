@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:data-projection:v1",
+  "title": "Jash data-projection v1",
+  "description": "json --inspect-data validates and projects a JTV2 stream, including failed/cancelled terminal outcomes. Items may have any JDV value shape; projecting bytes and units is deliberately lossy with respect to native kinds. A valid projection does not imply command success; consult all terminal fields.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "items",
+    "terminal"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.data.projection.v1"
+    },
+    "items": {
+      "type": "array",
+      "items": {},
+      "maxItems": 65536
+    },
+    "terminal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "completeness",
+        "truncated",
+        "items",
+        "logical_bytes",
+        "errors",
+        "producer_status",
+        "transform_status",
+        "transport_status",
+        "hash_verified",
+        "hash",
+        "reason"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "complete",
+            "cancelled",
+            "failed",
+            "incomplete"
+          ]
+        },
+        "completeness": {
+          "enum": [
+            "unknown",
+            "complete",
+            "partial"
+          ]
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "logical_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "errors": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "producer_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "transform_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "transport_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "hash_verified": {
+          "type": "boolean"
+        },
+        "hash": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          ]
+        },
+        "reason": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "hash_verified": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "hash": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "hash": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

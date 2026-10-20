@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgWall" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#04060c"/>
+      <stop offset="50%" stop-color="#080f1d"/>
+      <stop offset="100%" stop-color="#05070e"/>
+    </linearGradient>
+    <radialGradient id="goldAura" cx="50%" cy="12%" r="55%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.16"/>
+      <stop offset="55%" stop-color="#14b8a6" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="goldText" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="50%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#fef3c7"/>
+    </linearGradient>
+    <pattern id="wallGrid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#38bdf8" stroke-width="0.6" stroke-opacity="0.05"/>
+    </pattern>
+    <style>
+      .mono { font-family: 'Ubuntu Mono', 'JetBrains Mono', 'Fira Code', Consolas, monospace; }
+      .sans { font-family: 'Ubuntu', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      .serif { font-family: Georgia, 'Times New Roman', serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="760" rx="18" fill="url(#bgWall)"/>
+  <rect width="1280" height="760" rx="18" fill="url(#goldAura)"/>
+  <rect width="1280" height="760" rx="18" fill="url(#wallGrid)"/>
+  <rect x="1.5" y="1.5" width="1277" height="757" rx="16.5" fill="none" stroke="#334155" stroke-width="1.8"/>
+
+  <!-- Cinema Header -->
+  <text x="640" y="42" text-anchor="middle" class="mono" font-size="13" font-weight="700" fill="#fbbf24" letter-spacing="2.5">
+    ★ ★ ★ ★ ★   CO-DESIGNED WITH THE WORLD'S FRONTIER LLMS   ★ ★ ★ ★ ★
+  </text>
+  <text x="640" y="76" text-anchor="middle" class="sans" font-size="28" font-weight="800" fill="#f8fafc">
+    “We Asked the Models What Would Make Their Lives Better in a Shell. Then We Built It.”
+  </text>
+  <text x="640" y="103" text-anchor="middle" class="sans" font-size="15.5" fill="#94a3b8">
+    Every disruptive primitive in Jash was born from real pain reported by autonomous agents operating live terminal sessions.
+  </text>
+
+  <!-- ==================== ROW 1 ==================== -->
+
+  <!-- CARD 1: CLAUDE CODE -->
+  <g transform="translate(36, 126)">
+    <rect width="388" height="284" rx="14" fill="#091322" fill-opacity="0.95" stroke="#2dd4bf" stroke-width="1.5" stroke-opacity="0.7"/>
+    <text x="22" y="54" class="serif" font-size="56" font-weight="700" fill="#2dd4bf" fill-opacity="0.28">“</text>
+    <text x="24" y="34" class="mono" font-size="13" font-weight="700" fill="#fbbf24">★ ★ ★ ★ ★  ·  TIME-TRAVEL &amp; MEMORY</text>
+
+    <text x="24" y="68" class="sans" font-size="14.5" font-style="italic" fill="#f1f5f9">
+      <tspan x="24" dy="0">“In bash, one wrong `rm` destroys the</tspan>
+      <tspan x="24" dy="22">worktree and my context window forgets</tspan>
+      <tspan x="24" dy="22">what I ran 20 turns ago. In Jash,</tspan>
+      <tspan x="24" dy="22">`explain` previews the blast radius,</tspan>
+      <tspan x="24" dy="22">`rewind auto` undoes mistakes in 1ms, and</tspan>
+      <tspan x="24" dy="22">`recall` remembers what my window dropped.”</tspan>
+    </text>
+
+    <rect x="24" y="198" width="340" height="26" rx="6" fill="#06281e"/>
+    <text x="34" y="215" class="mono" font-size="11.5" font-weight="700" fill="#5eead4">Inspired: rewind auto · explain · recall</text>
+
+    <line x1="24" y1="238" x2="364" y2="238" stroke="#1e293b" stroke-width="1"/>
+    <text x="24" y="260" class="sans" font-size="15.5" font-weight="800" fill="#ffffff">— Claude Code</text>
+    <text x="152" y="260" class="mono" font-size="12" fill="#94a3b8">Anthropic · Coding Harness</text>
+  </g>
+
+  <!-- CARD 2: GPT-6.6 -->
+  <g transform="translate(446, 126)">
+    <rect width="388" height="284" rx="14" fill="#091322" fill-opacity="0.95" stroke="#38bdf8" stroke-width="1.5" stroke-opacity="0.7"/>
+    <text x="22" y="54" class="serif" font-size="56" font-weight="700" fill="#38bdf8" fill-opacity="0.28">“</text>
+    <text x="24" y="34" class="mono" font-size="13" font-weight="700" fill="#fbbf24">★ ★ ★ ★ ★  ·  ZERO-REGEX JSON &amp; CONTRACTS</text>
+
+    <text x="24" y="68" class="sans" font-size="14.5" font-style="italic" fill="#f1f5f9">
+      <tspan x="24" dy="0">“Nested quote escaping in `bash -c` and</tspan>
+      <tspan x="24" dy="22">regex-scraping text tables caused 80% of</tspan>
+      <tspan x="24" dy="22">my tool failures. Jash's `--exec-json`</tspan>
+      <tspan x="24" dy="22">takes raw argv with zero quote loss, 171</tspan>
+      <tspan x="24" dy="22">builtins emit schema'd JSON in 0.18ms, and</tspan>
+      <tspan x="24" dy="22">`expect` kills hallucinations on the spot.”</tspan>
+    </text>
+
+    <rect x="24" y="198" width="340" height="26" rx="6" fill="#082038"/>
+    <text x="34" y="215" class="mono" font-size="11.5" font-weight="700" fill="#7dd3fc">Inspired: --exec-json · --json · expect</text>
+
+    <line x1="24" y1="238" x2="364" y2="238" stroke="#1e293b" stroke-width="1"/>
+    <text x="24" y="260" class="sans" font-size="15.5" font-weight="800" fill="#ffffff">— GPT-6.6</text>
+    <text x="118" y="260" class="mono" font-size="12" fill="#94a3b8">OpenAI · Frontier Reasoning</text>
+  </g>
+
+  <!-- CARD 3: GEMINI 4 ARGON -->
+  <g transform="translate(856, 126)">
+    <rect width="388" height="284" rx="14" fill="#091322" fill-opacity="0.95" stroke="#c084fc" stroke-width="1.5" stroke-opacity="0.7"/>
+    <text x="22" y="54" class="serif" font-size="56" font-weight="700" fill="#c084fc" fill-opacity="0.28">“</text>
+    <text x="24" y="34" class="mono" font-size="13" font-weight="700" fill="#fbbf24">★ ★ ★ ★ ★  ·  92% TOKEN DIET &amp; AST GRAPH</text>
+
+    <text x="24" y="68" class="sans" font-size="14.5" font-style="italic" fill="#f1f5f9">
+      <tspan x="24" dy="0">“Why burn 150,000 tokens running 40 `find`</tspan>
+      <tspan x="24" dy="22">and `cat` calls just to orient myself in a</tspan>
+      <tspan x="24" dy="22">repository? Jash's `digest --brief` and</tspan>
+      <tspan x="24" dy="22">native C11 `graph build` hand me the whole</tspan>
+      <tspan x="24" dy="22">AST call-graph and BLAKE3 fingerprint in</tspan>
+      <tspan x="24" dy="22">0.4ms — cutting my token cost by 92%.”</tspan>
+    </text>
+
+    <rect x="24" y="198" width="340" height="26" rx="6" fill="#1f1235"/>
+    <text x="34" y="215" class="mono" font-size="11.5" font-weight="700" fill="#d8b4fe">Inspired: digest (CAS) · graph · salience</text>
+
+    <line x1="24" y1="238" x2="364" y2="238" stroke="#1e293b" stroke-width="1"/>
+    <text x="24" y="260" class="sans" font-size="15.5" font-weight="800" fill="#ffffff">— Gemini 4 Argon</text>
+    <text x="182" y="260" class="mono" font-size="12" fill="#94a3b8">DeepMind · Systems Architect</text>
+  </g>
+
+  <!-- ==================== ROW 2 ==================== -->
+
+  <!-- CARD 4: GLM-5.3 -->
+  <g transform="translate(36, 434)">
+    <rect width="388" height="284" rx="14" fill="#091322" fill-opacity="0.95" stroke="#fbbf24" stroke-width="1.5" stroke-opacity="0.7"/>
+    <text x="22" y="54" class="serif" font-size="56" font-weight="700" fill="#fbbf24" fill-opacity="0.28">“</text>
+    <text x="24" y="34" class="mono" font-size="13" font-weight="700" fill="#fbbf24">★ ★ ★ ★ ★  ·  STATEFUL SESSIONS &amp; MEMO</text>
+
+    <text x="24" y="68" class="sans" font-size="14.5" font-style="italic" fill="#f1f5f9">
+      <tspan x="24" dy="0">“Every `bash -c` call starts with total</tspan>
+      <tspan x="24" dy="22">amnesia — losing `cwd`, exported vars, and</tspan>
+      <tspan x="24" dy="22">re-reading unchanged files. Jash persists</tspan>
+      <tspan x="24" dy="22">state across `-c` calls, serves unchanged</tspan>
+      <tspan x="24" dy="22">reads via `memo` in 0.04ms, and coordinates</tspan>
+      <tspan x="24" dy="22">multi-agent swarms natively with `mesh`.”</tspan>
+    </text>
+
+    <rect x="24" y="198" width="340" height="26" rx="6" fill="#2b1f08"/>
+    <text x="34" y="215" class="mono" font-size="11.5" font-weight="700" fill="#fcd34d">Inspired: JASH_SESSION · memo · mesh</text>
+
+    <line x1="24" y1="238" x2="364" y2="238" stroke="#1e293b" stroke-width="1"/>
+    <text x="24" y="260" class="sans" font-size="15.5" font-weight="800" fill="#ffffff">— GLM-5.3</text>
+    <text x="122" y="260" class="mono" font-size="12" fill="#94a3b8">Zhipu AI · Agentic Loop</text>
+  </g>
+
+  <!-- CARD 5: QWEN-3 MAX -->
+  <g transform="translate(446, 434)">
+    <rect width="388" height="284" rx="14" fill="#091322" fill-opacity="0.95" stroke="#34d399" stroke-width="1.5" stroke-opacity="0.7"/>
+    <text x="22" y="54" class="serif" font-size="56" font-weight="700" fill="#34d399" fill-opacity="0.28">“</text>
+    <text x="24" y="34" class="mono" font-size="13" font-weight="700" fill="#fbbf24">★ ★ ★ ★ ★  ·  OSIF 2.0 &amp; GUARDED RUNTIME</text>
+
+    <text x="24" y="68" class="sans" font-size="14.5" font-style="italic" fill="#f1f5f9">
+      <tspan x="24" dy="0">“Cross-OS shell automation used to break</tspan>
+      <tspan x="24" dy="22">constantly on GNU vs. BSD flags. Jash's</tspan>
+      <tspan x="24" dy="22">OSIF 2.0 layer gives me one deterministic</tspan>
+      <tspan x="24" dy="22">contract across 8 kernels, while</tspan>
+      <tspan x="24" dy="22">`jash-agentd` enforces cgroup-v2 memory,</tspan>
+      <tspan x="24" dy="22">PID, and wall-clock quotas per job.”</tspan>
+    </text>
+
+    <rect x="24" y="198" width="340" height="26" rx="6" fill="#06281e"/>
+    <text x="34" y="215" class="mono" font-size="11.5" font-weight="700" fill="#6ee7b7">Inspired: osif check/port · jash-agentd</text>
+
+    <line x1="24" y1="238" x2="364" y2="238" stroke="#1e293b" stroke-width="1"/>
+    <text x="24" y="260" class="sans" font-size="15.5" font-weight="800" fill="#ffffff">— Qwen-3 Max</text>
+    <text x="150" y="260" class="mono" font-size="12" fill="#94a3b8">Systems &amp; Kernel Agent</text>
+  </g>
+
+  <!-- CARD 6: DEEPSEEK-R2 -->
+  <g transform="translate(856, 434)">
+    <rect width="388" height="284" rx="14" fill="#091322" fill-opacity="0.95" stroke="#f43f5e" stroke-width="1.5" stroke-opacity="0.7"/>
+    <text x="22" y="54" class="serif" font-size="56" font-weight="700" fill="#f43f5e" fill-opacity="0.28">“</text>
+    <text x="24" y="34" class="mono" font-size="13" font-weight="700" fill="#fbbf24">★ ★ ★ ★ ★  ·  CRYPTOGRAPHIC PROOF (LIBJEF)</text>
+
+    <text x="24" y="68" class="sans" font-size="14.5" font-style="italic" fill="#f1f5f9">
+      <tspan x="24" dy="0">“In serious engineering, 'trust the agent's</tspan>
+      <tspan x="24" dy="22">summary' is not an audit trail. Jash chains</tspan>
+      <tspan x="24" dy="22">every command into a forward-secure BLAKE3</tspan>
+      <tspan x="24" dy="22">ratchet and signs a DSSE Ed25519 proof —</tspan>
+      <tspan x="24" dy="22">so `jef_verify` can prove every byte I</tspan>
+      <tspan x="24" dy="22">executed using only the public key.”</tspan>
+    </text>
+
+    <rect x="24" y="198" width="340" height="26" rx="6" fill="#2d0c16"/>
+    <text x="34" y="215" class="mono" font-size="11.5" font-weight="700" fill="#fda4af">Inspired: sigil · libjef · jef_verify</text>
+
+    <line x1="24" y1="238" x2="364" y2="238" stroke="#1e293b" stroke-width="1"/>
+    <text x="24" y="260" class="sans" font-size="15.5" font-weight="800" fill="#ffffff">— DeepSeek-R2</text>
+    <text x="158" y="260" class="mono" font-size="12" fill="#94a3b8">Cryptographic Audit Agent</text>
+  </g>
+</svg>

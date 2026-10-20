@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:operator:describe:row:v1",
+  "title": "describe JSONL output row",
+  "description": "Row shape only; field selection, arithmetic and relation to input require the semantic operator tests.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "field",
+    "type",
+    "count",
+    "null_count",
+    "samples"
+  ],
+  "properties": {
+    "field": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "null",
+        "bool",
+        "number",
+        "string",
+        "array",
+        "object",
+        "mixed"
+      ]
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65536
+    },
+    "null_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65536
+    },
+    "samples": {
+      "type": "array",
+      "maxItems": 3
+    }
+  }
+}

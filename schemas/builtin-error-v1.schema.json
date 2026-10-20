@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:builtin-error:v1",
+  "title": "Checked builtin structured output failure",
+  "type": "object",
+  "required": [
+    "schema",
+    "command",
+    "complete",
+    "error"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.builtin.error.v1"
+    },
+    "command": {
+      "type": "string"
+    },
+    "complete": {
+      "const": false
+    },
+    "command_status": {
+      "type": "integer",
+      "description": "Status of the operation before result delivery failed. Effects may already have occurred."
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "required_bytes": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          ]
+        },
+        "budget_bytes": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$comment": "Protocol error envelopes are exempt from result data budgets. Budget/collection failure returns 75; encoding/sink failure returns 125. An absent command_status does not assert that no effects occurred."
+}

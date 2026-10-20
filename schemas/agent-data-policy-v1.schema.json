@@ -1,0 +1,12 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"urn:jash:agent-data-policy:v1",
+  "type":"object","additionalProperties":false,
+  "required":["schema","id","op","revision","max_bytes","fd_enabled","source","authority","constraints","applied","intent_receipt_ref","ok","error"],
+  "properties":{
+    "schema":{"const":"jash.agent-data-policy.v1"},"id":{"type":"string"},"op":{"enum":["data.policy.get","data.policy.set"]},
+    "revision":{"type":["string","null"],"pattern":"^[0-9a-f]{64}$"},"max_bytes":{"type":["integer","null"],"minimum":1,"maximum":16777216},"fd_enabled":{"type":["boolean","null"]},
+    "source":{"enum":["default","user","unknown"]},"authority":{"const":"same-owner-storage"},
+    "constraints":{"const":{"max_bytes_min":1,"max_bytes_max":16777216,"type":"integer","fd_enabled_type":"boolean"}},
+    "applied":{"type":"boolean"},"intent_receipt_ref":{"type":["string","null"]},"ok":{"type":"boolean"},"error":{"type":["string","null"]}
+  }
+}

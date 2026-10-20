@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:kv:v1",
+  "description": "One record from the documented TSV key/value store. Native writers lock and atomically publish. applied records the completed rename, durable additionally requires directory fsync; false does not undo an applied rename. found/value describe the observed state after any applied mutation. read_complete distinguishes a validated full snapshot from source failure. Pages are sorted by persisted insertion order; next_offset is a page cursor, not an immutable snapshot token.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "key",
+        "found",
+        "value",
+        "entries",
+        "total",
+        "read_complete",
+        "offset",
+        "next_offset",
+        "truncated",
+        "applied",
+        "durable",
+        "consistency",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.kv.v1"
+        },
+        "operation": {
+          "enum": [
+            "list",
+            "get",
+            "set",
+            "del"
+          ]
+        },
+        "key": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "maxLength": 255
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "found": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "value": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "maxLength": 8192
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "value"
+            ],
+            "properties": {
+              "key": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  {
+                    "$ref": "#/$defs/bytes"
+                  }
+                ]
+              },
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 8192
+                  },
+                  {
+                    "$ref": "#/$defs/bytes"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "total": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "next_offset": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4096
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "applied": {
+          "type": "boolean"
+        },
+        "durable": {
+          "type": "boolean"
+        },
+        "consistency": {
+          "const": "atomic_file_snapshot"
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.kv.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.kv.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    }
+  }
+}

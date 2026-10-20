@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:semantic:risk:v1",
+  "title": "Jash risk semantic result v1",
+  "description": "Bounded actual history observations and stored avoid patterns. Missing history is unknown, not an empty observed history; risk categories are substring heuristics. JSON and JSON projection of the JTV2 record share this field contract. Native kinds additionally preserve PATH/SYMBOL/FILESIZE and exact I64/U64. The terminal is a separate JTV2 contract; this document alone does not prove stream completion.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "engine",
+        "source",
+        "available",
+        "history_lines",
+        "high_risk_commands",
+        "profile"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.risk.v1"
+        },
+        "operation": {
+          "const": "assess"
+        },
+        "engine": {
+          "const": "substring-heuristic"
+        },
+        "source": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "history_lines": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "high_risk_commands": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "profile": {
+          "oneOf": [
+            {
+              "enum": [
+                "normal",
+                "moderate",
+                "excessive"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "path",
+        "ok",
+        "persisted",
+        "effects_may_have_applied",
+        "durability",
+        "details",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.risk.v1"
+        },
+        "operation": {
+          "const": "avoid"
+        },
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "persisted": {
+          "type": "boolean"
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        },
+        "durability": {
+          "const": "checked-close"
+        },
+        "details": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pattern",
+            "category",
+            "learned_local_time",
+            "confidence_source",
+            "bytes_written"
+          ],
+          "properties": {
+            "pattern": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            "category": {
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64",
+                          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "learned_local_time": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            "confidence_source": {
+              "const": "constant-on-insertion"
+            },
+            "bytes_written": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.risk.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.risk.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ]
+}

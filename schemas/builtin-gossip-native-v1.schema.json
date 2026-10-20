@@ -1,0 +1,318 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:gossip-native:v1",
+  "title": "Jash gossip-native structured contract",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "scope",
+        "channel",
+        "error",
+        "applied",
+        "persisted",
+        "durable",
+        "sequence",
+        "messages",
+        "next_cursor",
+        "retention_items",
+        "complete",
+        "has_more"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.gossip.v1"
+        },
+        "operation": {
+          "enum": [
+            "send",
+            "receive",
+            "clear"
+          ]
+        },
+        "scope": {
+          "enum": [
+            "home-channel-ring",
+            "process-local-ring"
+          ]
+        },
+        "channel": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "applied": {
+          "type": "boolean"
+        },
+        "persisted": {
+          "type": "boolean"
+        },
+        "durable": {
+          "type": "boolean"
+        },
+        "sequence": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sender",
+              "message",
+              "timestamp",
+              "timestamp_unit",
+              "sequence"
+            ],
+            "properties": {
+              "sender": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64",
+                        "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                      }
+                    }
+                  }
+                ]
+              },
+              "message": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64",
+                        "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                      }
+                    }
+                  }
+                ]
+              },
+              "timestamp": {
+                "type": "integer"
+              },
+              "timestamp_unit": {
+                "const": "unix-seconds"
+              },
+              "sequence": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "maxItems": 32
+        },
+        "next_cursor": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retention_items": {
+          "const": 32
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "has_more": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sender",
+          "message",
+          "timestamp",
+          "timestamp_unit",
+          "sequence"
+        ],
+        "properties": {
+          "sender": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                  }
+                }
+              }
+            ]
+          },
+          "message": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                  }
+                }
+              }
+            ]
+          },
+          "timestamp": {
+            "type": "integer"
+          },
+          "timestamp_unit": {
+            "const": "unix-seconds"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "maxItems": 32
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.gossip.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.gossip.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer"
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$comment": "Local receive preserves the legacy array. Native local receive carries the versioned scope record; channel operations always use that record. Publication and durability are independent observations."
+}

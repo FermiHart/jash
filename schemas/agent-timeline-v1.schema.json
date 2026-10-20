@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:jash:timeline:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "record_fields", "mutations", "lost", "entries", "count", "next_offset"],
+  "properties": {
+    "schema": {"const": "jash.timeline.v1"}, "record_fields": {"const": "legacy_bounded"},
+    "mutations": {"type": "integer", "minimum": 0}, "lost": {"type": "integer", "minimum": 0},
+    "count": {"type": "integer", "minimum": 0}, "next_offset": {"type": ["integer", "null"], "minimum": 0},
+    "entries": {"type": "array", "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "entry_id", "kind", "desc", "a", "b", "ts", "undoes"],
+      "properties": {
+        "id": {"type": ["integer", "string"]}, "entry_id": {"type": "string", "pattern": "^[0-9]+$"},
+        "kind": {"type": "string"}, "desc": {"$ref": "#/$defs/text"},
+        "a": {"$ref": "#/$defs/text"}, "b": {"$ref": "#/$defs/text"},
+        "ts": {"type": ["integer", "string"]}, "undoes": {"type": "boolean"}
+      }
+    }}
+  },
+  "$defs": {"text": {"oneOf": [{"type": "string"}, {"type": "object", "required": ["encoding", "data"], "properties": {"encoding": {"const": "base64"}, "data": {"type": "string"}}, "additionalProperties": false}]}}
+}

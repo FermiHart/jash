@@ -1,0 +1,853 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:shell-state:v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "command",
+    "complete",
+    "status",
+    "items"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "jash.shell-state.v1"
+    },
+    "command": {
+      "enum": [
+        "export",
+        "unset",
+        "readonly",
+        "declare",
+        "typeset",
+        "array",
+        "trap",
+        "ulimit",
+        "umask",
+        "set",
+        "shopt",
+        "times"
+      ]
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "name",
+              "operation",
+              "before",
+              "value",
+              "present",
+              "readonly",
+              "integer",
+              "nameref",
+              "changed",
+              "error"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "variable"
+              },
+              "name": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              "operation": {
+                "enum": [
+                  "query",
+                  "invalid",
+                  "set",
+                  "unset",
+                  "mark_readonly"
+                ]
+              },
+              "before": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "present": {
+                "type": "boolean"
+              },
+              "readonly": {
+                "type": "boolean"
+              },
+              "integer": {
+                "type": "boolean"
+              },
+              "nameref": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "changed": {
+                "type": "boolean"
+              },
+              "error": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "name",
+              "body",
+              "present"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "function"
+              },
+              "name": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              "body": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "present": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "name",
+              "enabled",
+              "behavior_implemented"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "shell_option"
+              },
+              "name": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "behavior_implemented": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "name",
+              "error"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              "error": {
+                "const": "unknown_option"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "index",
+              "value"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "positional"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "value": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "before",
+              "mask",
+              "octal",
+              "changed"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "umask"
+              },
+              "before": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "mask": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 511
+              },
+              "octal": {
+                "type": "string",
+                "pattern": "^0[0-7]{3}$"
+              },
+              "changed": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "name",
+              "display_scale",
+              "soft",
+              "hard",
+              "soft_unlimited",
+              "hard_unlimited",
+              "changed",
+              "error"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "resource_limit"
+              },
+              "name": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              "display_scale": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "soft": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "hard": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "soft_unlimited": {
+                "type": "boolean"
+              },
+              "hard_unlimited": {
+                "type": "boolean"
+              },
+              "changed": {
+                "type": "boolean"
+              },
+              "error": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "ticks_per_second",
+              "shell_user_ticks",
+              "shell_system_ticks",
+              "children_user_ticks",
+              "children_system_ticks"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "cpu_times"
+              },
+              "ticks_per_second": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "shell_user_ticks": {
+                "type": "integer"
+              },
+              "shell_system_ticks": {
+                "type": "integer"
+              },
+              "children_user_ticks": {
+                "type": "integer"
+              },
+              "children_system_ticks": {
+                "type": "integer"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "signal",
+              "action",
+              "ignored",
+              "requested",
+              "name",
+              "operation",
+              "before",
+              "present",
+              "changed",
+              "error",
+              "errno"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "const": "trap"
+              },
+              "signal": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "action": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "ignored": {
+                "type": "boolean"
+              },
+              "requested": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "name": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "operation": {
+                "enum": [
+                  "list",
+                  "query",
+                  "set",
+                  "reset"
+                ]
+              },
+              "before": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "present": {
+                "type": "boolean"
+              },
+              "changed": {
+                "type": "boolean"
+              },
+              "error": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "errno": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        ]
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "effects_may_have_applied"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "collection_limit_exceeded"
+        },
+        "effects_may_have_applied": {
+          "const": true
+        }
+      }
+    }
+  },
+  "$comment": "complete describes observation/report collection. status and item errors describe command success. Current flat environment export semantics are retained; this report does not claim an export attribute separate from existence. Native JTV2 retains JDV kinds.",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "complete": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "status": {
+            "const": 75
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      }
+    }
+  ]
+}

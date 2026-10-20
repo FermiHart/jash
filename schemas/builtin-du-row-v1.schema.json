@@ -1,0 +1,249 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:query:du-row:v1",
+  "title": "One du --json JSONL observation or explicit terminal marker",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "size_kb",
+        "path",
+        "allocated_bytes",
+        "apparent_bytes",
+        "complete",
+        "error",
+        "errno",
+        "is_total",
+        "freshness",
+        "symlink_policy",
+        "hardlink_policy"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/text"
+        },
+        "size_kb": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/uint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "path": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "allocated_bytes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/uint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "apparent_bytes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/uint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "is_total": {
+          "type": "boolean"
+        },
+        "freshness": {
+          "const": "live"
+        },
+        "symlink_policy": {
+          "const": "physical"
+        },
+        "hardlink_policy": {
+          "const": "per-path"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "is_total": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "path": {
+                "type": "null"
+              },
+              "name": {
+                "const": "total"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/text"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "complete": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "error": {
+                "type": "null"
+              },
+              "errno": {
+                "type": "null"
+              },
+              "size_kb": {
+                "$ref": "#/$defs/uint"
+              },
+              "allocated_bytes": {
+                "$ref": "#/$defs/uint"
+              },
+              "apparent_bytes": {
+                "$ref": "#/$defs/uint"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "size_kb",
+        "complete",
+        "error",
+        "next_offset"
+      ],
+      "properties": {
+        "name": {
+          "type": "null"
+        },
+        "size_kb": {
+          "type": "null"
+        },
+        "complete": {
+          "const": false
+        },
+        "error": {
+          "enum": [
+            "request_cancelled",
+            "traversal_limit",
+            "top_limit",
+            "page_limit"
+          ]
+        },
+        "next_offset": {
+          "$ref": "#/$defs/uint"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "text": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/bytes"
+        }
+      ]
+    },
+    "uint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      ]
+    },
+    "sint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        }
+      ]
+    }
+  },
+  "$comment": "size_kb is the retained legacy rounded KiB quantity; apparent_bytes and allocated_bytes have distinct physical meanings. Stream status is out of band. This schema describes the JSON projection, not JTV2."
+}

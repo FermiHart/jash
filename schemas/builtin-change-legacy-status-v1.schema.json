@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:change-legacy-status:v1",
+  "title": "Historical change status --json document with checked shared source collector",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemas",
+    "changes"
+  ],
+  "properties": {
+    "schemas": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 127,
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
+      "maxItems": 128
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "schema",
+          "status",
+          "artifacts"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 127,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 127,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "status": {
+            "$ref": "urn:jash:change:v1#/$defs/text"
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "status"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 127,
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                },
+                "status": {
+                  "enum": [
+                    "done",
+                    "pending"
+                  ]
+                }
+              }
+            },
+            "maxItems": 16
+          },
+          "goal": {
+            "$ref": "urn:jash:change:v1#/$defs/nullableText"
+          }
+        }
+      },
+      "maxItems": 128
+    }
+  }
+}

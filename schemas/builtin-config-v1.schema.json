@@ -1,0 +1,212 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:config:v1",
+  "title": "Jash config native report v1",
+  "description": "Configuration paths, observations, and mutation receipts. Key material, its hash, and its length are never included. File publication and directory durability are distinct. Existing directory or file type mismatches are reported as errors. Stateful operations admit a checked header before effects and flush each receipt before the next action. Mutation receipts bypass presentation budgets. Collection failure after admission retains prior receipts with complete:false, status:75 and effects_may_have_applied:true.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "command",
+    "complete",
+    "status",
+    "items"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.config.v1"
+    },
+    "command": {
+      "enum": [
+        "config"
+      ]
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operation",
+          "component",
+          "path",
+          "exists",
+          "kind",
+          "mode",
+          "changed",
+          "durable",
+          "key_configured",
+          "ok",
+          "error",
+          "errno"
+        ],
+        "properties": {
+          "operation": {
+            "enum": [
+              "show",
+              "init",
+              "set-key",
+              "help"
+            ]
+          },
+          "component": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "path": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exists": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "kind": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mode": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 18446744073709551615
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "durable": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "key_configured": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "errno": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 18446744073709551615
+          }
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "code": {
+          "const": "collection_limit_exceeded"
+        },
+        "effects_may_have_applied": {
+          "const": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "complete": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "status": {
+            "const": 75
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:trash-gc:data:v1",
+  "description": "Projection of each native trash GC action and its terminal summary. The JTV2 terminal remains authoritative.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "operation",
+        "path",
+        "action",
+        "error",
+        "applied",
+        "dry_run"
+      ],
+      "properties": {
+        "record": {
+          "const": "action"
+        },
+        "operation": {
+          "const": "gc"
+        },
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "action": {
+          "enum": [
+            "retained",
+            "planned",
+            "removed",
+            "failed"
+          ]
+        },
+        "error": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "applied": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dry_run": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "dry_run",
+        "removed",
+        "planned",
+        "retained",
+        "failed",
+        "pins_complete",
+        "exit_code",
+        "recovery_path",
+        "truncated",
+        "record"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.trash.gc.v1"
+        },
+        "dry_run": {
+          "type": "boolean"
+        },
+        "removed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "planned": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retained": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pins_complete": {
+          "type": "boolean"
+        },
+        "exit_code": {
+          "type": "integer"
+        },
+        "recovery_path": {
+          "oneOf": [
+            {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            {
+              "type": "object",
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "record": {
+          "const": "summary"
+        }
+      }
+    }
+  ]
+}

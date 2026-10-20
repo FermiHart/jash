@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:operator:uniqby:row:v1",
+  "title": "uniqby JSONL output row",
+  "description": "Row shape only; field selection, arithmetic and relation to input require the semantic operator tests.",
+  "type": "object"
+}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:jash:query:df:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "consistency", "items", "total", "count", "next_offset", "collection_truncated", "exit_code"],
+  "properties": {
+    "schema": {"const": "jash.query.df.v1"}, "consistency": {"const": "live"},
+    "items": {"type": "array", "items": {"$ref": "#/$defs/filesystem"}},
+    "total": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/filesystem"}]},
+    "count": {"type": "integer", "minimum": 0}, "next_offset": {"type": ["integer", "null"], "minimum": 0},
+    "collection_truncated": {"type": "boolean"}, "exit_code": {"type": "integer", "minimum": 0},
+    "baseline_mode": {"enum": ["create", "compare"]}, "baseline_error": {"type": ["string", "null"]},
+    "baseline_receipt": {"$ref": "#/$defs/baseline_receipt"}
+  },
+  "allOf": [{
+    "if": {"required": ["baseline_mode"], "properties": {"baseline_mode": {"const": "create"}}},
+    "then": {"required": ["baseline_receipt"]}
+  }],
+  "$defs": {
+    "uint": {"oneOf": [{"type": "integer", "minimum": 0, "maximum": 9007199254740991}, {"type": "string", "pattern": "^[0-9]+$"}]},
+    "text": {"oneOf": [{"type": "string"}, {"type": "object", "required": ["encoding", "data"], "properties": {"encoding": {"const": "base64"}, "data": {"type": "string"}}, "additionalProperties": false}]},
+    "baseline_receipt": {
+      "type": "object", "additionalProperties": false,
+      "required": ["action", "bytes_written", "destination", "durable", "effect", "errno", "error", "status", "undo", "verified"],
+      "properties": {
+        "action": {"const": "baseline_create"},
+        "bytes_written": {"$ref": "#/$defs/uint"},
+        "destination": {"$ref": "#/$defs/text"},
+        "durable": {"type": "boolean"}, "verified": {"type": "boolean"},
+        "effect": {"enum": ["none", "changed"]},
+        "errno": {"type": ["integer", "null"], "minimum": 1},
+        "error": {"type": ["string", "null"]},
+        "status": {"enum": ["completed", "partial", "failed"]},
+        "undo": {"oneOf": [{"type": "null"}, {
+          "type": "object", "additionalProperties": false,
+          "required": ["coverage", "entry_id", "token"],
+          "properties": {
+            "coverage": {"type": "string", "minLength": 1},
+            "entry_id": {"$ref": "#/$defs/uint"},
+            "token": {"type": "string", "pattern": "^[0-9a-f]{32}$"}
+          }
+        }]}
+      },
+      "allOf": [{
+        "if": {"properties": {"effect": {"const": "none"}}},
+        "then": {"properties": {"bytes_written": {"const": 0}, "status": {"const": "failed"}, "durable": {"const": false}, "verified": {"const": false}, "undo": {"type": "null"}}}
+      }, {
+        "if": {"properties": {"status": {"const": "completed"}}},
+        "then": {"properties": {"effect": {"const": "changed"}, "error": {"type": "null"}, "errno": {"type": "null"}, "durable": {"const": true}, "verified": {"const": true}}}
+      }]
+    },
+    "filesystem": {
+      "type": "object", "additionalProperties": false,
+      "required": ["device", "mountpoint", "fstype", "total_bytes", "used_bytes", "avail_bytes", "use_percent"],
+      "properties": {
+        "device": {"$ref": "#/$defs/text"}, "mountpoint": {"$ref": "#/$defs/text"}, "fstype": {"$ref": "#/$defs/text"},
+        "total_bytes": {"$ref": "#/$defs/uint"}, "used_bytes": {"$ref": "#/$defs/uint"}, "avail_bytes": {"$ref": "#/$defs/uint"},
+        "use_percent": {"type": "integer", "minimum": 0},
+        "filesystem_id": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/uint"}]},
+        "delta": {"oneOf": [{"type": "null"}, {"type": "object", "required": ["total_bytes", "used_bytes", "avail_bytes"],
+          "additionalProperties": false, "properties": {"total_bytes": {"type": ["integer", "string"]}, "used_bytes": {"type": ["integer", "string"]}, "avail_bytes": {"type": ["integer", "string"]}}}]},
+        "inodes": {"oneOf": [{"type": "null"}, {"type": "object", "required": ["total", "used", "free", "available"], "additionalProperties": {"$ref": "#/$defs/uint"}}]}
+      }
+    }
+  }
+}

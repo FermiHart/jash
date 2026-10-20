@@ -1,0 +1,6 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"urn:jash:agent-data-policy-intent:v1",
+  "type":"object","additionalProperties":false,"required":["schema","request_id","request_blake3","prior_revision","revision"],
+  "properties":{"schema":{"const":"jash.agent-data-policy-intent.v1"},"request_id":{"type":"string"},"request_blake3":{"$ref":"#/$defs/hash"},"prior_revision":{"$ref":"#/$defs/hash"},"revision":{"$ref":"#/$defs/hash"}},
+  "$defs":{"hash":{"type":"string","pattern":"^[0-9a-f]{64}$"}}
+}

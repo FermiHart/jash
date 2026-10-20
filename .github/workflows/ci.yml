@@ -1,0 +1,163 @@
+name: CI
+
+# JINV-004 — o projeto tem que ter um juiz que não seja a máquina do autor.
+#
+# Antes desta auditoria não existia CI. 105 arquivos de teste, 41 entradas na
+# suíte, e nenhum gatilho automático: "passou nos testes" dependia de alguém
+# lembrar de rodar, na própria máquina, contra um binário que o `make` podia
+# ter deixado desatualizado sem avisar (JINV-001).
+#
+# Ordem dos jobs é deliberada — do mais barato/decisivo para o mais caro:
+#   build  → o binário existe e o make FALHA quando deve (JINV-001/002)
+#   suite  → as 41 entradas
+#   asan   → ASAN+UBSAN, inclusive sobre o arco ADR-0044 que nunca rodou sob
+#            sanitizer (auditoria 2026-07-27, dimensão "teste", achado 5.5)
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── W3 — DOIS hosts, ambos com -Werror ────────────────────────────────────
+  #
+  # Ate 2026-08-05 o CI rodava so ubuntu-latest e sem -Werror. Um unico dia de
+  # porte para Linux produziu 13 achados que estavam no repo ha meses, e QUATRO
+  # deles foram encontrados pelo COMPILADOR, nao por engenhosidade:
+  #
+  #   3 overflows de realpath (buffer < PATH_MAX; macOS 1024, Linux 4096)
+  #   strptime sem declaracao -> char* truncado a 32 bits em `touch -d`
+  #   fread short-read entregando bytes nao-inicializados ao parser
+  #   chdir falho ignorado -> comando roda no diretorio ERRADO
+  #
+  # Os headers do Darwin incluem transitivamente e nao fazem gate por
+  # feature-test macro; os do glibc fazem. Toda build so-mac acumula essa divida
+  # em silencio. Este job e o antidoto, e custa minutos.
+  warnings:
+    name: -Werror (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false          # queremos saber se quebrou nos DOIS ou so num
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: dependências (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
+      - name: dependências (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja || true
+      - name: build com -Werror
+        run: |
+          cmake -B build-werror -G Ninja -DCMAKE_BUILD_TYPE=Release -DJASH_WERROR=ON
+          cmake --build build-werror --target jash
+      - name: o binário funciona
+        run: ./build-werror/jash -c 'echo werror-ok' | grep -qx werror-ok
+      # A camada osif L0 do Linux e um .S. Com project(LANGUAGES C) o CMake
+      # DESCARTA .S em silencio e o alvo linka mesmo assim, porque nada em c/
+      # referencia bear_osif_syscall6 diretamente — a camada de portabilidade
+      # simplesmente nao entra no binario e o build fica verde. Um build verde
+      # nao e evidencia de que ela existe; o objeto e.
+      - name: osif L0 foi realmente montado (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          test -f build-werror/CMakeFiles/jash.dir/c/osif/linux/syscall.S.o
+          nm build-werror/CMakeFiles/jash.dir/c/osif/linux/syscall.S.o | grep -q bear_osif_syscall6
+
+  build:
+    name: build + honestidade do build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: dependências
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
+      - name: build
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash
+      - name: o binário funciona
+        run: ./build/jash -c 'echo ci-ok' | grep -qx ci-ok
+      # JINV-001/002: este é o teste que impede o build de voltar a mentir.
+      - name: honestidade do build (JINV-001/002)
+        run: bash tests/test_jinv001_build_honesty.sh
+
+  # ── W4 — o mutation gate passa a BLOQUEAR ─────────────────────────────────
+  #
+  # tools/mutation-check.sh ja existia e ja estava certo: pegou, nesta semana,
+  # quatro asercoes que decidiam por sorte — capturas com `2>&1` comparadas por
+  # igualdade exata, em que UMA linha de aviso no stderr (o bloqueio do ratchet)
+  # transformou 26 resultados corretos em falhas. Faltava so ser obrigatorio.
+  #
+  # O mutante NULO e a pergunta que importa: se o jash inteiro virar `exit 0`,
+  # algum gate sobrevive? Um gate que sobrevive nao estava testando o jash.
+  mutation:
+    name: mutation gate (JINV-061)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: dependências
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
+      - name: build
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash
+      - name: lint de asserção infalsificável
+        run: bash tools/mutation-check.sh lint
+      - name: mutante nulo mata todos os gates declarados
+        run: bash tools/mutation-check.sh
+
+  suite:
+    name: suíte de testes
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: dependências
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build bubblewrap python3 python3-jsonschema python3-referencing time
+      - name: build
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DJASH_WERROR=ON
+          cmake --build build --parallel 2
+          cmake --build build --target modules --parallel 2
+      - name: contratos gerados e denominador qualificado
+        run: python3 tools/check_builtin_conformance.py
+      - name: conformance JSON e DATA (SKIP nao qualifica)
+        run: |
+          ctest --test-dir build -L builtin-contracts --no-tests=error --output-on-failure \
+            --test-output-size-passed 16777216 --test-output-size-failed 16777216 \
+            --output-junit "$PWD/build/builtin-contracts.xml"
+          python3 tools/check_builtin_conformance.py --junit "$PWD/build/builtin-contracts.xml"
+      - name: suíte
+        run: bash tests/test_suite.sh
+
+  asan:
+    name: ASAN + UBSAN
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: dependências
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build clang
+      # O próprio asan_test.sh configura e builda `build-asan/` com
+      # -DENABLE_ASAN=ON -DCMAKE_C_COMPILER=clang. Não pré-buildar aqui: um
+      # segundo build só criaria uma cópia divergente para o script ignorar.
+      - name: harness ASAN (self-build)
+        run: bash tests/asan_test.sh
+
+  compat:
+    name: compatibilidade bash (diferencial)
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: dependências
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
+      - name: build
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash
+      # O runner do GitHub tem bash 5.x — mais rigoroso que o bash 3.2 do
+      # macOS, onde vários casos bash-4+ nem existem para comparar.
+      - name: diferencial vs bash
+        run: bash tests/bash_compat_test.sh

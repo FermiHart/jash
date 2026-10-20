@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:query:tdiff:v1",
+  "title": "tdiff --json Myers hunk array",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "op",
+      "a",
+      "b",
+      "a_lines",
+      "b_lines",
+      "a_final_newline",
+      "b_final_newline",
+      "path",
+      "checkpoint"
+    ],
+    "properties": {
+      "op": {
+        "enum": [
+          "change",
+          "insert",
+          "delete"
+        ]
+      },
+      "a": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start",
+          "count"
+        ],
+        "properties": {
+          "start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200000
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200000
+          }
+        }
+      },
+      "b": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start",
+          "count"
+        ],
+        "properties": {
+          "start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200000
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200000
+          }
+        }
+      },
+      "a_lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/text"
+        },
+        "maxItems": 200000
+      },
+      "b_lines": {
+        "type": "array",
+        "items": {
+          "$ref": "#/$defs/text"
+        },
+        "maxItems": 200000
+      },
+      "a_final_newline": {
+        "type": "boolean"
+      },
+      "b_final_newline": {
+        "type": "boolean"
+      },
+      "path": {
+        "$ref": "#/$defs/text"
+      },
+      "checkpoint": {
+        "$ref": "#/$defs/text"
+      }
+    },
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "op": {
+              "const": "change"
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "a": {
+              "properties": {
+                "count": {
+                  "minimum": 1
+                }
+              }
+            },
+            "b": {
+              "properties": {
+                "count": {
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "op": {
+              "const": "insert"
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "a": {
+              "properties": {
+                "count": {
+                  "const": 0
+                }
+              }
+            },
+            "b": {
+              "properties": {
+                "count": {
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "op": {
+              "const": "delete"
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "a": {
+              "properties": {
+                "count": {
+                  "minimum": 1
+                }
+              }
+            },
+            "b": {
+              "properties": {
+                "count": {
+                  "const": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "maxItems": 200000,
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "text": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/bytes"
+        }
+      ]
+    },
+    "uint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      ]
+    },
+    "sint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        }
+      ]
+    }
+  },
+  "$comment": "Hunk starts are zero based line positions. Line bytes omit separators; final-newline flags preserve trailing newline state. Status0 means identical (empty array), status1 means differing, status2 is an explicit error document. Paging is supported only by native selectors. tdiff records use the logical path and requested checkpoint."
+}

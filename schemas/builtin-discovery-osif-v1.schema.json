@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:discovery:osif:v1",
+  "title": "osif semantic query report",
+  "description": "complete describes collection of all requested observations; status and per-item errors describe the operation outcome.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "command",
+    "complete",
+    "status",
+    "items"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.discovery.v1"
+    },
+    "command": {
+      "const": "osif"
+    },
+    "complete": {
+      "const": true
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "operation",
+          "capability",
+          "bit",
+          "provider",
+          "advertised",
+          "status",
+          "detail"
+        ],
+        "properties": {
+          "target": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "operation": {
+            "enum": [
+              "caps",
+              "check",
+              "score"
+            ]
+          },
+          "capability": {
+            "enum": [
+              "SYSID",
+              "PROC",
+              "MEM",
+              "MOUNTS",
+              "NET",
+              "UPTIME",
+              "LOADAVG",
+              "SPAWN"
+            ]
+          },
+          "bit": {
+            "enum": [
+              1,
+              2,
+              4,
+              8,
+              16,
+              32,
+              64,
+              128
+            ]
+          },
+          "provider": {
+            "enum": [
+              "sysid",
+              "proc_iter",
+              "meminfo",
+              "mounts",
+              "netstat",
+              "uptime",
+              "loadavg",
+              "spawn"
+            ]
+          },
+          "advertised": {
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "advertised",
+              "unavailable",
+              "pass",
+              "skip",
+              "fail"
+            ]
+          },
+          "detail": {
+            "oneOf": [
+              {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "minItems": 8
+    }
+  }
+}

@@ -1,0 +1,6 @@
+# lint-gate-registration debt ceiling.
+#
+# JINV gates: hard rule, always zero unregistered, not listed here.
+# Legacy ad-hoc tests predating the one-bug-one-gate discipline: frozen by
+# count. Lower this number whenever one gets registered; never raise it.
+ceiling=17

@@ -1,0 +1,122 @@
+; INV-880 — canonical Jash Beyond L0: start, translated and native doors.
+; The kernel ABI and capability manifest are supplied by Beyond; Jash owns
+; this assembly so the same canonical source tree is built on every update.
+; This variant has no fossil cage_raw_fork (canonical Jash no longer exports
+; cage_fork_conduit). Assemble with basm --target-profile beyond -f elf64.
+BITS 64
+section .text
+
+SYS_exit_group equ 0x25
+SYS_exit       equ 0x24
+NEG_ENOSYS     equ -38
+BEY_NOSYS      equ -1
+LINUX_NR_MAX   equ 453
+; INV-896 (ADR-0113): generic-door cell wildcards.
+PCD_NR_ANY     equ 0xFFFFFFFF
+PCD_CAP_ANY    equ 0xFFFFFFFF
+PCD_F_GENERIC  equ 1
+
+global _start
+global pcd_site_osif6
+global pcd_site_raw6
+
+
+extern bear_start_main
+extern bear_osif_exit
+_start:
+    xor rbp, rbp
+    mov rdi, [rsp]
+    lea rsi, [rsp+8]
+    mov rax, rdi
+    inc rax
+    shl rax, 3
+    lea rdx, [rsi+rax]
+    and rsp, -16
+    call bear_start_main   ; libc owns environ, TLS, locale and stdio
+    movsx rdi, eax
+    call bear_osif_exit
+.halt:
+    jmp .halt
+
+global bear_osif_syscall6
+extern bear_linux_to_beyond
+bear_osif_syscall6:
+    push rbp
+    mov rbp, rsp
+    push rbx
+    cmp rdi, LINUX_NR_MAX
+    ja osif6_nosys
+    lea rbx, [rel bear_linux_to_beyond]
+    movsx rax, word [rbx + rdi*2]
+    cmp eax, BEY_NOSYS
+    je osif6_nosys
+    mov r10, r8
+    mov r8, r9
+    mov r9, [rbp+16]
+    mov rdi, rsi
+    mov rsi, rdx
+    mov rdx, rcx
+    pop rbx
+    pop rbp
+pcd_site_osif6:
+    syscall
+    ret
+osif6_nosys:
+    mov rax, NEG_ENOSYS
+    pop rbx
+    pop rbp
+    ret
+
+global bear_raw_syscall6
+bear_raw_syscall6:
+    push rbp
+    mov rbp, rsp
+    mov rax, rdi
+    mov r10, r8
+    mov r8, r9
+    mov r9, [rbp+16]
+    mov rdi, rsi
+    mov rsi, rdx
+    mov rdx, rcx
+    pop rbp
+pcd_site_raw6:
+    syscall
+    ret
+
+global bear_osif_exit
+bear_osif_exit:
+    mov rax, SYS_exit_group
+
+pcd_site_exit_g:
+    syscall
+    mov rax, SYS_exit
+
+pcd_site_exit:
+    syscall
+    ud2
+
+; ── INV-896: generic-door manifest fragment ─────────────────────────
+; The translated/raw/exit doors serve every nr at runtime; their cells
+; bind the syscall INSTRUCTION with wildcards. The kernel byte-verifies
+; the 0F 05 at each site at spawn and matches live RIPs against them.
+section .pcd
+dd 0x31444350, 1, 4, 0
+
+dq pcd_site_osif6
+dd PCD_NR_ANY, PCD_CAP_ANY, PCD_F_GENERIC, 0
+dq 0, 0
+
+dq pcd_site_raw6
+dd PCD_NR_ANY, PCD_CAP_ANY, PCD_F_GENERIC, 0
+dq 0, 0
+
+dq pcd_site_exit_g
+dd PCD_NR_ANY, PCD_CAP_ANY, PCD_F_GENERIC, 0
+dq 0, 0
+
+dq pcd_site_exit
+dd PCD_NR_ANY, PCD_CAP_ANY, PCD_F_GENERIC, 0
+dq 0, 0
+
+section .beyond_caps
+dd 7, 8, 9, 11, 12, 14, 15, 22, 35, 64, 65, 67 ; inherited ∩ manifest

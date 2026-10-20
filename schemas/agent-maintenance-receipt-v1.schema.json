@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:agent-maintenance-receipt:v1",
+  "title": "Decoded DSSE maintenance intent, admission decision or terminal payload",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "phase", "request_id", "operation", "request_blake3"],
+  "properties": {
+    "schema": {"const": "jash.agent-maintenance-receipt.v1"},
+    "phase": {"enum": ["intent", "decision", "terminal"]},
+    "effect_protocol": {"const": "admission-v1"},
+    "decision": {"enum": ["admitted", "closed"]},
+    "decision_ref": {"type": "string"}, "decision_blake3": {"$ref": "#/$defs/hash"},
+    "request_id": {"type": "string"},
+    "operation": {"enum": ["store.gc", "store.quota", "store.release", "store.journal.quota", "store.journal.gc"]},
+    "request_blake3": {"$ref": "#/$defs/hash"},
+    "response_blake3": {"$ref": "#/$defs/hash"},
+    "intent_ref": {"type": "string"}, "intent_blake3": {"$ref": "#/$defs/hash"}
+  },
+  "allOf": [{"if": {"properties": {"phase": {"const": "terminal"}}},
+    "then": {"required": ["response_blake3", "intent_ref", "intent_blake3"]}},
+    {"if": {"properties": {"phase": {"const": "decision"}}},
+     "then": {"required": ["decision", "intent_ref", "intent_blake3"]}}],
+  "$defs": {"hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+}

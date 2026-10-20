@@ -1,0 +1,244 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:jobs:v1",
+  "title": "Jash jobs structured contract",
+  "type": "array",
+  "items": {
+    "oneOf": [
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "pid",
+          "cmd",
+          "command_complete",
+          "rc",
+          "notified",
+          "scope",
+          "state",
+          "current",
+          "previous"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pid": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cmd": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                  }
+                }
+              }
+            ]
+          },
+          "command_complete": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rc": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notified": {
+            "type": "boolean"
+          },
+          "scope": {
+            "const": "session"
+          },
+          "state": {
+            "enum": [
+              "running",
+              "stopped",
+              "done"
+            ]
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "previous": {
+            "type": "boolean"
+          }
+        }
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "pid",
+          "cmd",
+          "command_complete",
+          "rc",
+          "notified",
+          "scope",
+          "state",
+          "ms",
+          "elapsed_s",
+          "start_ts",
+          "end_ts",
+          "start",
+          "end"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pid": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cmd": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                  }
+                }
+              }
+            ]
+          },
+          "command_complete": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "rc": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notified": {
+            "type": "boolean"
+          },
+          "scope": {
+            "const": "detached"
+          },
+          "state": {
+            "enum": [
+              "running",
+              "done"
+            ]
+          },
+          "ms": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "elapsed_s": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "start_ts": {
+            "type": "integer"
+          },
+          "end_ts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "maxItems": 4096,
+  "$comment": "Default scope is detached persisted records. --session and --all explicitly add the active shell job table. out ID uses the cat metadata/page contract instead."
+}

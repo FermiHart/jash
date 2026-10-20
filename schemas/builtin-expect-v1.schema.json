@@ -1,0 +1,1570 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:expect:v1",
+  "title": "Checked state predicates, command observations and snapshot receipts",
+  "description": "False completed predicates return1 with COMPLETE/errors0. Observation and source failures are FAILED and are never negated. Time comparisons use whole seconds, matching the registered legacy predicate. File content checks require regular files, read at most16MiB per input and validate descriptor/name metadata. cmd and snapshot evaluate a subshell with merged stdout/stderr captured up to --capture-bytes (default/max256KiB); no command timeout is promised. --until1..60 checks a monotonic deadline between evaluations, emits each attempt and reserves at most601attempts; snapshot emits a capture receipt before opening/publishing the trusted atomic snapshot store. Current-process rc takes precedence; fallback chain metadata is parsed, not cryptographically verified. Explicit DATA bypasses presentation budgets.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "predicate",
+        "operand",
+        "second_operand",
+        "command",
+        "command_check",
+        "negated",
+        "complete",
+        "ok",
+        "predicate_status",
+        "files",
+        "previous_status",
+        "execution",
+        "execution_scope",
+        "output_scope",
+        "snapshot",
+        "wait",
+        "effects_may_have_applied",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.expect.v1"
+        },
+        "kind": {
+          "const": "result"
+        },
+        "predicate": {
+          "enum": [
+            "file",
+            "exists",
+            "dir",
+            "no",
+            "absent",
+            "exec",
+            "empty",
+            "nonempty",
+            "contains",
+            "newer",
+            "older",
+            "match",
+            "same",
+            "rc",
+            "cmd",
+            "link",
+            "broken",
+            "snapshot"
+          ]
+        },
+        "operand": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "second_operand": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command_check": {
+          "enum": [
+            null,
+            "rc",
+            "output"
+          ]
+        },
+        "negated": {
+          "type": "boolean"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "ok": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "predicate_status": {
+          "enum": [
+            null,
+            0,
+            1
+          ]
+        },
+        "files": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "present",
+              "metadata_observed",
+              "type",
+              "size_bytes",
+              "mtime_seconds",
+              "content_read_complete",
+              "bytes_read",
+              "access_executable",
+              "errno"
+            ],
+            "properties": {
+              "path": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64",
+                        "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                      }
+                    }
+                  }
+                ]
+              },
+              "present": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "metadata_observed": {
+                "type": "boolean"
+              },
+              "type": {
+                "enum": [
+                  "regular",
+                  "directory",
+                  "symlink",
+                  "fifo",
+                  "other",
+                  null
+                ]
+              },
+              "size_bytes": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 18446744073709551615
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "mtime_seconds": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -9223372036854775808,
+                    "maximum": 9223372036854775807
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "content_read_complete": {
+                "type": "boolean"
+              },
+              "bytes_read": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 18446744073709551615
+              },
+              "access_executable": {
+                "type": "boolean"
+              },
+              "errno": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -9223372036854775808,
+                    "maximum": 9223372036854775807
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "metadata_observed": {
+                      "const": false
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "present": {
+                      "type": "null"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "content_read_complete": {
+                      "const": true
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "present": {
+                      "const": true
+                    },
+                    "type": {
+                      "const": "regular"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "previous_status": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "source",
+                "present",
+                "status",
+                "command_recorded",
+                "sequence",
+                "chain_source"
+              ],
+              "properties": {
+                "source": {
+                  "enum": [
+                    null,
+                    "current_process",
+                    "retained_chain_unverified"
+                  ]
+                },
+                "present": {
+                  "type": "boolean"
+                },
+                "status": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9223372036854775808,
+                      "maximum": 9223372036854775807
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "command_recorded": {
+                  "anyOf": [
+                    {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "encoding",
+                            "data"
+                          ],
+                          "properties": {
+                            "encoding": {
+                              "const": "base64"
+                            },
+                            "data": {
+                              "type": "string",
+                              "contentEncoding": "base64",
+                              "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "sequence": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 18446744073709551615
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "chain_source": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "path",
+                        "present",
+                        "read_complete",
+                        "bytes",
+                        "records",
+                        "session_markers",
+                        "cryptographically_verified",
+                        "command_fidelity",
+                        "cwd_fidelity",
+                        "error",
+                        "errno"
+                      ],
+                      "properties": {
+                        "path": {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "$ref": "#/$defs/bytes"
+                            }
+                          ]
+                        },
+                        "present": {
+                          "type": "boolean"
+                        },
+                        "read_complete": {
+                          "type": "boolean"
+                        },
+                        "bytes": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 16777216
+                        },
+                        "records": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 65536
+                        },
+                        "session_markers": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 18446744073709551615
+                        },
+                        "cryptographically_verified": {
+                          "const": false
+                        },
+                        "command_fidelity": {
+                          "const": "recorded_bytes_only"
+                        },
+                        "cwd_fidelity": {
+                          "const": "legacy_may_replace_spaces_with_underscores"
+                        },
+                        "error": {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "errno": {
+                          "oneOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 1
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "attempted",
+                "command_status",
+                "stdout",
+                "stderr",
+                "stdout_bytes_seen",
+                "stderr_bytes_seen",
+                "stdout_truncated",
+                "stderr_truncated",
+                "complete",
+                "capture_boundary",
+                "adapter_errno",
+                "writer_errno",
+                "restore_errno"
+              ],
+              "properties": {
+                "attempted": {
+                  "type": "boolean"
+                },
+                "command_status": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9223372036854775808,
+                      "maximum": 9223372036854775807
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "stdout": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                },
+                "stderr": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                },
+                "stdout_bytes_seen": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "stderr_bytes_seen": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "stdout_truncated": {
+                  "type": "boolean"
+                },
+                "stderr_truncated": {
+                  "type": "boolean"
+                },
+                "complete": {
+                  "type": "boolean"
+                },
+                "capture_boundary": {
+                  "const": "evaluation_return_background_output_not_waited"
+                },
+                "adapter_errno": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9223372036854775808,
+                      "maximum": 9223372036854775807
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "writer_errno": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9223372036854775808,
+                      "maximum": 9223372036854775807
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "restore_errno": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9223372036854775808,
+                      "maximum": 9223372036854775807
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "complete": {
+                        "const": true
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "stdout_truncated": {
+                        "const": false
+                      },
+                      "stderr_truncated": {
+                        "const": false
+                      },
+                      "adapter_errno": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "attempted": {
+                        "const": false
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "command_status": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_scope": {
+          "enum": [
+            null,
+            "subshell"
+          ]
+        },
+        "output_scope": {
+          "enum": [
+            null,
+            "stdout_stderr_merged"
+          ]
+        },
+        "snapshot": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "action",
+                "read_complete",
+                "present_before",
+                "bytes_before",
+                "bytes_current",
+                "applied",
+                "durable",
+                "store_may_have_been_created",
+                "errno"
+              ],
+              "properties": {
+                "name": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64",
+                          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "action": {
+                  "enum": [
+                    null,
+                    "record",
+                    "update",
+                    "compare"
+                  ]
+                },
+                "read_complete": {
+                  "type": "boolean"
+                },
+                "present_before": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "bytes_before": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 18446744073709551615
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "bytes_current": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "applied": {
+                  "type": "boolean"
+                },
+                "durable": {
+                  "type": "boolean"
+                },
+                "store_may_have_been_created": {
+                  "type": "boolean"
+                },
+                "errno": {
+                  "anyOf": [
+                    {
+                      "type": "integer",
+                      "minimum": -9223372036854775808,
+                      "maximum": 9223372036854775807
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "durable": {
+                        "const": true
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "applied": {
+                        "const": true
+                      },
+                      "errno": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "read_complete": {
+                        "const": false
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "present_before": {
+                        "type": "null"
+                      },
+                      "bytes_before": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "action": {
+                        "const": "compare"
+                      }
+                    }
+                  },
+                  "then": {
+                    "properties": {
+                      "applied": {
+                        "const": false
+                      },
+                      "present_before": {
+                        "const": true
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wait": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "seconds",
+            "attempts",
+            "elapsed",
+            "timed_out",
+            "deadline_scope"
+          ],
+          "properties": {
+            "seconds": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 60
+            },
+            "attempts": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 601
+            },
+            "elapsed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            },
+            "timed_out": {
+              "type": "boolean"
+            },
+            "deadline_scope": {
+              "const": "between_evaluations_no_command_timeout"
+            }
+          }
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "complete": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "ok": {
+                "type": "boolean"
+              },
+              "error": {
+                "type": "null"
+              },
+              "errno": {
+                "type": "null"
+              },
+              "predicate_status": {
+                "enum": [
+                  0,
+                  1
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "ok": {
+                "type": "null"
+              },
+              "predicate_status": {
+                "type": "null"
+              },
+              "error": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ok": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "predicate_status": {
+                "const": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "ok": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "predicate_status": {
+                "const": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "predicate": {
+                "const": "snapshot"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "snapshot": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "name",
+                  "action",
+                  "read_complete",
+                  "present_before",
+                  "bytes_before",
+                  "bytes_current",
+                  "applied",
+                  "durable",
+                  "store_may_have_been_created",
+                  "errno"
+                ],
+                "properties": {
+                  "name": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64",
+                            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "action": {
+                    "enum": [
+                      null,
+                      "record",
+                      "update",
+                      "compare"
+                    ]
+                  },
+                  "read_complete": {
+                    "type": "boolean"
+                  },
+                  "present_before": {
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "bytes_before": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 18446744073709551615
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "bytes_current": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 18446744073709551615
+                  },
+                  "applied": {
+                    "type": "boolean"
+                  },
+                  "durable": {
+                    "type": "boolean"
+                  },
+                  "store_may_have_been_created": {
+                    "type": "boolean"
+                  },
+                  "errno": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9223372036854775808,
+                        "maximum": 9223372036854775807
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "durable": {
+                          "const": true
+                        }
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "applied": {
+                          "const": true
+                        },
+                        "errno": {
+                          "type": "null"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "properties": {
+                        "read_complete": {
+                          "const": false
+                        }
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "present_before": {
+                          "type": "null"
+                        },
+                        "bytes_before": {
+                          "type": "null"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "if": {
+                      "properties": {
+                        "action": {
+                          "const": "compare"
+                        }
+                      }
+                    },
+                    "then": {
+                      "properties": {
+                        "applied": {
+                          "const": false
+                        },
+                        "present_before": {
+                          "const": true
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "snapshot": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "predicate": {
+                "const": "rc"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "previous_status": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "source",
+                  "present",
+                  "status",
+                  "command_recorded",
+                  "sequence",
+                  "chain_source"
+                ],
+                "properties": {
+                  "source": {
+                    "enum": [
+                      null,
+                      "current_process",
+                      "retained_chain_unverified"
+                    ]
+                  },
+                  "present": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": -9223372036854775808,
+                        "maximum": 9223372036854775807
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "command_recorded": {
+                    "anyOf": [
+                      {
+                        "oneOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "encoding",
+                              "data"
+                            ],
+                            "properties": {
+                              "encoding": {
+                                "const": "base64"
+                              },
+                              "data": {
+                                "type": "string",
+                                "contentEncoding": "base64",
+                                "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "sequence": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 18446744073709551615
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "chain_source": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "path",
+                          "present",
+                          "read_complete",
+                          "bytes",
+                          "records",
+                          "session_markers",
+                          "cryptographically_verified",
+                          "command_fidelity",
+                          "cwd_fidelity",
+                          "error",
+                          "errno"
+                        ],
+                        "properties": {
+                          "path": {
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "$ref": "#/$defs/bytes"
+                              }
+                            ]
+                          },
+                          "present": {
+                            "type": "boolean"
+                          },
+                          "read_complete": {
+                            "type": "boolean"
+                          },
+                          "bytes": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 16777216
+                          },
+                          "records": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 65536
+                          },
+                          "session_markers": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 18446744073709551615
+                          },
+                          "cryptographically_verified": {
+                            "const": false
+                          },
+                          "command_fidelity": {
+                            "const": "recorded_bytes_only"
+                          },
+                          "cwd_fidelity": {
+                            "const": "legacy_may_replace_spaces_with_underscores"
+                          },
+                          "error": {
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "errno": {
+                            "oneOf": [
+                              {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "previous_status": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "attempt",
+        "stage",
+        "complete",
+        "holds_before_negation",
+        "command_attempted",
+        "command_status",
+        "snapshot_applied",
+        "snapshot_durable",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.expect.v1"
+        },
+        "kind": {
+          "const": "attempt"
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 601
+        },
+        "stage": {
+          "enum": [
+            "capture_before_snapshot",
+            "predicate_evaluated"
+          ]
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "holds_before_negation": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "command_attempted": {
+          "type": "boolean"
+        },
+        "command_status": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "snapshot_applied": {
+          "type": "boolean"
+        },
+        "snapshot_durable": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "stage": {
+                "const": "capture_before_snapshot"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "holds_before_negation": {
+                "type": "null"
+              },
+              "snapshot_applied": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "complete": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "holds_before_negation": {
+                "type": "null"
+              },
+              "error": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.expect.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.expect.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    }
+  }
+}

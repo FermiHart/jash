@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:agent-maintenance-resolution:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "id", "op", "target_id", "evidence_scope", "status", "dry_run", "published", "maintenance_complete", "result_ref", "receipt_ref", "receipt_pubkey", "ok", "error"],
+  "properties": {
+    "schema": {"const": "jash.agent-maintenance-resolution.v1"},
+    "id": {"type": "string"}, "op": {"const": "store.resolve"},
+    "target_id": {"type": "string", "minLength": 1, "maxLength": 47},
+    "evidence_scope": {"const": "original-maintenance-terminal"},
+    "journal_quota_mode": {"const": "recovery-exempt"},
+    "status": {"enum": ["unresolved", "recoverable", "recovered", "already_committed", "closable", "closed"]},
+    "dry_run": {"type": "boolean"}, "published": {"type": "boolean"},
+    "maintenance_complete": {"type": "boolean"}, "ok": {"type": "boolean"},
+    "error": {"type": ["string", "null"]},
+    "result_ref": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}\\.result$"},
+    "receipt_ref": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}\\.[0-9a-f]{64}\\.maintenance-terminal\\.dsse$"},
+    "receipt_pubkey": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+  },
+  "allOf": [
+    {"if": {"properties": {"ok": {"const": true}}},
+     "then": {"properties": {"error": {"type": "null"}, "status": {"enum": ["recoverable", "recovered", "already_committed", "closable", "closed"]}}},
+     "else": {"properties": {"error": {"type": "string"}}}},
+    {"if": {"properties": {"ok": {"const": true}, "status": {"enum": ["recoverable", "recovered", "already_committed", "closed"]}}},
+     "then": {"properties": {"result_ref": {"type": "string"}, "receipt_ref": {"type": "string"}}}},
+    {"if": {"properties": {"dry_run": {"const": true}}},
+     "then": {"properties": {"published": {"const": false}}}}
+  ]
+}

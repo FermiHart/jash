@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:glob:v1",
+  "title": "glob --json live match page",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "pattern",
+    "consistency",
+    "total_matches",
+    "offset",
+    "limit",
+    "returned",
+    "matches",
+    "errors",
+    "next_offset",
+    "complete"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.glob.v1"
+    },
+    "pattern": {
+      "$ref": "#/$defs/byteString"
+    },
+    "consistency": {
+      "const": "live"
+    },
+    "total_matches": {
+      "$ref": "#/$defs/uint"
+    },
+    "offset": {
+      "$ref": "#/$defs/uint"
+    },
+    "limit": {
+      "$ref": "#/$defs/uint"
+    },
+    "returned": {
+      "$ref": "#/$defs/uint"
+    },
+    "matches": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "type",
+              "size_bytes",
+              "mtime",
+              "mtime_nsec"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/byteString"
+              },
+              "type": {
+                "enum": [
+                  "file",
+                  "dir",
+                  "symlink",
+                  "fifo",
+                  "socket",
+                  "block",
+                  "char",
+                  "other"
+                ]
+              },
+              "size_bytes": {
+                "oneOf": [
+                  {
+                    "oneOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^(0|[1-9][0-9]*)$"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "mtime": {
+                "$ref": "#/$defs/sint"
+              },
+              "mtime_nsec": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 999999999
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "type",
+              "size_bytes",
+              "error",
+              "errno"
+            ],
+            "properties": {
+              "path": {
+                "$ref": "#/$defs/byteString"
+              },
+              "type": {
+                "type": "null"
+              },
+              "size_bytes": {
+                "type": "null"
+              },
+              "error": {
+                "const": "stat_failed"
+              },
+              "errno": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "errors": {
+      "$ref": "#/$defs/uint"
+    },
+    "next_offset": {
+      "oneOf": [
+        {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "complete": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "byteString": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "encoding",
+            "data"
+          ],
+          "properties": {
+            "encoding": {
+              "const": "base64"
+            },
+            "data": {
+              "type": "string",
+              "contentEncoding": "base64"
+            }
+          }
+        }
+      ]
+    },
+    "uint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      ]
+    },
+    "sint": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        }
+      ]
+    }
+  }
+}

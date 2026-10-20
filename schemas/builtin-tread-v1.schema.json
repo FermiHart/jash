@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:tread:v1",
+  "title": "tread --json current or historical regular file page",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "path",
+    "checkpoint",
+    "snapshot",
+    "target_depth",
+    "offset",
+    "bytes_returned",
+    "total_bytes",
+    "eof",
+    "complete",
+    "freshness",
+    "page_blake3",
+    "data"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.tread.v1"
+    },
+    "path": {
+      "$ref": "#/$defs/text"
+    },
+    "checkpoint": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/text"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "snapshot": {
+      "type": "boolean"
+    },
+    "target_depth": {
+      "$ref": "#/$defs/uint"
+    },
+    "offset": {
+      "$ref": "#/$defs/uint"
+    },
+    "bytes_returned": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16384
+    },
+    "total_bytes": {
+      "$ref": "#/$defs/uint"
+    },
+    "eof": {
+      "type": "boolean"
+    },
+    "complete": {
+      "const": true
+    },
+    "freshness": {
+      "const": "descriptor-stable"
+    },
+    "page_blake3": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$",
+          "minLength": 44,
+          "maxLength": 44
+        }
+      }
+    },
+    "data": {
+      "$ref": "#/$defs/bytes"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "snapshot": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "checkpoint": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "checkpoint": {
+            "$ref": "#/$defs/text"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "text": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/bytes"
+        }
+      ]
+    },
+    "uint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      ]
+    },
+    "sint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        }
+      ]
+    }
+  },
+  "$comment": "complete refers to the delivered page observation; eof states whether the whole file has been reached. data and page_blake3 are base64 bytes. @proc:PID has a separately catalogued process schema."
+}

@@ -1,0 +1,365 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:semantic:agent-guide:v1",
+  "title": "Jash agent-guide semantic result v1",
+  "description": "Compiled help/registry/environment documentation, with a checked Markdown artifact receipt for --save. Metadata presence is not feature qualification. published describes the rename; durable additionally requires directory fsync. JSON and JSON projection of the JTV2 record share this field contract. Native kinds additionally preserve PATH/SYMBOL/FILESIZE and exact I64/U64. The terminal is a separate JTV2 contract; this document alone does not prove stream completion.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "source",
+        "metadata_only",
+        "qualification_source",
+        "builtins",
+        "environment",
+        "document",
+        "artifact",
+        "ok",
+        "error",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.agent-guide.v1"
+        },
+        "operation": {
+          "enum": [
+            "query",
+            "save"
+          ]
+        },
+        "source": {
+          "const": "compiled-registry-and-environment-docs"
+        },
+        "metadata_only": {
+          "const": true
+        },
+        "qualification_source": {
+          "const": "--contract-json"
+        },
+        "builtins": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "help",
+              "section",
+              "why",
+              "unique",
+              "argv_handler"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "help": {
+                "oneOf": [
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64",
+                            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "section": {
+                "oneOf": [
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64",
+                            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "why": {
+                "oneOf": [
+                  {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64",
+                            "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "unique": {
+                "type": "boolean"
+              },
+              "argv_handler": {
+                "type": "boolean"
+              }
+            }
+          },
+          "maxItems": 4096
+        },
+        "environment": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "description"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64",
+                        "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "maxItems": 4096
+        },
+        "document": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "artifact": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "format",
+                "bytes",
+                "published",
+                "durable"
+              ],
+              "properties": {
+                "path": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64",
+                          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "format": {
+                  "const": "markdown"
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "published": {
+                  "type": "boolean"
+                },
+                "durable": {
+                  "type": "boolean"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.agent-guide.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.agent-guide.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ]
+}

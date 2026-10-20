@@ -1,0 +1,7 @@
+# BUG-043 repros + baseline regressions
+sample.txt destdir/
+sample.txt destdir
+sample.txt copy_of_sample.txt
+-r subdir destdir
+sample.txt code.c destdir
+

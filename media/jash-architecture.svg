@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 590" width="100%" height="100%">
+  <defs>
+    <linearGradient id="archBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#050811"/>
+      <stop offset="100%" stop-color="#080e1a"/>
+    </linearGradient>
+    <pattern id="archGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#38bdf8" stroke-width="0.6" stroke-opacity="0.06"/>
+    </pattern>
+    <style>
+      .mono { font-family: 'Ubuntu Mono', 'JetBrains Mono', 'Fira Code', Consolas, monospace; }
+      .sans { font-family: 'Ubuntu', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="590" rx="18" fill="url(#archBg)"/>
+  <rect width="1280" height="590" rx="18" fill="url(#archGrid)"/>
+  <rect x="1.5" y="1.5" width="1277" height="587" rx="16.5" fill="none" stroke="#1e3a5f" stroke-width="2"/>
+
+  <!-- Header -->
+  <text x="640" y="42" text-anchor="middle" class="sans" font-size="22" font-weight="800" fill="#f8fafc" letter-spacing="1.5">
+    JASH SOVEREIGN ARCHITECTURE — HUMAN UX × AGENT EXOCORTEX × LIBJEF × OSIF 2.0
+  </text>
+
+  <!-- LAYER 1: CONSUMERS (HUMAN + AI AGENT SURFACES) -->
+  <g transform="translate(40, 64)">
+    <!-- Left: Human Interactive Surface -->
+    <rect x="0" y="0" width="585" height="104" rx="12" fill="#091526" stroke="#2dd4bf" stroke-width="1.5" stroke-opacity="0.7"/>
+    <text x="22" y="28" class="mono" font-size="13.5" font-weight="700" fill="#2dd4bf">HUMAN INTERACTIVE SURFACE (c/readline + c/completion + c/theme)</text>
+    <text x="22" y="54" class="sans" font-size="15" font-weight="700" fill="#f1f5f9">• Smart Ghost-Text Autosuggest (`jux` + Frecency + Context Predictor)</text>
+    <text x="22" y="76" class="sans" font-size="14.5" fill="#94a3b8">• Live Syntax &amp; Bracket Highlighting · Fuzzy History · `?` Inline AI (`? auto` / `? fix`)</text>
+    <text x="22" y="94" class="mono" font-size="12.5" fill="#5eead4">4.8x fewer keystrokes · zero external shell plugins required</text>
+
+    <!-- Right: Autonomous AI Agent Surface -->
+    <rect x="615" y="0" width="585" height="104" rx="12" fill="#091526" stroke="#38bdf8" stroke-width="1.5" stroke-opacity="0.7"/>
+    <text x="637" y="28" class="mono" font-size="13.5" font-weight="700" fill="#38bdf8">AUTONOMOUS AI AGENT SURFACE (jash-agentd + integrations/)</text>
+    <text x="637" y="54" class="sans" font-size="15" font-weight="700" fill="#f1f5f9">• Claude Code Drop-in · Read-Only MCP Stdio Server · Scoped Python SDK</text>
+    <text x="637" y="76" class="sans" font-size="14.5" fill="#94a3b8">• `JASH_AGENT=1` JSON Envelopes · `--exec-json` Literal Argv · Delegated cgroup-v2 Quotas</text>
+    <text x="637" y="94" class="mono" font-size="12.5" fill="#7dd3fc">Source-isolated `jash-agentd` daemon · capability-gated IPC &amp; cancellation</text>
+  </g>
+
+  <!-- LAYER 2: THE 4 PILLARS OF THE EXOCORTEX & 171 IN-PROCESS BUILTINS -->
+  <g transform="translate(40, 188)">
+    <rect x="0" y="0" width="1200" height="176" rx="14" fill="#07101e" stroke="#475569" stroke-width="1.5"/>
+    <text x="600" y="28" text-anchor="middle" class="mono" font-size="14" font-weight="700" fill="#e2e8f0" letter-spacing="1">
+      CORE EVALUATOR &amp; 171 IN-PROCESS BUILTINS (0.18ms · ZERO FORK/EXEC OVERHEAD)
+    </text>
+
+    <!-- Pillar 1: Typed Data Plane -->
+    <g transform="translate(20, 44)">
+      <rect width="275" height="114" rx="10" fill="#0c192e" stroke="#38bdf8" stroke-width="1.2" stroke-opacity="0.6"/>
+      <text x="16" y="24" class="mono" font-size="13" font-weight="700" fill="#38bdf8">01 · TYPED DATA PLANE</text>
+      <text x="16" y="48" class="mono" font-size="12.5" fill="#f8fafc">ls/stat/df/du/ps/grep --json</text>
+      <text x="16" y="68" class="mono" font-size="12.5" fill="#94a3b8">ls --data (JTV1/JTV2 streams)</text>
+      <text x="16" y="88" class="mono" font-size="12" fill="#7dd3fc">Sealed memfd observations</text>
+      <text x="16" y="104" class="mono" font-size="11.5" fill="#64748b">31 JSON Draft 2020-12 Schemas</text>
+    </g>
+
+    <!-- Pillar 2: Code Intelligence -->
+    <g transform="translate(315, 44)">
+      <rect width="275" height="114" rx="10" fill="#0c192e" stroke="#2dd4bf" stroke-width="1.2" stroke-opacity="0.6"/>
+      <text x="16" y="24" class="mono" font-size="13" font-weight="700" fill="#2dd4bf">02 · CODE INTELLIGENCE</text>
+      <text x="16" y="48" class="mono" font-size="12.5" fill="#f8fafc">digest --brief / --manifest</text>
+      <text x="16" y="68" class="mono" font-size="12.5" fill="#94a3b8">graph build / graph stats</text>
+      <text x="16" y="88" class="mono" font-size="12" fill="#5eead4">BLAKE3 CAS + C11 AST Parser</text>
+      <text x="16" y="104" class="mono" font-size="11.5" fill="#64748b">Up to -92.4% LLM token usage</text>
+    </g>
+
+    <!-- Pillar 3: Time-Travel & Safety -->
+    <g transform="translate(610, 44)">
+      <rect width="275" height="114" rx="10" fill="#0c192e" stroke="#fbbf24" stroke-width="1.2" stroke-opacity="0.6"/>
+      <text x="16" y="24" class="mono" font-size="13" font-weight="700" fill="#fbbf24">03 · TIME-TRAVEL SAFETY</text>
+      <text x="16" y="48" class="mono" font-size="12.5" fill="#f8fafc">rewind auto / undo / redo</text>
+      <text x="16" y="68" class="mono" font-size="12.5" fill="#94a3b8">tx begin / commit / rollback</text>
+      <text x="16" y="88" class="mono" font-size="12" fill="#fcd34d">explain "CMD" &amp; speculate</text>
+      <text x="16" y="104" class="mono" font-size="11.5" fill="#64748b">Auto-checkpoint before rm/mv/cp</text>
+    </g>
+
+    <!-- Pillar 4: Context Governor -->
+    <g transform="translate(905, 44)">
+      <rect width="275" height="114" rx="10" fill="#0c192e" stroke="#c084fc" stroke-width="1.2" stroke-opacity="0.6"/>
+      <text x="16" y="24" class="mono" font-size="13" font-weight="700" fill="#c084fc">04 · CONTEXT GOVERNOR</text>
+      <text x="16" y="48" class="mono" font-size="12.5" fill="#f8fafc">recall did / failed / grep</text>
+      <text x="16" y="68" class="mono" font-size="12.5" fill="#94a3b8">expect file / rc / match</text>
+      <text x="16" y="88" class="mono" font-size="12" fill="#d8b4fe">Salience auto-cap + memo</text>
+      <text x="16" y="104" class="mono" font-size="11.5" fill="#64748b">Zero 200K context window floods</text>
+    </g>
+  </g>
+
+  <!-- LAYER 3: SOVEREIGN ATTESTATION SPINE (SIGIL + LIBJEF) -->
+  <g transform="translate(40, 384)">
+    <rect x="0" y="0" width="1200" height="76" rx="12" fill="#06221c" stroke="#10b981" stroke-width="1.6"/>
+    <text x="24" y="28" class="mono" font-size="14" font-weight="700" fill="#34d399">
+      SOVEREIGN CRYPTOGRAPHIC ATTESTATION SPINE — `modules/sigil` + Standalone `libjef` (`jef_verify`)
+    </text>
+    <text x="24" y="54" class="mono" font-size="13" fill="#d1fae5">
+      Append-Only BLAKE3 Hash-Chain (`h_n = H(h_{n-1} || payload)`)  ·  Forward-Secure Ratchet MACs  ·  Ed25519 (RFC 8032) &amp; DSSE/in-toto Proofs  ·  Pubkey-Only Verification
+    </text>
+  </g>
+
+  <!-- LAYER 4: OSIF 2.0 PORTABILITY LAYER -->
+  <g transform="translate(40, 480)">
+    <rect x="0" y="0" width="1200" height="82" rx="12" fill="#091322" stroke="#38bdf8" stroke-width="1.5" stroke-opacity="0.75"/>
+    <text x="24" y="27" class="mono" font-size="14" font-weight="700" fill="#38bdf8">
+      OSIF 2.0 — OPERATING SYSTEM INTERFACE (`c/osif/` · L0 Raw Syscall ABI + L1 Typed OS Providers: +SYSID +PROC +MEM +MOUNTS +NET +UPTIME +LOADAVG +SPAWN)
+    </text>
+    <g transform="translate(24, 40)">
+      <rect x="0" y="0" width="136" height="28" rx="6" fill="#0f233d"/><text x="68" y="19" text-anchor="middle" class="mono" font-size="12.5" font-weight="700" fill="#7dd3fc">Linux x86_64</text>
+      <rect x="146" y="0" width="136" height="28" rx="6" fill="#0f233d"/><text x="214" y="19" text-anchor="middle" class="mono" font-size="12.5" font-weight="700" fill="#7dd3fc">macOS Darwin</text>
+      <rect x="292" y="0" width="136" height="28" rx="6" fill="#0f233d"/><text x="360" y="19" text-anchor="middle" class="mono" font-size="12.5" font-weight="700" fill="#5eead4">Beyond OS</text>
+      <rect x="438" y="0" width="136" height="28" rx="6" fill="#0f233d"/><text x="506" y="19" text-anchor="middle" class="mono" font-size="12.5" font-weight="700" fill="#5eead4">TinaLinux</text>
+      <rect x="584" y="0" width="136" height="28" rx="6" fill="#0f233d"/><text x="652" y="19" text-anchor="middle" class="mono" font-size="12.5" font-weight="700" fill="#5eead4">SinguOS</text>
+      <rect x="730" y="0" width="136" height="28" rx="6" fill="#0f233d"/><text x="798" y="19" text-anchor="middle" class="mono" font-size="12.5" font-weight="700" fill="#5eead4">BethOS</text>
+      <rect x="876" y="0" width="136" height="28" rx="6" fill="#0f233d"/><text x="944" y="19" text-anchor="middle" class="mono" font-size="12.5" font-weight="700" fill="#fcd34d">MINIX 3</text>
+      <rect x="1022" y="0" width="130" height="28" rx="6" fill="#0f233d"/><text x="1087" y="19" text-anchor="middle" class="mono" font-size="12.5" font-weight="700" fill="#fcd34d">NetBSD</text>
+    </g>
+  </g>
+</svg>

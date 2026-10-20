@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:jash:checkpoints:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "record_fields", "depth", "checkpoints", "invalid_rows", "scan_complete", "truncated", "exit_code"],
+  "properties": {
+    "schema": {"const": "jash.checkpoints.v1"}, "record_fields": {"const": "legacy_bounded"}, "depth": {"type": "integer"},
+    "invalid_rows": {"type": "integer", "minimum": 0}, "scan_complete": {"type": "boolean"}, "truncated": {"type": "boolean"}, "exit_code": {"type": "integer"},
+    "checkpoints": {"type": "array", "maxItems": 64, "items": {
+      "type": "object", "additionalProperties": false, "required": ["name", "depth", "mutations_since", "ts", "cwd"],
+      "properties": {"name": {"$ref": "#/$defs/text"}, "cwd": {"$ref": "#/$defs/text"}, "depth": {"type": "integer"},
+        "mutations_since": {"type": "integer", "minimum": 0}, "ts": {"type": ["integer", "string"]}}
+    }}
+  },
+  "$defs": {"text": {"oneOf": [{"type": "string"}, {"type": "object", "additionalProperties": false, "required": ["encoding", "data"], "properties": {"encoding": {"const": "base64"}, "data": {"type": "string"}}}]}}
+}

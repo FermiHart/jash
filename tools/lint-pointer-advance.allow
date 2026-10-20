@@ -1,0 +1,84 @@
+# Excecoes do lint de avanco de ponteiro — JINV-062.
+#
+# Duas secoes, e a diferenca entre elas e o ponto inteiro deste arquivo:
+#
+#   REVISADO — o avanco EXISTE e foi conferido a mao; o lint e que nao alcanca
+#              (ponteiro que avanca por `ep = ee`, funcao de pular de outro
+#              arquivo). Permanente, nao e divida.
+#   DÍVIDA   — o laco PODE MESMO terminar imovel. Esta aqui declarado, nao
+#              perdoado. O numero de linhas desta secao e uma CATRACA: nunca
+#              sobe.
+#
+# Uma excecao sem a linha `# porque:` e divida escondida — e foi exatamente do
+# habito de nao escrever o porque que esta familia (JINV-043, JINV-057) nasceu.
+#
+# A chave e `arquivo: TIPO funcao ponteiro`, sem numero de linha de proposito:
+# numero de linha muda a cada edicao e faria deste arquivo um campo de conflito.
+
+# ─────────────────────────────────────────────────────────────────────────
+# REVISADO — o avanco existe, o lint e que nao enxerga
+# ─────────────────────────────────────────────────────────────────────────
+
+# porque: o avanco de `ep` e feito por `ep = ee` no fim da volta, e `ee` foi
+# inicializado com `ep` e varrido ate o separador — sempre >= ep+1, porque o
+# laco de pular acima ja garantiu que `*ep` nao e ' ', '\t' nem ')'. Provar
+# isso exigiria seguir o valor de um SEGUNDO ponteiro; o lint so raciocina
+# sobre o ponteiro do proprio laco. Conferido a mao em 2026-07-27.
+c/builtins/local.c: EXTERNO jash_b_local ep
+
+# porque: `strtol(cursor, &end, 10)` ou avanca `end` alem de `cursor`, que e
+# atribuido de volta no fim da volta, ou deixa `end == cursor` e a analise
+# estrita retorna erro. O laco anterior tambem consome todo espaco em branco;
+# nenhum byte invalido e repetido. Conferido a mao em 2026-08-27.
+c/core/agent_process.c: EXTERNO read_direct_children cursor
+
+# porque: `counter` ou retorna erro, ou consome ao menos um caractere do nome,
+# um digito em `number` e a quebra de linha antes da proxima volta. Os testes
+# `!len`, `number != 0` e `*p++ != '\n'` fecham todos os caminhos sem avanco;
+# o lint nao segue retornos nem o contrato da funcao auxiliar. Conferido a mao
+# em 2026-09-08.
+c/core/agent_cgroup.c: EXTERNO counter p
+
+# porque: em OP_PICK, depois de skip_space, n = p - start. Se a varredura
+# nao consumir byte (virgula inicial, virgulas consecutivas ou fim apos
+# espacos), !n retorna EINVAL antes de repetir. Os demais ramos de erro
+# tambem retornam; no caminho valido n > 0 ja avancou p, e a virgula final
+# e consumida por skip_space(p + 1), com retorno se nao houver outro campo.
+# O lint nao segue o retorno guardado por !n. Conferido em 2026-10-20.
+c/builtins/builtin_pipe.c: PAR options p
+
+# porque: parse_stat rejeita !*cursor ou *cursor == '\n' imediatamente
+# depois de pular espacos, antes da varredura. Se continuar, o primeiro
+# byte nao e NUL, espaco ou newline, logo a varredura avanca ao menos um;
+# falhas de conversao/limite retornam. Alem disso, o for visita apenas os
+# campos 4..24. O lint nao segue a recusa explicita anterior ao segundo
+# while; nenhuma volta com newline pode repetir. Conferido em 2026-10-20.
+c/osif/linux/osinfo.c: PAR parse_stat cursor
+
+# porque: o avanco de `p` e feito por `jash_quote_step` e por um fallback
+# incondicional `p++` no fim do laco interno; depois, ao sair do laco interno,
+# o laco externo avanca `p` para alem do `|` que o terminou. Todo caractere
+# e consumido; o lint nao enxerga porque o avanco mora em varreduras internas.
+c/parser/pipeline.c: EXTERNO split_pipeline p
+
+# ─────────────────────────────────────────────────────────────────────────
+# DÍVIDA — pode travar. Declarada, nao perdoada. Esta secao so encolhe.
+# ─────────────────────────────────────────────────────────────────────────
+
+# CONSERTADO em 2026-07-27 — divida quitada, entrada removida (a catraca so
+# encolhe). Era: `c/parser/if_block.c: PAR split_statements p`, TRAVAMENTO REAL
+# reproduzido por `printf 'if true; then\n done\nfi\n' > x.sh && jash x.sh`.
+# A varredura parava em `at_keyword(p,"fi"|"esac"|"done")` na profundidade zero
+# — separadores que o laco de pular nao consumia: ponteiro imovel, volta
+# identica. Conserto no JINV-064 (`tests/test_jinv064_split_statements_advance.sh`):
+# fechador sem abertura correspondente deixou de ser terminador e passou a ser
+# consumido como palavra, mais guarda de avanco explicita no laco externo.
+# Este lint e a prova independente: SUSPEITO 1 antes, SUSPEITO 0 depois.
+
+# porque: gira parado, mas o contador `item_count < 32` limita a 32 voltas —
+# nao pendura, PERDE DADO: `skip_ws` daqui pula so ' ' '\t' '\n', enquanto a
+# varredura para em `isspace`, que inclui '\v' '\f' '\r'. Um '\r' na lista de
+# palavras do `select` produz 32 itens vazios e engole os reais. E o mesmo
+# defeito de conjunto assimetrico do CASO 2, salvo do travamento por acidente
+# de um contador. Conserto = pular o mesmo `isspace`; fica para outro commit.
+c/parser/select_loop.c: PAR jash_eval_select_loop wp

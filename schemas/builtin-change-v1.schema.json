@@ -1,0 +1,1025 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:change:v1",
+  "title": "Native change source observations and checked phase receipts",
+  "description": "Queries are one document; effectful operations are a JSONL sequence of phase receipts followed by a result. Each JTV2 item uses this same projection; terminal framing is checked separately. Rewind observes only the current shell process timeline. No atomic batch or rollback of arbitrary external child effects is promised.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/query"
+    },
+    {
+      "$ref": "#/$defs/error"
+    },
+    {
+      "$ref": "#/$defs/argumentError"
+    },
+    {
+      "$ref": "#/$defs/valueLimitError"
+    },
+    {
+      "$ref": "#/$defs/receipt"
+    },
+    {
+      "$ref": "#/$defs/result"
+    }
+  ],
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "text": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/bytes"
+        }
+      ]
+    },
+    "nullableText": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/text"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "u64": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "i64": {
+      "type": "integer",
+      "minimum": -9223372036854775808,
+      "maximum": 9223372036854775807
+    },
+    "errno": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2147483647
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "generates",
+        "requires",
+        "template_available"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 127,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "generates": {
+          "$ref": "#/$defs/text"
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 127,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "maxItems": 8
+        },
+        "template_available": {
+          "type": "boolean"
+        }
+      }
+    },
+    "artifactState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "status",
+        "generates",
+        "requires",
+        "template_available"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 127,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "status": {
+          "enum": [
+            "done",
+            "ready",
+            "blocked"
+          ]
+        },
+        "generates": {
+          "$ref": "#/$defs/text"
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 127,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "maxItems": 8
+        },
+        "template_available": {
+          "type": "boolean"
+        }
+      }
+    },
+    "changeSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "artifacts"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 127,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifact"
+          },
+          "maxItems": 16
+        }
+      }
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "schema",
+        "status",
+        "artifacts",
+        "goal",
+        "uuid",
+        "created_unix_seconds",
+        "path",
+        "metadata_bytes",
+        "artifact_observation"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 127,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "schema": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 127,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "status": {
+          "$ref": "#/$defs/text"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artifactState"
+          },
+          "maxItems": 16
+        },
+        "goal": {
+          "$ref": "#/$defs/nullableText"
+        },
+        "uuid": {
+          "$ref": "#/$defs/text"
+        },
+        "created_unix_seconds": {
+          "$ref": "#/$defs/i64"
+        },
+        "path": {
+          "$ref": "#/$defs/text"
+        },
+        "metadata_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 524288
+        },
+        "artifact_observation": {
+          "const": "file-presence"
+        }
+      }
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "record",
+        "operation",
+        "project",
+        "schemas",
+        "changes",
+        "scan_complete",
+        "observation",
+        "lock_scope",
+        "max_directory_entries",
+        "max_file_bytes"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.change.v1"
+        },
+        "record": {
+          "const": "query"
+        },
+        "operation": {
+          "enum": [
+            "status",
+            "recall"
+          ]
+        },
+        "project": {
+          "$ref": "#/$defs/text"
+        },
+        "schemas": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/changeSchema"
+          },
+          "maxItems": 128
+        },
+        "changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/change"
+          },
+          "maxItems": 128
+        },
+        "scan_complete": {
+          "const": true
+        },
+        "observation": {
+          "const": "stable-file-snapshots"
+        },
+        "lock_scope": {
+          "const": "cooperating-native-change"
+        },
+        "max_directory_entries": {
+          "const": 128
+        },
+        "max_file_bytes": {
+          "const": 524288
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "record",
+        "operation",
+        "ok",
+        "error",
+        "errno",
+        "effects_started"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.change.v1"
+        },
+        "record": {
+          "const": "error"
+        },
+        "operation": {
+          "enum": [
+            "status",
+            "recall",
+            "schema.init",
+            "schema.fork",
+            "propose",
+            "continue",
+            "ff",
+            "apply",
+            "verify",
+            "sync",
+            "archive",
+            "rewind"
+          ]
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        },
+        "errno": {
+          "$ref": "#/$defs/errno"
+        },
+        "effects_started": {
+          "type": "boolean"
+        }
+      }
+    },
+    "argumentError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.change.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    "valueLimitError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.change.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "$ref": "#/$defs/i64"
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    },
+    "checkpointDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "cwd",
+        "depth",
+        "timestamp_seconds",
+        "record_fields"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nullableText"
+        },
+        "cwd": {
+          "$ref": "#/$defs/text"
+        },
+        "depth": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/i64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timestamp_seconds": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/i64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "record_fields": {
+          "const": "legacy-bounded"
+        }
+      }
+    },
+    "timelineDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry_id",
+        "kind",
+        "description",
+        "a",
+        "b",
+        "status",
+        "effect",
+        "retained",
+        "redo_available",
+        "depth_before",
+        "depth_after",
+        "guards"
+      ],
+      "properties": {
+        "entry_id": {
+          "$ref": "#/$defs/u64"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "a": {
+          "$ref": "#/$defs/nullableText"
+        },
+        "b": {
+          "$ref": "#/$defs/nullableText"
+        },
+        "status": {
+          "type": "string"
+        },
+        "effect": {
+          "enum": [
+            "none",
+            "applied",
+            "possible"
+          ]
+        },
+        "retained": {
+          "type": "boolean"
+        },
+        "redo_available": {
+          "type": "boolean"
+        },
+        "depth_before": {
+          "$ref": "#/$defs/i64"
+        },
+        "depth_after": {
+          "$ref": "#/$defs/i64"
+        },
+        "guards": {
+          "const": "legacy-inverse"
+        }
+      }
+    },
+    "executeDetail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "attempted",
+        "command_status",
+        "output",
+        "adapter_errno",
+        "restore_errno"
+      ],
+      "properties": {
+        "command": {
+          "enum": [
+            "bash tests/test_suite.sh",
+            "make"
+          ]
+        },
+        "attempted": {
+          "type": "boolean"
+        },
+        "command_status": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/i64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output": {
+          "const": "discarded"
+        },
+        "adapter_errno": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/errno"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "restore_errno": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/errno"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "record",
+        "operation",
+        "step",
+        "phase",
+        "path",
+        "source",
+        "applied",
+        "applied_scope",
+        "durable",
+        "error",
+        "errno",
+        "cleanup_errno",
+        "retained_temporary_name",
+        "detail"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.change.v1"
+        },
+        "record": {
+          "const": "receipt"
+        },
+        "operation": {
+          "enum": [
+            "schema.init",
+            "schema.fork",
+            "propose",
+            "continue",
+            "ff",
+            "apply",
+            "verify",
+            "sync",
+            "archive",
+            "rewind"
+          ]
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 386
+        },
+        "phase": {
+          "enum": [
+            "mkdir",
+            "publish",
+            "move",
+            "checkpoint",
+            "timeline",
+            "cwd",
+            "checkpoints",
+            "execute"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/nullableText"
+        },
+        "source": {
+          "$ref": "#/$defs/nullableText"
+        },
+        "applied": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "applied_scope": {
+          "const": "reported-target"
+        },
+        "durable": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/errno"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cleanup_errno": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/errno"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retained_temporary_name": {
+          "$ref": "#/$defs/nullableText"
+        },
+        "detail": {}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "phase": {
+              "enum": [
+                "mkdir",
+                "move",
+                "cwd",
+                "checkpoints"
+              ]
+            },
+            "detail": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "phase": {
+              "const": "publish"
+            },
+            "detail": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 524288
+            }
+          }
+        },
+        {
+          "properties": {
+            "phase": {
+              "const": "checkpoint"
+            },
+            "detail": {
+              "$ref": "#/$defs/checkpointDetail"
+            }
+          }
+        },
+        {
+          "properties": {
+            "phase": {
+              "const": "timeline"
+            },
+            "detail": {
+              "$ref": "#/$defs/timelineDetail"
+            }
+          }
+        },
+        {
+          "properties": {
+            "phase": {
+              "const": "execute"
+            },
+            "detail": {
+              "$ref": "#/$defs/executeDetail"
+            }
+          }
+        }
+      ]
+    },
+    "rewindSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requested",
+        "completed",
+        "failed",
+        "kept",
+        "lost",
+        "depth_before",
+        "depth_after",
+        "stopped"
+      ],
+      "properties": {
+        "requested": {
+          "$ref": "#/$defs/u64"
+        },
+        "completed": {
+          "$ref": "#/$defs/u64"
+        },
+        "failed": {
+          "$ref": "#/$defs/u64"
+        },
+        "kept": {
+          "$ref": "#/$defs/u64"
+        },
+        "lost": {
+          "$ref": "#/$defs/u64"
+        },
+        "depth_before": {
+          "$ref": "#/$defs/i64"
+        },
+        "depth_after": {
+          "$ref": "#/$defs/i64"
+        },
+        "stopped": {
+          "type": "boolean"
+        }
+      }
+    },
+    "verifySummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tasks_present",
+        "tasks_total",
+        "tasks_done",
+        "spec_files",
+        "requirements",
+        "scenarios",
+        "target",
+        "target_status",
+        "input_observation",
+        "ready_to_archive",
+        "readiness_rule",
+        "semantic_correctness_verified"
+      ],
+      "properties": {
+        "tasks_present": {
+          "type": "boolean"
+        },
+        "tasks_total": {
+          "$ref": "#/$defs/u64"
+        },
+        "tasks_done": {
+          "$ref": "#/$defs/u64"
+        },
+        "spec_files": {
+          "$ref": "#/$defs/u64"
+        },
+        "requirements": {
+          "$ref": "#/$defs/u64"
+        },
+        "scenarios": {
+          "$ref": "#/$defs/u64"
+        },
+        "target": {
+          "oneOf": [
+            {
+              "enum": [
+                "bash tests/test_suite.sh",
+                "make"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "target_status": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/i64"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_observation": {
+          "const": "before-execution"
+        },
+        "ready_to_archive": {
+          "type": "boolean"
+        },
+        "readiness_rule": {
+          "const": "nonempty-complete-tasks-and-selected-target-success"
+        },
+        "semantic_correctness_verified": {
+          "const": false
+        }
+      }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "record",
+        "operation",
+        "name",
+        "path",
+        "project",
+        "ok",
+        "exit_code",
+        "error",
+        "receipts",
+        "applied_receipts",
+        "receipt_capacity",
+        "effects_may_have_applied",
+        "atomic_batch",
+        "lock_scope",
+        "recovery_scope",
+        "detail"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.change.v1"
+        },
+        "record": {
+          "const": "result"
+        },
+        "operation": {
+          "enum": [
+            "schema.init",
+            "schema.fork",
+            "propose",
+            "continue",
+            "ff",
+            "apply",
+            "verify",
+            "sync",
+            "archive",
+            "rewind"
+          ]
+        },
+        "name": {
+          "$ref": "#/$defs/nullableText"
+        },
+        "path": {
+          "$ref": "#/$defs/nullableText"
+        },
+        "project": {
+          "$ref": "#/$defs/text"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "receipts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 386
+        },
+        "applied_receipts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 386
+        },
+        "receipt_capacity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 386
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        },
+        "atomic_batch": {
+          "const": false
+        },
+        "lock_scope": {
+          "const": "cooperating-native-change"
+        },
+        "recovery_scope": {
+          "const": "timeline-inverses-only"
+        },
+        "detail": {}
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "operation": {
+              "enum": [
+                "schema.init",
+                "schema.fork",
+                "propose",
+                "continue",
+                "ff",
+                "apply",
+                "sync",
+                "archive"
+              ]
+            },
+            "detail": {
+              "type": "null"
+            }
+          }
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "verify"
+            },
+            "detail": {
+              "$ref": "#/$defs/verifySummary"
+            }
+          }
+        },
+        {
+          "properties": {
+            "operation": {
+              "const": "rewind"
+            },
+            "detail": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/rewindSummary"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "exit_code": {
+                "const": 0
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "ok": {
+                "const": true
+              },
+              "error": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "ok": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,1220 @@
+# ===========================================================================
+# jash shell-language conformance corpus            oracle: /bin/bash 3.2
+# ===========================================================================
+# Format:  <category>::<one line of shell>
+#   - the separator is the FIRST '::' on the line
+#   - <NL> becomes a newline, <TAB> becomes a tab (see run-conformance.sh)
+#   - trailing spaces are significant and deliberate on some lines
+#   - a case PASSES when stdout AND exit status match bash's
+#
+# Sandbox fixture present for every case (LC_ALL=C):
+#   a.txt ab.txt b.txt c.log data.txt empty.txt nums.txt "two words.txt"
+#   .hidden  sub/  sub/inner.txt  home/
+#   data.txt = alpha/beta/gamma/delta   nums.txt = 3/1/2
+#
+# jash shadows cat, wc, sed, awk, grep, ls, cp, mv, rm, touch with builtins.
+# Cases that only need a neutral helper therefore call /bin/cat, /usr/bin/wc
+# and /usr/bin/grep by absolute path: this file measures the LANGUAGE, and
+# tests/conformance/run_conformance.sh already measures the builtin tools.
+#
+# Exclusions and their justification: see EXCLUSOES.md.  Nothing was ever
+# removed from this corpus for the reason "jash fails it".
+# ===========================================================================
+
+# --------------------------------------------------------------------------
+# param — parameter expansion
+# --------------------------------------------------------------------------
+param::v=abc; echo $v
+param::v=abc; echo ${v}
+param::v=abc; echo "${v}"
+param::v=abc; echo "$v"
+param::v=abc; echo '$v'
+param::v=abc; echo ${v}def
+param::v=abc; echo $vdef
+param::v=abc; echo "${v}def"
+param::echo "[${undefined_zz}]"
+param::echo "[$undefined_zz]"
+param::v=a; w=b; echo $v$w
+param::v=a; w=b; echo "$v-$w"
+param::v=abc; echo ${v:-def}
+param::v=; echo ${v:-def}
+param::unset v; echo ${v:-def}
+param::v=abc; echo ${v-def}
+param::v=; echo "[${v-def}]"
+param::unset v; echo ${v-def}
+param::echo ${undefined_zz:-fallback}
+param::echo ${undefined_zz:-}
+param::echo "[${undefined_zz:-}]"
+param::v=; echo ${v:-$(echo sub)}
+param::unset v; echo ${v:-"a b"}
+param::unset v; echo "${v:-a b}"
+param::a=1; echo ${undefined_zz:-$a}
+param::v=; echo ${v:=def}; echo $v
+param::unset v; echo ${v:=def}; echo $v
+param::v=abc; echo ${v:=def}; echo $v
+param::v=; echo "[${v=def}]"; echo "[$v]"
+param::unset v; echo ${v=def}; echo $v
+param::v=abc; echo ${v:+set}
+param::v=; echo "[${v:+set}]"
+param::unset v; echo "[${v:+set}]"
+param::v=; echo "[${v+set}]"
+param::unset v; echo "[${v+set}]"
+param::v=abc; echo ${v:+"$v$v"}
+param::v=abc; echo ${v:?msg}
+param::unset v; echo ${v:?boom}
+param::v=; echo ${v:?boom}
+param::v=; echo ${v?ok}
+param::v=abcdef; echo ${#v}
+param::v=; echo ${#v}
+param::unset v; echo ${#v}
+param::v=a; echo ${#v}
+param::v="a b"; echo ${#v}
+param::set -- a b c; echo ${#1}
+param::v=aXbXc; echo ${v#*X}
+param::v=aXbXc; echo ${v##*X}
+param::v=aXbXc; echo ${v%X*}
+param::v=aXbXc; echo ${v%%X*}
+param::f=/a/b/c.txt; echo ${f##*/}
+param::f=/a/b/c.txt; echo ${f%/*}
+param::f=/a/b/c.txt; echo ${f#/}
+param::f=file.tar.gz; echo ${f%.*}
+param::f=file.tar.gz; echo ${f%%.*}
+param::f=file.tar.gz; echo ${f#*.}
+param::f=file.tar.gz; echo ${f##*.}
+param::v=abc; echo ${v#x}
+param::v=abc; echo ${v##x}
+param::v=abc; echo ${v%x}
+param::v=abc; echo ${v%%x}
+param::v=abc; echo "[${v#}]"
+param::v=abc; echo "[${v%}]"
+param::v=hello; echo ${v#h?}
+param::v=hello; echo ${v#[hx]}
+param::v=hello; echo ${v%[ol]}
+param::v=hello; echo ${v%%l*}
+param::v=aaa; echo ${v#a}
+param::v=aaa; echo ${v##a}
+param::v=aaa; echo ${v%a}
+param::v=aaa; echo ${v%%a}
+param::v=abc; echo "${v#a}${v%c}"
+param::v=" lead"; echo "[${v# }]"
+param::v="trail "; echo "[${v% }]"
+param::v=abc; p=a; echo ${v#$p}
+param::v=aXbXc; echo ${v/X/-}
+param::v=aXbXc; echo ${v//X/-}
+param::v=aXbXc; echo ${v/X}
+param::v=aXbXc; echo ${v//X}
+param::v=aXbXc; echo ${v/#a/Z}
+param::v=aXbXc; echo ${v/%c/Z}
+param::v=abc; echo ${v/x/y}
+param::v=aaa; echo ${v//a/}
+param::v=abc; echo ${v//?/.}
+param::v=abc; echo ${v/b/[]}
+param::v="a b c"; echo "${v// /_}"
+param::v=abc; echo "${v/#/pre-}"
+param::v=abc; echo "${v/%/-post}"
+param::v=aXbXc; s=X; echo ${v//$s/-}
+param::v=abcdef; echo ${v:2}
+param::v=abcdef; echo ${v:2:3}
+param::v=abcdef; echo ${v:0:1}
+param::v=abcdef; echo ${v:0:0}; echo end
+param::v=abcdef; echo "[${v:10}]"
+param::v=abcdef; echo "[${v:1:0}]"
+param::v=abcdef; echo ${v:1:100}
+param::v=abcdef; echo ${v: -2}
+param::v=abcdef; i=2; echo ${v:$i:2}
+param::v=abcdef; echo ${v:1+1:2}
+param::a=hello; b=a; echo ${!b}
+param::a=hello; b=a; echo "${!b}"
+param::a=; b=a; echo "[${!b}]"
+param::set -- x y z; echo $1 $2 $3
+param::set -- x y z; echo $#
+param::set -- x y z; echo "$@"
+param::set -- x y z; echo "$*"
+param::set -- x y z; echo $@
+param::set -- x y z; echo $*
+param::set -- x y z; shift; echo "$@"
+param::set -- x y z; shift 2; echo "$@"
+param::set -- x y z; shift 3; echo "[$*]"
+param::set -- "a b" c; for i in "$@"; do echo "[$i]"; done
+param::set -- "a b" c; for i in "$*"; do echo "[$i]"; done
+param::set -- "a b" c; for i in $@; do echo "[$i]"; done
+param::set --; echo "[$*]" $#
+param::set -- a b c d e f g h i j k; echo ${10} ${11}
+param::set -- a b c; echo ${1}${2}
+param::set -- a b c; echo "${@:2}"
+param::set -- a b c; echo "${@: -1}"
+param::set -- a b c; echo "${#@}"
+param::set -- ""; echo $#
+param::set -- "" ""; echo $#
+param::v=abc; echo ${v}${v}${v}
+param::a=(1 2 3); echo ${a[0]}
+param::a=(1 2 3); echo ${a[@]}
+param::a=(1 2 3); echo ${#a[@]}
+param::a=(1 2 3); echo ${a[2]}
+param::a=(1 2 3); a[1]=X; echo "${a[@]}"
+param::a=(x y); echo "${a[*]}"
+param::v=abc; echo ${v:?}${v}
+param::x=1; y=2; echo ${x}${y}
+param::unset undefined_zz; echo "ok${undefined_zz}ok"
+param::v=$HOME; echo "[${v:+has-home}]"
+param::v=abc; echo "before ${v} after"
+param::n=3; echo ${n}
+param::v='$notexpanded'; echo "$v"
+param::v='a$b'; echo "${#v}"
+
+# --------------------------------------------------------------------------
+# quote — quoting, escaping, ANSI-C and locale quoting
+# --------------------------------------------------------------------------
+quote::echo 'single quoted'
+quote::echo "double quoted"
+quote::echo plain
+quote::echo 'a"b'
+quote::echo "a'b"
+quote::echo "a\"b"
+quote::echo 'a\b'
+quote::echo "a\\b"
+quote::echo a\ b
+quote::echo a\\b
+quote::echo \$HOME
+quote::echo "\$HOME"
+quote::echo '$HOME'
+quote::v=x; echo "$v"'literal'
+quote::v=x; echo '"'"$v"'"'
+quote::echo "a  b"
+quote::echo a  b
+quote::echo "  leading"
+quote::echo ""
+quote::echo ''
+quote::echo "" ""
+quote::echo '' ''
+quote::printf '[%s]\n' ""
+quote::printf '[%s][%s]\n' "" ""
+quote::echo "a
+quote::echo 'it'"'"'s'
+quote::echo "he said \"hi\""
+quote::echo 'he said "hi"'
+quote::echo $'a\tb'
+quote::echo $'a\nb'
+quote::echo $'a\\b'
+quote::echo $'\x41\x42'
+quote::echo $'\101\102'
+quote::echo $'\e[0m' | /usr/bin/wc -c
+quote::echo $'no escapes'
+quote::echo $''; echo end
+quote::echo $'a\'b'
+quote::echo $"hello"
+quote::v=x; echo $"$v"
+quote::echo "$(echo nested)"
+quote::echo "a$(echo b)c"
+quote::echo "$(echo 'inner single')"
+quote::echo "$(echo "inner double")"
+quote::echo "'"
+quote::echo '"'
+quote::echo "\`"
+quote::echo "\!"
+quote::echo "\a"
+quote::echo "\z"
+quote::echo '\z'
+quote::echo \z
+quote::echo \
+quote::echo a\<NL>b
+quote::v='a b'; echo $v
+quote::v='a b'; echo "$v"
+quote::v='a  b'; echo "$v"
+quote::v='a  b'; echo $v
+quote::echo "*"
+quote::echo '*'
+quote::echo \*
+quote::echo "?"
+quote::echo "["
+quote::echo "]"
+quote::echo "{"
+quote::echo "("
+quote::echo ")"
+quote::echo ";"
+quote::echo "|"
+quote::echo "&"
+quote::echo "<"
+quote::echo ">"
+quote::echo "#"
+quote::echo "~"
+quote::echo "%"
+quote::echo "="
+quote::echo "^"
+quote::printf '%s\n' 'a b'
+quote::printf '%s\n' "a b"
+quote::set -- 'a b'; echo "[$1]"
+quote::v="  x  "; echo "[$v]"
+quote::v="  x  "; echo [$v]
+quote::echo "$@"; echo end
+quote::echo "line1<NL>line2"
+quote::echo 'line1<NL>line2'
+
+# --------------------------------------------------------------------------
+# cmdsub — command substitution
+# --------------------------------------------------------------------------
+cmdsub::echo $(echo hi)
+cmdsub::echo `echo hi`
+cmdsub::echo "$(echo hi)"
+cmdsub::echo "`echo hi`"
+cmdsub::echo $(echo a; echo b)
+cmdsub::echo "$(echo a; echo b)"
+cmdsub::echo `echo a; echo b`
+cmdsub::v=$(echo x); echo $v
+cmdsub::v=`echo x`; echo $v
+cmdsub::v=$(echo a b); echo "$v"
+cmdsub::echo $(echo $(echo deep))
+cmdsub::echo "$(echo "$(echo deep)")"
+cmdsub::echo `echo \`echo deep\``
+cmdsub::echo $(printf 'a\nb\n' | sort -r)
+cmdsub::echo "$(printf 'a\nb\n' | sort -r)"
+cmdsub::echo $(printf 'b\na\n' | sort | head -1)
+cmdsub::echo $(echo 'quoted arg')
+cmdsub::echo "$(echo 'a  b')"
+cmdsub::echo $(echo 'a  b')
+cmdsub::echo $(true; echo $?)
+cmdsub::echo $(false; echo $?)
+cmdsub::x=$(false); echo $?
+cmdsub::x=$(true); echo $?
+cmdsub::echo $(exit 3); echo $?
+cmdsub::$(echo echo) indirect
+cmdsub::echo "trailing:$(printf 'x\n\n\n')"
+cmdsub::echo "[$(printf '\n\n')]"
+cmdsub::echo "[$(echo)]"
+cmdsub::echo "[$(true)]"
+cmdsub::echo $(/bin/cat data.txt)
+cmdsub::echo "$(/bin/cat data.txt)"
+cmdsub::echo $(/bin/cat data.txt | head -2)
+cmdsub::echo $(echo a)$(echo b)
+cmdsub::echo pre$(echo mid)post
+cmdsub::echo "pre$(echo mid)post"
+cmdsub::echo $(( $(echo 2) + 3 ))
+cmdsub::for f in $(echo a b c); do echo $f; done
+cmdsub::for f in "$(echo a b c)"; do echo "[$f]"; done
+cmdsub::if [ "$(echo x)" = x ]; then echo ok; fi
+cmdsub::case $(echo abc) in a*) echo m;; esac
+cmdsub::echo $(echo "*")
+cmdsub::echo "$(echo '*')"
+cmdsub::v=$(echo a; echo b); echo "$v" | /usr/bin/wc -l
+cmdsub::echo $(echo -n noeol)
+cmdsub::echo "$(cd sub && echo inside)"
+cmdsub::echo $(echo $HOME)
+cmdsub::n=$(printf 'a\nb\nc\n' | /usr/bin/wc -l); echo $((n+0))
+cmdsub::echo $(echo '$notexpanded')
+cmdsub::echo $(v=inner; echo $v); echo "[${v:-outer-unset}]"
+cmdsub::echo "$(printf '%s\n' "quoted inside")"
+cmdsub::echo $(: ; echo after-null)
+cmdsub::echo `printf 'x'`y
+cmdsub::echo $(echo a | tr a-z A-Z)
+
+# --------------------------------------------------------------------------
+# arith — arithmetic expansion and evaluation
+# --------------------------------------------------------------------------
+arith::echo $((1+2))
+arith::echo $(( 1 + 2 ))
+arith::echo $((1 + 2))
+arith::echo $((2*3+4))
+arith::echo $((2+3*4))
+arith::echo $(( (2+3)*4 ))
+arith::echo $((10-4))
+arith::echo $((10/3))
+arith::echo $((10%3))
+arith::echo $((-5))
+arith::echo $((+5))
+arith::echo $((-5/2))
+arith::echo $((-5%2))
+arith::echo $((2**10))
+arith::echo $((3**0))
+arith::echo $((1<<8))
+arith::echo $((256>>4))
+arith::echo $((5&3))
+arith::echo $((5|3))
+arith::echo $((5^3))
+arith::echo $((~5))
+arith::echo $((!0))
+arith::echo $((!5))
+arith::echo $((1<2))
+arith::echo $((2<2))
+arith::echo $((2<=2))
+arith::echo $((3>4))
+arith::echo $((3>=3))
+arith::echo $((3==3))
+arith::echo $((3!=3))
+arith::echo $((1&&0))
+arith::echo $((1&&1))
+arith::echo $((0||0))
+arith::echo $((1||0))
+arith::echo $((1?2:3))
+arith::echo $((0?2:3))
+arith::echo $((1?0?7:8:3))
+arith::v=5; echo $((v+1))
+arith::v=5; echo $(($v+1))
+arith::v=5; echo $(( v * v ))
+arith::v=5; w=2; echo $((v*w))
+arith::v=5; echo $((v++)); echo $v
+arith::v=5; echo $((++v)); echo $v
+arith::v=5; echo $((v--)); echo $v
+arith::v=5; echo $((--v)); echo $v
+arith::v=5; echo $((v+=3)); echo $v
+arith::v=5; echo $((v-=3)); echo $v
+arith::v=5; echo $((v*=3)); echo $v
+arith::v=6; echo $((v/=3)); echo $v
+arith::v=7; echo $((v%=3)); echo $v
+arith::v=1; echo $((v<<=3)); echo $v
+arith::v=8; echo $((v>>=2)); echo $v
+arith::v=6; echo $((v&=3)); echo $v
+arith::v=6; echo $((v|=1)); echo $v
+arith::v=6; echo $((v^=3)); echo $v
+arith::v=0; echo $((v=9)); echo $v
+arith::echo $((0x10))
+arith::echo $((0xff))
+arith::echo $((010))
+arith::echo $((0))
+arith::echo $((2#1010))
+arith::echo $((8#17))
+arith::echo $((16#ff))
+arith::echo $((36#z))
+arith::echo $((1,2,3))
+arith::unset u; echo $((u+1))
+arith::u=; echo $((u+1))
+arith::v=abc; echo $((v))
+arith::echo $(( $((1+1)) * 3 ))
+arith::echo $[1+2]
+arith::echo $[2*3]
+arith::let x=2+3; echo $x
+arith::let x=1 y=2; echo $((x+y))
+arith::let 'x = 3 * 4'; echo $x
+arith::x=1; let x++; echo $x
+arith::let 1; echo $?
+arith::let 0; echo $?
+arith::((1)); echo $?
+arith::((0)); echo $?
+arith::x=0; ((x++)); echo $x
+arith::x=0; ((x=5)); echo $x
+arith::if ((3>2)); then echo yes; fi
+arith::echo $((1/0)); echo $?
+arith::echo $((1%0)); echo $?
+arith::echo $((9223372036854775807))
+arith::echo $((2147483647+1))
+arith::echo $((1000000*1000000))
+arith::i=0; while ((i<3)); do echo $i; ((i++)); done
+arith::echo $(( 1 ))
+arith::v=" 5 "; echo $((v+1))
+arith::a=2; b=a; echo $((b+1))
+arith::echo $((1 > 2 ? 10 : 20))
+arith::n=5; echo $((n>3 && n<10))
+arith::echo "$((1+1))"
+arith::echo x$((1+1))y
+
+# --------------------------------------------------------------------------
+# glob — pathname expansion
+# --------------------------------------------------------------------------
+glob::echo *
+glob::echo *.txt
+glob::echo *.log
+glob::echo a*
+glob::echo b*
+glob::echo ?.txt
+glob::echo ??.txt
+glob::echo [ab].txt
+glob::echo [ab]*.txt
+glob::echo [!ab]*.txt
+glob::echo [^ab]*.txt
+glob::echo [a-c]*
+glob::echo [[:alpha:]].txt
+glob::echo [[:digit:]]*
+glob::echo nomatch*
+glob::echo *.nomatch
+glob::echo nomatch*; echo $?
+glob::echo sub/*
+glob::echo sub/i*
+glob::echo */
+glob::echo .*
+glob::echo .h*
+glob::echo *.log *.txt
+glob::echo t*
+glob::for f in t*; do echo "[$f]"; done
+glob::for f in *.txt; do echo $f; done
+glob::for f in *.txt; do printf '%s\n' "$f"; done
+glob::set -- *; echo $#
+glob::set -- *.txt; echo $#
+glob::set -- nomatch*; echo $#; echo "[$1]"
+glob::echo "*"
+glob::echo '*'
+glob::echo \*
+glob::echo "*.txt"
+glob::v=*; echo $v
+glob::v=*; echo "$v"
+glob::v='*.txt'; echo $v
+glob::echo *[0-9]*
+glob::echo a?.txt
+glob::echo ab?txt
+glob::echo *xyz*
+glob::echo ./a*
+glob::echo sub/../a.txt
+glob::echo */inner.txt
+glob::echo [!.]*.log
+glob::echo *.{txt,log}
+glob::echo $(echo '*')
+glob::echo "$(echo *)"
+glob::set -f; echo *; set +f
+glob::shopt -s nullglob; echo "[nomatch*]"; echo nomatch*; echo end
+glob::shopt -s dotglob; echo *; echo end
+glob::echo empty*
+glob::echo *y*
+glob::echo ?
+glob::echo ??
+glob::echo [abc]
+glob::echo two*
+glob::echo "two words.txt"
+glob::echo two\ words.txt
+glob::ls_out=$(echo *); echo ${#ls_out}
+
+# --------------------------------------------------------------------------
+# redir — redirection, heredocs, here-strings, numbered fds
+# --------------------------------------------------------------------------
+redir::echo hi > out.txt; /bin/cat out.txt
+redir::echo hi > out.txt; echo $?
+redir::echo a > o; echo b > o; /bin/cat o
+redir::echo a > o; echo b >> o; /bin/cat o
+redir::printf 'x' > f; printf 'y' >> f; /bin/cat f
+redir::> trunc.txt; [ -f trunc.txt ] && echo created
+redir::echo x > empty.txt; /bin/cat empty.txt
+redir::/bin/cat < data.txt
+redir::/bin/cat <data.txt
+redir::read v < data.txt; echo $v
+redir::/usr/bin/wc -l < data.txt
+redir::while read -r l; do echo "L:$l"; done < data.txt
+redir::echo x 2> err.txt; echo $?; [ -s err.txt ] && echo nonempty || echo empty
+redir::/bin/cat nosuchfile 2> err.txt; echo rc=$?; [ -s err.txt ] && echo diag-written
+redir::/bin/cat nosuchfile 2>/dev/null; echo rc=$?
+redir::echo msg >&2
+redir::echo msg 1>&2; echo out
+redir::echo msg 1>&2 2>/dev/null; echo out
+redir::{ echo o; echo e >&2; } > f.txt 2>&1; /bin/cat f.txt
+redir::{ echo o; echo e >&2; } 2>&1 | /bin/cat
+redir::echo x 2>&1 1>/dev/null
+redir::echo x 1>/dev/null 2>&1
+redir::echo x >/dev/null; echo done
+redir::echo x &> o.txt; /bin/cat o.txt
+redir::/bin/cat nosuchfile &> o.txt; echo rc=$?; [ -s o.txt ] && echo captured
+redir::/bin/cat <<< herestring
+redir::/bin/cat <<< "here string"
+redir::v=abc; /bin/cat <<< "$v"
+redir::v=abc; /bin/cat <<< '$v'
+redir::/bin/cat <<< "$(echo sub)"
+redir::/usr/bin/wc -c <<< abc
+redir::/bin/cat <<EOF<NL>line1<NL>EOF<NL>
+redir::/bin/cat <<EOF<NL>line1<NL>line2<NL>EOF<NL>
+redir::v=X; /bin/cat <<EOF<NL>val=$v<NL>EOF<NL>
+redir::v=X; /bin/cat <<'EOF'<NL>val=$v<NL>EOF<NL>
+redir::v=X; /bin/cat <<"EOF"<NL>val=$v<NL>EOF<NL>
+redir::v=X; /bin/cat <<\EOF<NL>val=$v<NL>EOF<NL>
+redir::/bin/cat <<EOF<NL>$(echo subbed)<NL>EOF<NL>
+redir::/bin/cat <<EOF<NL>$((1+1))<NL>EOF<NL>
+redir::/bin/cat <<EOF<NL>back\`echo tick\`<NL>EOF<NL>
+redir::/bin/cat <<EOF<NL><NL>EOF<NL>
+redir::/bin/cat <<EOF<NL>EOF<NL>
+redir::/bin/cat <<END<NL>not EOF<NL>END<NL>
+redir::/bin/cat <<-EOF<NL><TAB>indented<NL><TAB>EOF<NL>
+redir::/bin/cat <<-EOF<NL><TAB><TAB>deep<NL>EOF<NL>
+redir::/bin/cat <<EOF | tr a-z A-Z<NL>abc<NL>EOF<NL>
+redir::v=$(/bin/cat <<EOF<NL>captured<NL>EOF<NL>); echo "$v"
+redir::/bin/cat <<EOF > o.txt<NL>to-file<NL>EOF<NL>/bin/cat o.txt
+redir::while read -r l; do echo "<$l>"; done <<EOF<NL>a<NL>b<NL>EOF<NL>
+redir::exec 3> f.txt; echo x >&3; exec 3>&-; /bin/cat f.txt
+redir::exec 3< data.txt; /bin/cat <&3; exec 3<&-
+redir::exec 3>&1; echo via3 >&3; exec 3>&-
+redir::exec 3>&1 >o.txt; echo hidden; exec 1>&3 3>&-; /bin/cat o.txt
+redir::echo a >&1
+redir::echo a 1>&1
+redir::echo hi > "two out.txt"; /bin/cat "two out.txt"
+redir::f=out.txt; echo hi > $f; /bin/cat $f
+redir::f='sp ace.txt'; echo hi > "$f"; /bin/cat "$f"
+redir::echo a | /bin/cat > o.txt; /bin/cat o.txt
+redir::(echo a; echo b) > o.txt; /bin/cat o.txt
+redir::for i in 1 2; do echo $i; done > o.txt; /bin/cat o.txt
+redir::if true; then echo t; fi > o.txt; /bin/cat o.txt
+redir::case x in x) echo c;; esac > o.txt; /bin/cat o.txt
+redir::echo test 1> o.txt 2> e.txt; /bin/cat o.txt
+redir::set -C; echo a > o.txt; echo b > o.txt; echo rc=$?; /bin/cat o.txt
+redir::set -C; echo a > o.txt; echo b >| o.txt; echo rc=$?; /bin/cat o.txt
+redir::echo x > nosuchdir/o.txt; echo rc=$?
+redir::/bin/cat < nosuchfile; echo rc=$?
+redir::echo hi > o.txt
+redir::echo 0 > o.txt; /bin/cat 0<o.txt
+redir::exec 4<> f.txt; echo rw >&4; exec 4>&-; /bin/cat f.txt
+redir::echo a > o.txt; echo b > p.txt; /bin/cat o.txt p.txt
+redir::printf 'a\nb\n' | tail -1
+redir::{ /bin/cat; } < data.txt
+redir::f(){ /bin/cat; }; f < data.txt
+redir::echo out > o.txt 2>&1; /bin/cat o.txt
+redir::: > o.txt; [ -s o.txt ] && echo nonempty || echo empty
+
+# --------------------------------------------------------------------------
+# pipeline — pipelines, and/or lists, subshells, groups
+# --------------------------------------------------------------------------
+pipeline::echo hi | /bin/cat
+pipeline::printf 'a\nb\n' | sort -r
+pipeline::echo abc | tr a-z A-Z | tr A-Z a-z
+pipeline::echo a | /bin/cat | /bin/cat | /bin/cat
+pipeline::seq 1 5 | head -2
+pipeline::seq 1 5 | tail -2
+pipeline::printf 'b\na\nc\n' | sort | head -1
+pipeline::echo abc | /usr/bin/wc -c
+pipeline::true && echo yes
+pipeline::false && echo yes
+pipeline::false || echo yes
+pipeline::true || echo yes
+pipeline::true && echo a || echo b
+pipeline::false && echo a || echo b
+pipeline::true || echo a && echo b
+pipeline::echo a; echo b
+pipeline::echo a ; echo b
+pipeline::echo a;echo b
+pipeline::! true; echo $?
+pipeline::! false; echo $?
+pipeline::! echo x; echo $?
+pipeline::(echo sub)
+pipeline::(echo a; echo b)
+pipeline::v=0; (v=1); echo $v
+pipeline::(cd sub); echo ${PWD##*/} | tr -d '\n'; echo ok
+pipeline::{ v=1; }; echo $v
+pipeline::{ echo a; echo b; }
+pipeline::{ echo a; } | /bin/cat
+pipeline::{ echo a; echo b; } | /usr/bin/wc -l
+pipeline::echo x | while read l; do echo "got $l"; done
+pipeline::printf 'a\nb\n' | while read l; do echo "-$l"; done
+pipeline::false | true; echo $?
+pipeline::true | false; echo $?
+pipeline::false | false; echo $?
+pipeline::true | true; echo $?
+pipeline::echo a | false; echo $?
+pipeline::set -o pipefail; false | true; echo $?
+pipeline::set -o pipefail; true | false; echo $?
+pipeline::echo a && echo b && echo c
+pipeline::false; echo $?
+pipeline::(exit 5); echo $?
+pipeline::(exit 0); echo $?
+pipeline::{ exit 0; }; echo never
+pipeline::v=$(echo a | tr a b); echo $v
+pipeline::if echo x | /usr/bin/grep -q x; then echo found; fi
+pipeline::echo x | /usr/bin/grep -q y; echo $?
+pipeline::true && { echo grp; }
+pipeline::false || { echo grp; }
+pipeline::true && (echo sub)
+pipeline::{ echo a; } && { echo b; }
+pipeline::for i in 1 2; do echo $i; done | sort -r
+pipeline::echo one | { read v; echo "[$v]"; }
+pipeline::seq 1 3 | while read n; do echo $((n*2)); done
+pipeline::{ sleep 0; echo bg; } & wait; echo done
+pipeline::(echo child) & wait; echo parent
+pipeline::echo a | sort | tr a-z A-Z | /usr/bin/wc -l
+pipeline::true; true; true; echo $?
+pipeline::(true) && (false); echo $?
+pipeline::x=1 && echo $x
+pipeline::: && echo colon-true
+pipeline::echo a | /bin/cat > /dev/null; echo $?
+
+# --------------------------------------------------------------------------
+# control — if / for / while / until / case / break / continue
+# --------------------------------------------------------------------------
+control::if true; then echo yes; fi
+control::if false; then echo yes; fi; echo after
+control::if false; then echo yes; else echo no; fi
+control::if false; then echo a; elif true; then echo b; else echo c; fi
+control::if false; then echo a; elif false; then echo b; else echo c; fi
+control::if true; then echo a; elif true; then echo b; fi
+control::if [ 1 -eq 1 ]; then echo eq; fi
+control::if [ -f a.txt ]; then echo isfile; fi
+control::if echo probe > /dev/null; then echo ranok; fi
+control::if true; then :; fi; echo $?
+control::if true<NL>then<NL>echo multi<NL>fi<NL>
+control::if false; then echo a; else if true; then echo nested; fi; fi
+control::for i in a b c; do echo $i; done
+control::for i in 1 2 3; do echo $((i*i)); done
+control::for i in; do echo $i; done; echo empty-ok
+control::for i in ""; do echo "[$i]"; done
+control::for f in *.log; do echo $f; done
+control::for i in a b; do echo -n $i; done; echo
+control::for i in "a b" c; do echo "[$i]"; done
+control::for i in $(echo a b); do echo $i; done
+control::for i in 1 2 3<NL>do<NL>echo $i<NL>done<NL>
+control::for ((i=0;i<3;i++)); do echo $i; done
+control::for ((i=3;i>0;i--)); do echo $i; done
+control::for ((i=0,j=3;i<j;i++,j--)); do echo "$i-$j"; done
+control::for ((;;)); do echo once; break; done
+control::for ((i=0;i<0;i++)); do echo never; done; echo done
+control::i=0; while [ $i -lt 3 ]; do echo $i; i=$((i+1)); done
+control::i=0; until [ $i -ge 3 ]; do echo $i; i=$((i+1)); done
+control::while false; do echo never; done; echo done
+control::until true; do echo never; done; echo done
+control::while true; do echo once; break; done
+control::i=0; while ((i<3)); do echo $i; i=$((i+1)); done
+control::for i in 1 2 3 4 5; do [ $i = 3 ] && break; echo $i; done
+control::for i in 1 2 3 4 5; do [ $i = 3 ] && continue; echo $i; done
+control::for i in 1 2; do for j in a b; do echo $i$j; done; done
+control::for i in 1 2; do for j in a b; do break 2; done; echo never; done; echo done
+control::for i in 1 2; do for j in a b; do continue 2; done; echo never; done; echo done
+control::for i in 1 2 3; do case $i in 2) continue;; esac; echo $i; done
+control::i=0; while true; do i=$((i+1)); [ $i -ge 3 ] && break; done; echo $i
+control::i=0; while [ $i -lt 5 ]; do i=$((i+1)); [ $i = 2 ] && continue; echo $i; done
+control::case abc in a*) echo A;; b*) echo B;; esac
+control::case abc in x*) echo X;; *) echo default;; esac
+control::case abc in a|b) echo ab;; abc) echo exact;; esac
+control::case b in a|b) echo ab;; esac
+control::case '' in "") echo empty;; *) echo other;; esac
+control::case abc in ???) echo three;; esac
+control::case abc in ??) echo two;; *) echo notwo;; esac
+control::case abc in [a-c]*) echo range;; esac
+control::case A in [[:upper:]]) echo upper;; esac
+control::case 5 in [0-9]) echo digit;; esac
+control::v=x; case $v in x) echo x;; esac
+control::v="a b"; case "$v" in *" "*) echo hasspace;; esac
+control::case a in a) echo one;; a) echo two;; esac
+control::case abc in *b*) echo mid;; esac
+control::case abc in *) echo star;; esac
+control::case x in y) echo y;; esac; echo $?
+control::case x in x) false;; esac; echo $?
+control::case x in x) ;; esac; echo $?
+control::case a.txt in *.txt) echo txt;; esac
+control::case "two words.txt" in *.txt) echo txt;; esac
+control::case abc in<NL>a*) echo A ;;<NL>*) echo other ;;<NL>esac<NL>
+control::case $(echo z) in z) echo cmdsub;; esac
+control::for i in a b; do if [ $i = a ]; then echo first; else echo second; fi; done
+control::while read -r l; do case $l in a*) echo "A:$l";; *) echo "O:$l";; esac; done < data.txt
+control::n=0; for f in *.txt; do n=$((n+1)); done; echo $n
+control::if ! false; then echo negated; fi
+control::if true && true; then echo both; fi
+control::if true || false; then echo or; fi
+control::if [ 1 = 1 ] && [ 2 = 2 ]; then echo andtest; fi
+
+# --------------------------------------------------------------------------
+# func — function definition, arguments, return, locals, recursion
+# --------------------------------------------------------------------------
+func::f(){ echo hi; }; f
+func::f() { echo hi; }; f
+func::f(){ echo hi; }<NL>f<NL>
+func::f()<NL>{<NL>echo hi<NL>}<NL>f<NL>
+func::function f { echo kw; }; f
+func::function f() { echo kwparen; }; f
+func::f(){ echo "$1-$2"; }; f a b
+func::f(){ echo "$1"; }; f "a b"
+func::f(){ echo $#; }; f a b c
+func::f(){ echo $#; }; f
+func::f(){ echo "$@"; }; f a b
+func::f(){ echo "$*"; }; f a b
+func::f(){ for x in "$@"; do echo "[$x]"; done; }; f "a b" c
+func::f(){ return 3; }; f; echo $?
+func::f(){ return; }; f; echo $?
+func::f(){ true; }; f; echo $?
+func::f(){ false; }; f; echo $?
+func::f(){ echo a; return; echo b; }; f
+func::f(){ return 0; echo never; }; f; echo $?
+func::f(){ local x=1; echo $x; }; f
+func::x=out; f(){ local x=in; echo $x; }; f; echo $x
+func::x=out; f(){ x=in; }; f; echo $x
+func::f(){ local a b; a=1; b=2; echo $a$b; }; f
+func::f(){ local x; echo "[$x]"; }; x=out; f; echo $x
+func::f(){ g; }; g(){ echo g-called; }; f
+func::f(){ echo outer; g(){ echo inner; }; g; }; f
+func::fact(){ if [ $1 -le 1 ]; then echo 1; else echo $(( $1 * $(fact $(($1-1))) )); fi; }; fact 5
+func::cnt(){ [ $1 -eq 0 ] && return; echo $1; cnt $(($1-1)); }; cnt 3
+func::f(){ echo "$1"; }; f ""; echo done
+func::f(){ echo "[$1]"; }; f
+func::f(){ set -- x y; echo "$@"; }; f a
+func::f(){ echo pipe; }; f | tr a-z A-Z
+func::f(){ echo out; }; v=$(f); echo $v
+func::f(){ echo $1; }; for i in 1 2; do f $i; done
+func::f(){ echo A; }; f(){ echo B; }; f
+func::f(){ echo redir; } > /dev/null; f; echo after
+func::f(){ /bin/cat; }; echo piped | f
+func::f(){ if [ "$1" = x ]; then echo isx; else echo notx; fi; }; f x; f y
+func::f(){ echo $((1+1)); }; f
+func::f(){ v=set-in-f; }; f; echo $v
+func::f(){ echo "$1"; shift; echo "$#"; }; f a b c
+func::f(){ while [ $# -gt 0 ]; do echo "$1"; shift; done; }; f a b c
+func::f(){ exit 4; }; (f); echo $?
+func::unset -f nosuchfn 2>/dev/null; f(){ echo defined; }; f
+func::f(){ echo one; }; unset -f f; f 2>/dev/null; echo $?
+func::f(){ return 1; }; f || echo failed
+func::f(){ return 0; }; f && echo ok
+func::f(){ echo "$@"; }; f
+func::f(){ printf '%s\n' "$@"; }; f a "b c"
+
+# --------------------------------------------------------------------------
+# builtin — test/[, [[, printf, echo, read, set, shift, export, eval, ...
+# --------------------------------------------------------------------------
+builtin::[ a = a ]; echo $?
+builtin::[ a = b ]; echo $?
+builtin::[ a != b ]; echo $?
+builtin::[ a != a ]; echo $?
+builtin::[ -z "" ]; echo $?
+builtin::[ -z "x" ]; echo $?
+builtin::[ -n "x" ]; echo $?
+builtin::[ -n "" ]; echo $?
+builtin::[ 1 -eq 1 ]; echo $?
+builtin::[ 1 -eq 2 ]; echo $?
+builtin::[ 1 -ne 2 ]; echo $?
+builtin::[ 1 -lt 2 ]; echo $?
+builtin::[ 2 -le 2 ]; echo $?
+builtin::[ 3 -gt 2 ]; echo $?
+builtin::[ 3 -ge 3 ]; echo $?
+builtin::[ -1 -lt 0 ]; echo $?
+builtin::[ -f a.txt ]; echo $?
+builtin::[ -f sub ]; echo $?
+builtin::[ -d sub ]; echo $?
+builtin::[ -d a.txt ]; echo $?
+builtin::[ -e a.txt ]; echo $?
+builtin::[ -e nosuch ]; echo $?
+builtin::[ -r a.txt ]; echo $?
+builtin::[ -w a.txt ]; echo $?
+builtin::[ -x a.txt ]; echo $?
+builtin::[ -s a.txt ]; echo $?
+builtin::[ -s data.txt ]; echo $?
+builtin::[ -L a.txt ]; echo $?
+builtin::[ ! -f nosuch ]; echo $?
+builtin::[ ! a = a ]; echo $?
+builtin::[ a = a -a b = b ]; echo $?
+builtin::[ a = b -a b = b ]; echo $?
+builtin::[ a = a -o b = c ]; echo $?
+builtin::[ a = b -o b = c ]; echo $?
+builtin::[ \( a = a \) ]; echo $?
+builtin::[ ]; echo $?
+builtin::[ x ]; echo $?
+builtin::[ "" ]; echo $?
+builtin::[ "a b" = "a b" ]; echo $?
+builtin::test a = a; echo $?
+builtin::test -f a.txt; echo $?
+builtin::test; echo $?
+builtin::test x; echo $?
+builtin::[ a == a ]; echo $?
+builtin::[[ a = a ]]; echo $?
+builtin::[[ a != b ]]; echo $?
+builtin::[[ abc == a* ]]; echo $?
+builtin::[[ abc != a* ]]; echo $?
+builtin::[[ abc == "a*" ]]; echo $?
+builtin::[[ 1 -lt 2 && 3 -gt 2 ]]; echo $?
+builtin::[[ 1 -lt 2 || 1 -gt 2 ]]; echo $?
+builtin::[[ -n x ]] && echo yes
+builtin::[[ -z "" ]] && echo yes
+builtin::[[ "a b" == "a b" ]]; echo $?
+builtin::[[ abc =~ ^a ]]; echo $?
+builtin::[[ abc =~ ^b ]]; echo $?
+builtin::[[ -f a.txt ]]; echo $?
+builtin::[[ ! -f nosuch ]]; echo $?
+builtin::printf '%s\n' hello
+builtin::printf '%s %s\n' a b
+builtin::printf '%s\n' a b c
+builtin::printf '%s'; echo end
+builtin::printf 'a%sb' ''; echo
+builtin::printf '%d\n' 42
+builtin::printf '%i\n' 42
+builtin::printf '%d\n' -7
+builtin::printf '%5d|\n' 42
+builtin::printf '%-5d|\n' 42
+builtin::printf '%05d\n' 42
+builtin::printf '%+d\n' 42
+builtin::printf '%x\n' 255
+builtin::printf '%X\n' 255
+builtin::printf '%#x\n' 255
+builtin::printf '%o\n' 8
+builtin::printf '%u\n' 42
+builtin::printf '%c' abc; echo
+builtin::printf '%f\n' 1.5
+builtin::printf '%.2f\n' 3.14159
+builtin::printf '%10.3f|\n' 3.14159
+builtin::printf '%-10.3f|\n' 3.14159
+builtin::printf '%e\n' 1234.5
+builtin::printf '%g\n' 0.0001
+builtin::printf '%%\n'
+builtin::printf '[%5s]\n' ab
+builtin::printf '[%-5s]\n' ab
+builtin::printf '[%.2s]\n' abcdef
+builtin::printf '%*d|\n' 5 42
+builtin::printf '%b\n' 'a\tb'
+builtin::printf '%b\n' 'a\nb'
+builtin::printf 'no newline'; echo ''
+builtin::printf '%s\n' "$(echo x)"
+builtin::printf '%d %d\n' 1 2 3 4
+builtin::printf '%s-%s\n' a b c
+builtin::printf 'x\n' extra
+builtin::printf '%q\n' 'a b'
+builtin::printf '%d\n' abc; echo rc=$?
+builtin::printf 'a\tb\n'
+builtin::printf 'a\\b\n'
+builtin::printf '%s\n' '%s'
+builtin::printf -- '-x\n'
+builtin::echo
+builtin::echo ""
+builtin::echo -n abc; echo
+builtin::echo -n
+builtin::echo -e 'a\tb'
+builtin::echo -e 'a\nb'
+builtin::echo -E 'a\tb'
+builtin::echo 'a\nb'
+builtin::echo -n -e 'x\n'
+builtin::echo --
+builtin::echo -
+builtin::echo a b   c
+builtin::echo -e '\x41'
+builtin::echo x | { read v; echo "$v"; }
+builtin::printf 'a b c\n' | { read x y; echo "x=$x y=$y"; }
+builtin::printf 'a b c\n' | { read x y z w; echo "[$w]"; }
+builtin::printf ' lead\n' | { read v; echo "[$v]"; }
+builtin::printf 'a\\tb\n' | { read -r v; echo "$v"; }
+builtin::printf 'x\n' | { read v; echo $?; }
+builtin::printf 'x' | { read v; echo "rc=$? v=$v"; }
+builtin::printf '' | { read v; echo "rc=$? v=[$v]"; }
+builtin::echo a:b | { IFS=: read x y; echo "$x-$y"; }
+builtin::printf 'l1\nl2\n' | { read a; read b; echo "$a|$b"; }
+builtin::read v < data.txt; echo $v
+builtin::read a b < data.txt; echo "[$a][$b]"
+builtin::set -- a b c; echo $*
+builtin::set -- a b c; echo $#
+builtin::set -u; echo ${undef_zz:-ok}
+builtin::set -u; echo $undef_zz; echo never
+builtin::set -e; false; echo never
+builtin::set -e; (false); echo never
+builtin::set -e; false || true; echo reached
+builtin::set -e; if false; then :; fi; echo reached
+builtin::set +e; false; echo reached
+builtin::set -o pipefail; false | true; echo $?
+builtin::set -x; echo traced
+builtin::shift; echo $?
+builtin::set -- a b; shift; echo $*
+builtin::set -- a b; shift 2; echo "[$*]"
+builtin::set -- a b; shift 5; echo $?
+builtin::export FOO=bar; echo $FOO
+builtin::export FOO=bar; /bin/sh -c 'echo $FOO'
+builtin::FOO=bar /bin/sh -c 'echo $FOO'
+builtin::FOO=bar; /bin/sh -c 'echo [$FOO]'
+builtin::FOO=bar; export FOO; /bin/sh -c 'echo $FOO'
+builtin::export FOO=bar; unset FOO; /bin/sh -c 'echo [$FOO]'
+builtin::unset FOO; echo "[${FOO:-unset}]"
+builtin::v=1; unset v; echo "[${v:-gone}]"
+builtin::eval 'echo evaled'
+builtin::v=x; eval "echo \$v"
+builtin::eval 'a=1; b=2'; echo $a$b
+builtin::cmd='echo dyn'; eval $cmd
+builtin::eval echo $(echo nested)
+builtin::eval 'exit 4'; echo never
+builtin::eval ''; echo $?
+builtin::eval 'false'; echo $?
+builtin::eval 'echo a; echo b'
+builtin::exec /bin/echo replaced
+builtin::exec /bin/echo replaced; echo never
+builtin::trap 'echo trapped' EXIT; echo body
+builtin::trap 'echo bye' EXIT; exit 0
+builtin::trap 'echo bye' EXIT; exit 3
+builtin::trap - EXIT; echo ok
+builtin::trap 'echo INT' INT; echo set-ok
+builtin::trap '' TERM; echo ignored-ok
+builtin::: ; echo $?
+builtin::true; echo $?
+builtin::false; echo $?
+builtin::command echo cmd
+builtin::builtin echo bi
+builtin::type echo > /dev/null; echo $?
+builtin::type nosuchcmd123 > /dev/null 2>&1; echo $?
+builtin::readonly R=1; echo $R
+builtin::local x=1; echo $?
+builtin::cd sub; echo ${PWD##*/}
+builtin::cd sub && cd .. && echo back
+builtin::cd nosuchdir 2>/dev/null; echo $?
+builtin::cd sub; cd -; echo $?
+builtin::pwd > /dev/null; echo $?
+builtin::alias e=echo; e aliased
+builtin::hash > /dev/null 2>&1; echo $?
+builtin::times > /dev/null; echo $?
+builtin::umask > /dev/null; echo $?
+builtin::getopts ab o -a; echo "$o $?"
+
+# --------------------------------------------------------------------------
+# exit — exit status of every construct, propagation
+# --------------------------------------------------------------------------
+exit::true; echo $?
+exit::false; echo $?
+exit::(exit 7); echo $?
+exit::(exit 0); echo $?
+exit::(exit 255); echo $?
+exit::(exit 256); echo $?
+exit::/bin/sh -c 'exit 9'; echo $?
+exit::/bin/sh -c 'exit 200'; echo $?
+exit::echo a; echo $?
+exit::[ 1 = 2 ]; echo $?
+exit::[ 1 = 1 ]; echo $?
+exit::nosuchcmd123 2>/dev/null; echo $?
+exit::/nosuch/path/x 2>/dev/null; echo $?
+exit::./data.txt 2>/dev/null; echo $?
+exit::./sub 2>/dev/null; echo $?
+exit::true | false; echo $?
+exit::false | true; echo $?
+exit::false | false; echo $?
+exit::true && false; echo $?
+exit::false || true; echo $?
+exit::false && echo a; echo $?
+exit::true || echo a; echo $?
+exit::! true; echo $?
+exit::! false; echo $?
+exit::v=$(false); echo $?
+exit::v=$(exit 3); echo $?
+exit::v=$(true); echo $?
+exit::if false; then :; fi; echo $?
+exit::if true; then false; fi; echo $?
+exit::if false; then :; else false; fi; echo $?
+exit::for i in; do :; done; echo $?
+exit::for i in a; do false; done; echo $?
+exit::while false; do :; done; echo $?
+exit::until true; do :; done; echo $?
+exit::case x in y) ;; esac; echo $?
+exit::case x in x) false;; esac; echo $?
+exit::f(){ return 42; }; f; echo $?
+exit::f(){ false; }; f; echo $?
+exit::{ false; }; echo $?
+exit::(false); echo $?
+exit::false; true; echo $?
+exit::false; echo $?; echo $?
+exit::echo $?; echo $?
+exit::eval 'false'; echo $?
+exit::x=1 true; echo $?
+exit::read v < /dev/null; echo $?
+exit::: ; echo $?
+exit::exit 5
+exit::exit 0
+exit::(exit 3) || echo caught
+exit::(exit 3) && echo never
+exit::set -- ; shift 2>/dev/null; echo $?
+exit::false; f(){ echo $?; }; f
+exit::true; v=$(false); echo $?
+exit::/bin/sh -c 'exit 1' || echo handled
+
+# --------------------------------------------------------------------------
+# ifs — field splitting and IFS
+# --------------------------------------------------------------------------
+ifs::v='a b c'; for i in $v; do echo "[$i]"; done
+ifs::v='a  b'; for i in $v; do echo "[$i]"; done
+ifs::v=' a b '; for i in $v; do echo "[$i]"; done
+ifs::v='a b'; set -- $v; echo $#
+ifs::v='a b'; set -- "$v"; echo $#
+ifs::IFS=:; v='a:b:c'; for i in $v; do echo "[$i]"; done
+ifs::IFS=:; v='a::b'; for i in $v; do echo "[$i]"; done
+ifs::IFS=:; v=':a'; for i in $v; do echo "[$i]"; done
+ifs::IFS=:; v='a:'; for i in $v; do echo "[$i]"; done
+ifs::IFS=:; set -- $(echo 'x:y'); echo $#
+ifs::IFS=,; set -- $(echo 'x,y'); echo "$1|$2"
+ifs::IFS=; v='a b'; for i in $v; do echo "[$i]"; done
+ifs::IFS=''; v='a b'; echo "[$v]"
+ifs::unset IFS; v='a b'; for i in $v; do echo "[$i]"; done
+ifs::IFS=:; set -- a b; echo "$*"
+ifs::IFS=:; set -- a b; echo "$@"
+ifs::IFS=:; set -- a b c; v="$*"; echo "$v"
+ifs::IFS=abc; v='xaybzc'; for i in $v; do echo "[$i]"; done
+ifs::echo a:b | { IFS=: read x y; echo "$x|$y"; }
+ifs::echo 'a  b' | { read x y; echo "[$x][$y]"; }
+ifs::IFS=:; echo a:b:c | { read x y; echo "[$x][$y]"; }
+ifs::v=$(printf 'a b\nc\n'); for i in $v; do echo "[$i]"; done
+ifs::IFS=; v=$(printf 'a b\nc\n'); echo "[$v]"
+ifs::v='a b'; echo $v | /usr/bin/wc -w
+ifs::IFS=:; v='a:b'; echo $v
+ifs::IFS=:; v='a:b'; echo "$v"
+ifs::v='  '; set -- $v; echo $#
+ifs::v=''; set -- $v; echo $#
+ifs::IFS=:; v=''; set -- $v; echo $#
+ifs::set -- a b c; IFS=-; echo "$*"
+ifs::IFS=$'\n'; v=$(printf 'a b\nc d\n'); for i in $v; do echo "[$i]"; done
+
+# --------------------------------------------------------------------------
+# edge — whitespace, empties, single chars, weird names, UTF-8, high bytes
+# --------------------------------------------------------------------------
+# --- trailing whitespace battery (<SP> is a literal space; never "clean" it) -
+edge::echo trailing space<SP>
+edge::echo trailing space<SP><SP>
+edge::echo x<SP>
+edge::echo x<SP><SP><SP>
+edge::echo<SP>
+edge::echo<SP><SP>
+edge::v=1; echo $v<SP>
+edge::v=1; echo "$v"<SP>
+edge::echo "quoted trailing "
+edge::echo "quoted trailing "<SP>
+edge::printf '[%s]\n' x<SP>
+edge::printf '[%s]\n' "x "<SP>
+edge::echo a b<SP>
+edge::echo "a" "b"<SP>
+edge::v=x ; echo "[$v]"<SP>
+edge::echo "trailing space inside "
+edge::echo "  both  "
+edge::echo a<SP>| /usr/bin/wc -c
+edge::echo a<SP>> o.txt; /usr/bin/wc -c < o.txt
+edge::v=$(echo a<SP>); echo "[$v]"
+edge::[ "$(echo x<SP>)" = x ]; echo $?
+edge::for i in a<SP>; do echo "[$i]"; done
+edge::case "x " in x) echo bare;; "x ") echo withspace;; esac
+edge::true<SP>
+edge::true<SP>; echo $?
+edge::echo x<SP>; echo y
+edge::printf '[%s]\n' ""
+edge::printf '[%s][%s]\n' "" x
+edge::v=""; echo "[$v]"
+edge::v=" "; echo "[$v]"
+edge::v="  "; echo "[${#v}]"
+edge::echo "[$(echo)]"
+edge::echo a
+edge::echo x
+edge::echo 1
+edge::echo " "
+edge::echo "	"
+edge::v=a; echo "$v$v"
+edge::echo "café"
+edge::v=café; echo ${#v}
+edge::echo "日本語"
+edge::v=日本語; echo ${#v}
+edge::printf '%s\n' 'ß'
+edge::echo $'\xc3\xa9'
+edge::v=$(printf '\xc3\xa9'); echo ${#v}
+edge::printf '\377' | /usr/bin/wc -c
+edge::v=$(printf 'a\xffb'); echo ${#v}
+edge::echo 'ação'
+edge::case café in caf*) echo m;; esac
+edge::v='a\tb'; echo "$v"
+edge::v=$(printf 'a\nb'); echo "$v" | /usr/bin/wc -l
+edge::v=$(printf 'a%.0s' $(seq 1 500)); echo ${#v}
+edge::v=$(printf 'a%.0s' $(seq 1 5000)); echo ${#v}
+edge::for i in $(seq 1 50); do printf x; done; echo
+edge::echo a#b
+edge::echo a #b
+edge::echo x; # trailing comment
+edge::# only a comment
+edge::echo '#'
+edge::echo "#"
+edge::echo ";"
+edge::echo "|"
+edge::echo "&"
+edge::echo {a,b}
+edge::echo {1..3}
+edge::echo a{b,c}d
+edge::echo {a..c}
+edge::echo {}
+edge::echo {a}
+edge::echo "{a,b}"
+edge::echo {1..3}{a,b}
+edge::echo ~
+edge::echo ~/x
+edge::echo "~"
+edge::v=~; echo $v
+edge::echo ~nosuchuser123
+edge::echo ~/
+edge::x=1; echo ${x}2
+edge::A_B=1; echo $A_B
+edge::_x=1; echo $_x
+edge::x1=1; echo $x1
+edge::echo $
+edge::echo $ x
+edge::echo ${}
+edge::echo ${!}
+edge::;echo x
+edge::echo }
+edge::echo )
+edge::echo (
+edge::> "sp ace.txt"; [ -f "sp ace.txt" ] && echo ok
+edge::> 'dollar$name'; echo dollar*
+edge::> 'star*name'; [ -f 'star*name' ] && echo ok
+edge::> 'a b'; for f in a\ b; do echo "[$f]"; done
+edge::v='a*b'; echo "$v"
+edge::v='a*b'; echo $v
+edge::echo "" | /usr/bin/wc -c
+edge::echo -n "" | /usr/bin/wc -c
+edge::v=$(echo -n); echo "[${#v}]"
+edge::true & wait; echo done
+edge::echo $((0x7fffffffffffffff))
+edge::echo a"b"c
+edge::echo a'b'c
+edge::echo "a"'b'"c"
+edge::echo ""x""
+edge::v=1;v=2;echo $v
+edge::v=1 w=2; echo $v$w
+edge::echo a\<NL>b
+edge::echo \<NL>x
+edge::echo one<NL>echo two<NL>
+edge::echo one<NL><NL>echo two<NL>
+edge::<NL>echo blank-first<NL>
+edge::   echo indented
+edge::<TAB>echo tabbed
+edge::echo a<TAB>b
+edge::echo "a<TAB>b" | /usr/bin/wc -c
+
+# ===========================================================================
+# WAVE 2 — cases derived from VERIFYING the wave-1 divergences.
+# The block above was authored blind (before any jash output was seen).  This
+# block was added afterwards, while bisecting the boundaries of the failures
+# that wave 1 exposed, and it deliberately includes the passing side of each
+# boundary as well as the failing side.  It is kept separate so the reader can
+# reproduce the blind number by running with --corpus on a truncated file.
+# ===========================================================================
+
+# ceilings: positional parameters, builtin argv, capture size
+param::set -- $(seq 1 32); echo $#
+param::set -- $(seq 1 63); echo $#
+param::set -- $(seq 1 64); echo $#
+param::set -- $(seq 1 65); echo $#
+param::set -- $(seq 1 100); echo $#
+param::set -- $(seq 1 500); echo $#
+param::c=0; for i in $(seq 1 100); do c=$((c+1)); done; echo $c
+param::c=0; for i in $(seq 1 500); do c=$((c+1)); done; echo $c
+builtin::printf 'a%.0s' $(seq 1 1000) | /usr/bin/wc -c
+builtin::printf 'a%.0s' $(seq 1 1023) | /usr/bin/wc -c
+builtin::printf 'a%.0s' $(seq 1 1024) | /usr/bin/wc -c
+builtin::printf 'a%.0s' $(seq 1 2000) | /usr/bin/wc -c
+builtin::printf 'a%.0s' $(seq 1 2000) > big.txt; /usr/bin/wc -c < big.txt
+builtin::v=$(printf '%2000s' ''); echo ${#v}
+builtin::v=$(/usr/bin/head -c 8000 /dev/zero | tr '\0' a); echo ${#v}
+
+# echo builtin: leading/internal/trailing whitespace of its arguments
+quote::echo "a b"  "c d"
+quote::echo -n "  x"; echo
+quote::echo "  a  b  "
+quote::echo "a"  "b"
+quote::v="  x  "; echo "$v"
+
+# test: negation, and file predicates that decide destructive branches
+builtin::[ ! -e nosuch ]; echo $?
+builtin::[ ! -e a.txt ]; echo $?
+builtin::[ ! -d sub ]; echo $?
+builtin::[ ! -z x ]; echo $?
+builtin::[ ! -n x ]; echo $?
+builtin::[ ! 1 -eq 1 ]; echo $?
+builtin::[ ! 1 -eq 2 ]; echo $?
+builtin::! [ a = a ]; echo $?
+builtin::[[ ! a = a ]]; echo $?
+builtin::[ -s sub ]; echo $?
+builtin::[ -f data.txt ]; echo $?
+builtin::if [ ! -f nosuch ]; then echo would-create; fi
+builtin::if [ ! -f a.txt ]; then echo would-clobber; else echo safe; fi
+
+# subshell exit-status boundary
+exit::(exit 251); echo $?
+exit::(exit 252); echo $?
+exit::(exit 253); echo $?
+exit::(exit 254); echo $?
+
+# 'if' as the first command on a line, and compound nesting on one line
+control::echo A; if false; then :; fi; echo B
+control::if false; then :; else :; fi; echo A
+control::if true; then if true; then :; fi; fi; echo A
+control::if false; then :; fi<NL>echo A<NL>
+control::f(){ if [ "$1" = a ]; then echo first; else echo second; fi; }; f a; f b
+control::i=0; while [ $i -lt 2 ]; do if [ $i = 0 ]; then echo z; else echo n; fi; i=$((i+1)); done
+control::for i in a b<NL>do<NL>if [ $i = a ]; then<NL>echo first<NL>else<NL>echo second<NL>fi<NL>done<NL>
+control::for i in a b; do if [ $i = a ]; then echo first; fi; done
+control::for i in a b; do case $i in a) echo first;; *) echo second;; esac; done
+
+# shell variables must not reach a child's environment unless exported
+builtin::FOO=noexport; /bin/sh -c 'echo [$FOO]'
+builtin::FOO=noexport; /usr/bin/env | /usr/bin/grep -c '^FOO='
+builtin::export BAR=yes; /usr/bin/env | /usr/bin/grep -c '^BAR='
+
+# a failed redirection must abort the command, not fall back to stdout
+redir::echo x > nosuchdir/o.txt; echo rc=$?
+redir::echo x > nosuchdir/o.txt 2>/dev/null || echo redirect-failed
+redir::/bin/cat < nosuchdir/i.txt; echo rc=$?

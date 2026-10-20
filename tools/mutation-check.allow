@@ -1,0 +1,79 @@
+# tools/mutation-check.allow — excecoes declaradas do lint de assercao
+# infalsificavel (JINV-061). Formato: "arquivo:CLASSE: trecho" (sem numero de
+# linha, que muda a cada edicao).
+#
+# REGRA: toda entrada precisa de um comentario "# porque:" na linha anterior.
+# Uma excecao sem justificativa escrita e divida escondida — e foi assim que a
+# familia do JINV-029 nasceu.
+#
+# Duas secoes:
+#   SEGURO — a forma parece a classe, mas a assercao TEM como falhar de verdade.
+#            Permanente.
+#   DIVIDA — a assercao realmente nao pode falhar. Esta ali so ate alguem
+#            consertar, e o teto em mutation-check.sh so DESCE.
+
+# ════════════════════════════════════════════════════════════════════════
+#  SEGURO
+# ════════════════════════════════════════════════════════════════════════
+
+# porque: o canal de aviso esta silenciado na propria linha
+#   (JASH_LOOPGUARD=off JASH_NUDGE=0), que e o que torna a fusao segura; o
+#   comentario acima da linha no gate ja explica a escolha. Comparar jash e
+#   bash COM stderr e o ponto do teste: uma divergencia de mensagem de erro e
+#   justamente a regressao procurada.
+tests/test_jinv036_block_tail.sh:MERGED-EXACT: gj=$(JASH_LOOPGUARD=off JASH_NUDGE=0 "$JASH" "$T/$1.sh" 2>&1 | tr '\n' ' ')
+
+# porque: e a saida do BASH, nao do jash — nao existe advisory do jash para
+#   contaminar este lado. Ele so aparece por ser o outro operando da igualdade.
+tests/test_jinv036_block_tail.sh:MERGED-EXACT: gb=$(bash "$T/$1.sh" 2>&1 | tr '\n' ' ')
+
+# porque: o gate passou a exportar JASH_NUDGE=0 JASH_BRIEF=0 JASH_LOOPGUARD=off
+#   JASH_SIGIL=0 no cabecalho (consertado junto com a criacao deste lint), entao
+#   nao ha mais advisory que possa entrar na captura. A fusao de stderr e
+#   deliberada: paridade de mensagem de erro com o bash faz parte do contrato.
+tests/test_jinv040_tilde_assign.sh:MERGED-EXACT: gj=$("$JASH" "$T/$1.sh" 2>&1 | tail -1)
+
+# porque: saida do BASH — nenhum advisory do jash a alcanca.
+tests/test_jinv040_tilde_assign.sh:MERGED-EXACT: gb=$(bash "$T/$1.sh" 2>&1 | tail -1)
+
+# porque: a linha fixa JASH_AGENT=0, JASH_SIGIL=0, JASH_NUDGE=0,
+#   JASH_LOOPGUARD=off e JASH_GUARD_BYPASS*=0. O teste e de PARIDADE com o bash
+#   e a mensagem de erro faz parte do contrato, entao fundir stderr e correto.
+tests/test_bug059.sh:MERGED-EXACT: jout=$(JASH_AGENT=0 JASH_SIGIL=0 JASH_BRIEF=0 JASH_NUDGE=0 JASH_LOOPGUARD=off JASH_GUARD_BYPASS=0 JASH_GUARD_B...
+
+# porque: saida do BASH — nenhum advisory do jash a alcanca.
+tests/test_bug059.sh:MERGED-EXACT: bout=$(/bin/bash -c "$cmd" 2>&1)
+
+# porque: o helper `run` do proprio arquivo ja fixa
+#   JASH_SIGIL=1 JASH_MEMO=0 JASH_BRIEF=0 JASH_NUDGE=0 antes de invocar o jash,
+#   entao o canal de advisory esta fechado; e o teste de governor precisa ver o
+#   rodape de salience, que sai no stderr.
+tests/test_salience.sh:MERGED-EXACT: u=$(run JASH_LLM_BUDGET=100000 JASH_GOVERNOR=salient "$JASH" -c "$CAT $T/small.txt" 2>&1)
+
+# porque: o ramo de falha existe, so nao cabe nesta linha. O `for` logo acima
+#   chama `bad "argv[0] com '$meta' nao executa"` e da `break` assim que o
+#   canario aparece; esta linha so acrescenta o `ok` quando NENHUMA iteracao
+#   falhou. Se a injecao voltar, o `bad` de dentro do laco conta a falha e o
+#   gate fica vermelho — o detector so nao enxerga fluxo entre linhas.
+tests/test_jinv016_execjson_inject.sh:NO-FAIL-BRANCH: [ ! -f "$CANARY" ] && ok "argv[0] com && || | \$( \` — nenhum executa"
+
+# porque: mesmo desenho do JINV-016. O `for pontuado` acima chama
+#   `bad "laço infinito com pontuação"` e da `break` quando o rc e 124; esta
+#   linha so acrescenta o `ok` no caso em que nada travou. O `|| true` final e
+#   deliberado: sem ele o gate sairia 1 pelo rc do proprio teste quando a falha
+#   JA foi contada dentro do laco.
+tests/test_jinv057_resume.sh:NO-FAIL-BRANCH: [ "${rc:-0}" != "124" ] && ok "parênteses e pontuação não travam a extração" || true
+
+# porque: o jash e o ULTIMO comando do pipe (`echo | jash`), entao o $? lido
+#   e o dele — o programa sob teste — e a assercao falha de verdade. O lint
+#   nao distingue a posicao do programa no pipe; o filtro-cauda que ele teme
+#   nao existe aqui. (O teste em si e stale ADR-0046, divida registrada em
+#   tests/test_debt.txt; a excecao cobre apenas a forma, nao o conteudo.)
+
+# ════════════════════════════════════════════════════════════════════════
+#  @@DIVIDA@@ — assercoes que realmente nao podem falhar.
+#  O teto (DEBT_CEILING em mutation-check.sh) so DESCE. Nao acrescente aqui
+#  sem consertar: e a secao que existe para encolher ate zero.
+#  O token @@DIVIDA@@ acima e o marcador que o contador procura — nao o apague
+#  nem o reescreva; o lint reprova se ele sumir.
+# ════════════════════════════════════════════════════════════════════════

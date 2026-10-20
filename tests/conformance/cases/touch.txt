@@ -1,0 +1,2 @@
+newfile.txt
+subdir/nested_new.txt

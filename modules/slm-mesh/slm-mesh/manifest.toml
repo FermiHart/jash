@@ -1,0 +1,4 @@
+name=slm-mesh
+version=0.1.0
+description=SLM Mesh — Malha de Inteligencia Fluida Local<->Cloud (ADR-0022)
+caps=0x00000011

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:recovery-store:item:v1",
+  "description": "Projection of a native recovery-store observation/action record. The JTV2 sequence flushes each item before the next effect. Counters are cumulative; an empty successful stream has zero scanned and affected. The authoritative terminal declares source scan limits and errors; a limit produces INCOMPLETE, truncated=true and status75.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "operation", "consistency", "ref", "storage_state", "action", "state", "pinned", "eligible", "payload_bytes", "scanned", "affected"],
+  "properties": {
+    "schema": {"const": "jash.recovery-store.item.v1"},
+    "operation": {"enum": ["list", "gc", "pin", "unpin"]},
+    "consistency": {"const": "live"},
+    "ref": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+    "storage_state": {"enum": ["published", "pending", "gc_hold"]},
+    "action": {"type": "string"},
+    "state": {"enum": ["ready", "active", "consumed", "unknown"]},
+    "pinned": {"type": "boolean"},
+    "eligible": {"type": "boolean"},
+    "payload_bytes": {"type": ["integer", "null"], "minimum": 0},
+    "scanned": {"type": "integer", "minimum": 1, "maximum": 4096},
+    "affected": {"type": "integer", "minimum": 0, "maximum": 4096}
+  }
+}

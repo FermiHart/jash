@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:query:find:v1",
+  "title": "find --json bounded native observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "consistency",
+    "maxdepth",
+    "offset",
+    "limit",
+    "count",
+    "matches_seen",
+    "total_matches",
+    "next_offset",
+    "page_complete",
+    "complete",
+    "truncated",
+    "items",
+    "errors",
+    "errors_total",
+    "errors_truncated"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.query.find.v1"
+    },
+    "consistency": {
+      "const": "live"
+    },
+    "maxdepth": {
+      "type": "integer"
+    },
+    "offset": {
+      "$ref": "#/$defs/uint"
+    },
+    "limit": {
+      "$ref": "#/$defs/uint"
+    },
+    "count": {
+      "$ref": "#/$defs/uint"
+    },
+    "matches_seen": {
+      "$ref": "#/$defs/uint"
+    },
+    "total_matches": {
+      "oneOf": [
+        {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "next_offset": {
+      "oneOf": [
+        {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "string",
+              "pattern": "^(0|[1-9][0-9]*)$"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "page_complete": {
+      "type": "boolean"
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "truncated": {
+      "type": "boolean"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "type",
+          "size_bytes",
+          "mtime",
+          "mtime_nsec"
+        ],
+        "properties": {
+          "path": {
+            "$ref": "#/$defs/byteString"
+          },
+          "type": {
+            "enum": [
+              "file",
+              "dir",
+              "symlink",
+              "fifo",
+              "socket",
+              "block",
+              "char",
+              "other"
+            ]
+          },
+          "size_bytes": {
+            "oneOf": [
+              {
+                "oneOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  {
+                    "type": "string",
+                    "pattern": "^(0|[1-9][0-9]*)$"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mtime": {
+            "$ref": "#/$defs/sint"
+          },
+          "mtime_nsec": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 999999999
+          }
+        }
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "errno"
+        ],
+        "properties": {
+          "path": {
+            "$ref": "#/$defs/byteString"
+          },
+          "errno": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "errors_total": {
+      "$ref": "#/$defs/uint"
+    },
+    "errors_truncated": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "byteString": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "encoding",
+            "data"
+          ],
+          "properties": {
+            "encoding": {
+              "const": "base64"
+            },
+            "data": {
+              "type": "string",
+              "contentEncoding": "base64"
+            }
+          }
+        }
+      ]
+    },
+    "uint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      ]
+    },
+    "sint": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        }
+      ]
+    }
+  }
+}

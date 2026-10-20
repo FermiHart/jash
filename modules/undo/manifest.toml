@@ -1,0 +1,6 @@
+name=undo
+version=0.2.0
+description=Transactional undo — tx begin/commit/rollback + sessions + agent safe mode (ADR-0018 W2-4)
+caps=0x00001413
+provides_verbs=tx
+provides_hooks=mutation,post_cmd

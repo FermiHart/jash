@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:jash:mirror:receipt:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "receipt_ref", "verified", "verification_scope", "error", "receipt"],
+  "properties": {
+    "schema": {"const": "jash.mirror.receipt.v1"},
+    "receipt_ref": {"type": "string", "pattern": "^[0-9a-f]{64}\\.dsse$"},
+    "verified": {"type": "boolean"}, "verification_scope": {"enum": ["pinned-signature-and-artifact-hash", "runtime-request-response-and-streams"]},
+    "error": {"type": ["string", "null"]}, "receipt": {"type": ["string", "null"]}
+  }
+}

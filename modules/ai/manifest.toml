@@ -1,0 +1,4 @@
+name=ai
+version=0.2.0
+description=Jash AI agent — context expansion and command execution
+caps=0x000000FF

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:query:wc:v1",
+  "title": "Checked native wc page, byte-whitespace word counting",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "consistency", "word_policy", "total_scope", "items", "total", "count", "failed", "next_offset", "exit_code"],
+  "properties": {
+    "schema": {"const": "jash.query.wc.v1"},
+    "consistency": {"const": "live"},
+    "word_policy": {"const": "byte-isspace"},
+    "total_scope": {"const": "observed-page"},
+    "items": {"type": "array", "items": {"$ref": "#/$defs/item"}},
+    "total": {"$ref": "#/$defs/item"},
+    "count": {"$ref": "#/$defs/uint"},
+    "failed": {"$ref": "#/$defs/uint"},
+    "next_offset": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/uint"}]},
+    "exit_code": {"enum": [0, 1]}
+  },
+  "$defs": {
+    "uint": {"oneOf": [{"type": "integer", "minimum": 0, "maximum": 9007199254740991}, {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"}]},
+    "path": {"oneOf": [{"type": "string"}, {"type": "object", "additionalProperties": false, "required": ["encoding", "data"], "properties": {"encoding": {"const": "base64"}, "data": {"type": "string", "contentEncoding": "base64"}}}]},
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "lines", "words", "bytes", "complete", "error"],
+      "properties": {
+        "name": {"$ref": "#/$defs/path"},
+        "lines": {"$ref": "#/$defs/uint"},
+        "words": {"$ref": "#/$defs/uint"},
+        "bytes": {"$ref": "#/$defs/uint"},
+        "complete": {"type": "boolean"},
+        "error": {"enum": [null, "open_failed", "read_failed", "close_failed", "partial"]}
+      }
+    }
+  }
+}

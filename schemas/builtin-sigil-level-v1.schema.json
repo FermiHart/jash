@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:sigil-level:v1",
+  "title": "Jash sigil-level structured contract",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "scope",
+        "level",
+        "name",
+        "previous_level",
+        "changed",
+        "module_loaded",
+        "verification_performed"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.level.v1"
+        },
+        "scope": {
+          "const": "shell-process"
+        },
+        "level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "name": {
+          "enum": [
+            "off",
+            "log",
+            "sign",
+            "seal"
+          ]
+        },
+        "previous_level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "changed": {
+          "type": "boolean"
+        },
+        "module_loaded": {
+          "type": "boolean"
+        },
+        "verification_performed": {
+          "const": false
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer"
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$comment": "Core level state only; a level setting never asserts that a verification was performed or that an optional module is present."
+}

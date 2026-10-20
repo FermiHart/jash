@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:query:grep:v1",
+  "title": "grep --json byte match observations",
+  "type": "array",
+  "items": {
+    "oneOf": [
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "line",
+          "col",
+          "match",
+          "span",
+          "match_truncated"
+        ],
+        "properties": {
+          "file": {
+            "$ref": "#/$defs/text"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 67108864
+          },
+          "col": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65536
+          },
+          "match": {
+            "$ref": "#/$defs/text"
+          },
+          "span": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "start",
+              "end"
+            ],
+            "properties": {
+              "start": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              },
+              "end": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 65535
+              }
+            }
+          },
+          "match_truncated": {
+            "type": "boolean"
+          }
+        }
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "file",
+          "error",
+          "complete"
+        ],
+        "properties": {
+          "file": {
+            "$ref": "#/$defs/text"
+          },
+          "error": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "complete": {
+            "const": false
+          }
+        }
+      }
+    ]
+  },
+  "maxItems": 4097,
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "text": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/bytes"
+        }
+      ]
+    },
+    "uint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      ]
+    },
+    "sint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        }
+      ]
+    }
+  },
+  "$comment": "Line and col are one based; span start/end are zero based byte offsets within a line, end exclusive. JSON retains at most 4000 match bytes and discloses match_truncated. Native output retains the whole supported span. Predicate status1 and input status2 are out of band; unsupported arguments use builtin-error."
+}

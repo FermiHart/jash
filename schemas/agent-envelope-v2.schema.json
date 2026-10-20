@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:agent-envelope:v2",
+  "title": "Jash foreground command envelope",
+  "type": "object",
+  "required": ["jash_agent", "schema", "rc", "ms", "tl", "cwd", "cpu_ms", "maxrss_kb", "jash", "git", "modabi", "created", "modified", "deleted", "moved", "timeline_scope", "files_changed", "absorbed", "adoption", "path_encoding", "integer_encoding"],
+  "additionalProperties": false,
+  "properties": {
+    "jash_agent": {"const": 1},
+    "schema": {"const": "jash.agent-envelope.v2"},
+    "rc": {"type": "integer"},
+    "ms": {"anyOf": [{"$ref": "#/$defs/integer"}, {"type": "null"}]},
+    "tl": {"type": "integer"},
+    "cwd": {"anyOf": [{"$ref": "#/$defs/path"}, {"type": "null"}]},
+    "cwd_errno": {"type": "integer"},
+    "cpu_ms": {"anyOf": [{"$ref": "#/$defs/integer"}, {"type": "null"}]},
+    "maxrss_kb": {"anyOf": [{"$ref": "#/$defs/integer"}, {"type": "null"}]},
+    "jash": {"type": "string"},
+    "git": {"type": "string"},
+    "modabi": {"type": "integer"},
+    "created": {"$ref": "#/$defs/paths"},
+    "modified": {"$ref": "#/$defs/paths"},
+    "deleted": {"$ref": "#/$defs/paths"},
+    "directories_created": {"$ref": "#/$defs/paths"},
+    "directories_deleted": {"$ref": "#/$defs/paths"},
+    "links_created": {"$ref": "#/$defs/paths"},
+    "metadata_changed": {"$ref": "#/$defs/paths"},
+    "moved": {"type": "array", "items": {"anyOf": [{"type": "string"}, {"$ref": "#/$defs/move"}]}},
+    "moves": {"type": "array", "items": {"$ref": "#/$defs/move"}},
+    "timeline_scope": {
+      "type": "object", "additionalProperties": false,
+      "required": ["retained_records", "lost_to_ring", "capacity"],
+      "properties": {"retained_records": {"type": "integer", "minimum": 0}, "lost_to_ring": {"type": "integer", "minimum": 0}, "capacity": {"type": "integer", "minimum": 1}}
+    },
+    "files_changed": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scanned", "total", "reported", "truncated", "scope", "created", "modified", "deleted", "stale_writes"],
+      "properties": {
+        "scanned": {"type": "boolean"}, "total": {"type": "integer", "minimum": 0},
+        "reported": {"type": "integer", "minimum": 0}, "truncated": {"type": "boolean"},
+        "scope": {"const": "bounded-cwd-snapshot"},
+        "created": {"$ref": "#/$defs/paths"}, "modified": {"$ref": "#/$defs/paths"},
+        "deleted": {"$ref": "#/$defs/paths"}, "stale_writes": {"$ref": "#/$defs/paths"}
+      }
+    },
+    "world_delta": {
+      "type": "object", "additionalProperties": false,
+      "required": ["since_s", "created", "modified", "deleted", "total_created", "total_modified", "total_deleted", "truncated", "scope"],
+      "properties": {
+        "since_s": {"$ref": "#/$defs/integer"},
+        "created": {"$ref": "#/$defs/paths"}, "modified": {"$ref": "#/$defs/paths"}, "deleted": {"$ref": "#/$defs/paths"},
+        "total_created": {"type": "integer", "minimum": 0}, "total_modified": {"type": "integer", "minimum": 0}, "total_deleted": {"type": "integer", "minimum": 0},
+        "truncated": {"type": "boolean"}, "scope": {"const": "bounded-metadata-snapshots"},
+        "attribution": {"anyOf": [{"const": "external"}, {"type": "object", "required": ["method", "by", "tag", "inferred"], "properties": {"method": {"const": "chain"}, "by": {"type": "string"}, "tag": {"$ref": "#/$defs/path"}, "inferred": {"const": true}}}]}
+      }
+    },
+    "memo": {"type": "object", "required": ["delta"], "properties": {"delta": {"type": "object", "required": ["add", "del", "prev_age_s"], "properties": {"add": {"type": "integer"}, "del": {"type": "integer"}, "prev_age_s": {"type": "integer"}}}}},
+    "claim_conflicts": {"$ref": "#/$defs/paths"},
+    "claim_conflicts_truncated": {"const": true},
+    "jobs_done": {"type": "array", "items": {"type": "integer"}},
+    "jobs_notification": {"type": "object", "required": ["scanned", "batch_limit", "delivery", "client_acknowledged", "duplicates_possible"], "properties": {"scanned": {"type": "boolean"}, "batch_limit": {"type": "integer"}, "delivery": {"const": "write-confirmed"}, "client_acknowledged": {"const": false}, "duplicates_possible": {"const": true}}},
+    "absorbed": {"type": "object", "required": ["count", "failed", "ms", "tl", "complete"], "properties": {"count": {"type": "integer", "minimum": 0}, "failed": {"type": "integer", "minimum": 0}, "ms": {"$ref": "#/$defs/integer"}, "tl": {"$ref": "#/$defs/integer"}, "complete": {"type": "boolean"}}},
+    "adoption": {"type": "object", "required": ["level", "source"], "properties": {"level": {"type": "integer"}, "source": {"type": "string"}}},
+    "path_encoding": {"const": "utf8-or-base64"},
+    "integer_encoding": {"const": "safe-number-or-decimal-string"}
+  },
+  "$defs": {
+    "integer": {"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "string", "pattern": "^-?[0-9]+$"}]},
+    "path": {"anyOf": [{"type": "string"}, {"type": "object", "additionalProperties": false, "required": ["encoding", "data"], "properties": {"encoding": {"const": "base64"}, "data": {"type": "string", "contentEncoding": "base64"}}}]},
+    "paths": {"type": "array", "items": {"$ref": "#/$defs/path"}},
+    "move": {"type": "object", "additionalProperties": false, "required": ["from", "to"], "properties": {"from": {"$ref": "#/$defs/path"}, "to": {"$ref": "#/$defs/path"}}}
+  }
+}

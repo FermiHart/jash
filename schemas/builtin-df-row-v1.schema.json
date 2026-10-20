@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:query:df-row:v1",
+  "title": "One df --json filesystem JSONL row",
+  "$ref": "#/$defs/filesystem",
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "text": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/bytes"
+        }
+      ]
+    },
+    "uint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      ]
+    },
+    "sint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        }
+      ]
+    },
+    "filesystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device",
+        "mountpoint",
+        "fstype",
+        "total_bytes",
+        "used_bytes",
+        "avail_bytes",
+        "use_percent",
+        "filesystem_id"
+      ],
+      "properties": {
+        "device": {
+          "$ref": "#/$defs/text"
+        },
+        "mountpoint": {
+          "$ref": "#/$defs/text"
+        },
+        "fstype": {
+          "$ref": "#/$defs/text"
+        },
+        "total_bytes": {
+          "$ref": "#/$defs/uint"
+        },
+        "used_bytes": {
+          "$ref": "#/$defs/uint"
+        },
+        "avail_bytes": {
+          "$ref": "#/$defs/uint"
+        },
+        "use_percent": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "filesystem_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/uint"
+            }
+          ]
+        },
+        "inodes": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "total",
+                "used",
+                "free",
+                "available"
+              ],
+              "additionalProperties": {
+                "$ref": "#/$defs/uint"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "$comment": "--json-report owns paging and baseline/delta operations. This legacy JSONL mode has status/stderr out of band; OSIF failures use a separate builtin-error document. use_percent is an integer percentage, quantities are bytes."
+}

@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:directory-stack:v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "command",
+    "complete",
+    "status",
+    "items"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "jash.directory-stack.v1"
+    },
+    "command": {
+      "enum": [
+        "pushd",
+        "popd",
+        "dirs"
+      ]
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "required": [
+          "index",
+          "path",
+          "current",
+          "stack_changed",
+          "cwd_changed",
+          "previous_cwd",
+          "error"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "path": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "current": {
+            "type": "boolean"
+          },
+          "stack_changed": {
+            "type": "boolean"
+          },
+          "cwd_changed": {
+            "type": "boolean"
+          },
+          "previous_cwd": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "code",
+        "effects_may_have_applied"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "collection_limit_exceeded"
+        },
+        "effects_may_have_applied": {
+          "const": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "complete": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "status": {
+            "const": 75
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      }
+    }
+  ]
+}

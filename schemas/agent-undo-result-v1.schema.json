@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:undo-result:v1",
+  "title": "Checked local recovery reference result",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "ref", "status", "effect", "code", "exit_code", "recovery_path"],
+  "properties": {
+    "schema": {"const": "jash.undo-result.v1"},
+    "ref": {"$ref": "#/$defs/bytes_or_text"},
+    "status": {"enum": ["ready", "completed", "failed", "partial", "inspected"]},
+    "record": {"type": "object", "additionalProperties": false, "required": ["entry_id", "coverage", "state", "path", "payload_bytes", "target_validated"],
+      "properties": {"entry_id": {"type": "string", "pattern": "^[0-9]+$"}, "coverage": {"type": "string"}, "state": {"enum": ["ready", "active", "consumed"]},
+        "path": {"$ref": "#/$defs/bytes_or_text"}, "payload_bytes": {"type": ["integer", "string"]}, "target_validated": {"const": false}}},
+    "effect": {"enum": ["none", "changed"]},
+    "code": {"type": ["string", "null"]},
+    "exit_code": {"type": "integer", "minimum": 0, "maximum": 255},
+    "recovery_path": {"$ref": "#/$defs/bytes_or_text"}
+  },
+  "$defs": {
+    "bytes_or_text": {"oneOf": [
+      {"type": ["string", "null"]},
+      {"type": "object", "additionalProperties": false, "required": ["encoding", "data"],
+       "properties": {"encoding": {"const": "base64"}, "data": {"type": "string", "contentEncoding": "base64"}}}
+    ]}
+  }
+}

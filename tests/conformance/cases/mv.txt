@@ -1,0 +1,2 @@
+movable.txt destdir/
+movable.txt renamed.txt

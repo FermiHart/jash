@@ -1,0 +1,35 @@
+# ADR-0036 W3 fuzz seed corpus — one `-c` input per line, blank/# ignored.
+# Curated from real repro lines across BUGFIX_ROADMAP.md: these are,
+# empirically, exactly the inputs that have broken jash before, so they are
+# the highest-value starting points for mutation.
+echo $((1/0))
+echo $((0xffffffffffffffff))
+echo $((64#zzzzzzzzzzzz))
+<4094 'a'><(b)
+grep -E '\bstrcpy\b' /nonexistent
+grep -E 'a\sb' /nonexistent
+cp a b c
+cp -r a a
+V=$(printf "a\nb"); echo "[$V]"
+echo "a   b   c"
+printf '%s\n' 'a b c'
+printf 'a\nb\n' > /tmp/jash_fuzz_out.$$
+for i in 1 2 3; do echo $i; done
+echo "texto <<- aqui"
+echo ${UNDEF:-}
+x="a << b"; echo "$x"
+echo $0
+$(echo echo) hi
+eval 'echo nested'
+echo "$(echo "$(echo deep)")"
+declare -i x=5; echo $x
+read -r x <<< 'hello world'
+case x in x) echo match;; esac
+while false; do echo never; done
+function f() { echo in-func; }; f
+trap 'echo trapped' EXIT
+[ -z "" ] && echo empty
+test 1 -eq 1 && echo eq
+printf '%d' 999999999999999999999999
+printf '%999999999d' 1
+echo unterminated"

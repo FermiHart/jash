@@ -1,0 +1,514 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:timeline:action:v1",
+  "description": "Semantic receipts from retained legacy timeline inverses. The fields retain legacy storage bounds and legacy inverse guards; guarded --ref recovery is a separate contract. Per-action delivery precedes the next inverse. complete describes receipt collection, status and item outcomes describe operation success. Failed inverses remain recorded; effect:possible does not promise rollback. Lost history is explicit.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "command",
+    "complete",
+    "status",
+    "items"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.timeline.action.v1"
+    },
+    "command": {
+      "enum": [
+        "undo",
+        "redo",
+        "rewind",
+        "checkpoint"
+      ]
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "record",
+              "operation",
+              "entry_id",
+              "id",
+              "kind",
+              "description",
+              "a",
+              "b",
+              "status",
+              "effect",
+              "error",
+              "dry_run",
+              "retained",
+              "redo_available",
+              "depth_before",
+              "depth_after",
+              "record_fields",
+              "guards"
+            ],
+            "properties": {
+              "record": {
+                "const": "action"
+              },
+              "operation": {
+                "enum": [
+                  "undo",
+                  "redo",
+                  "rewind"
+                ]
+              },
+              "entry_id": {
+                "type": "string",
+                "pattern": "^[0-9]+$"
+              },
+              "id": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kind": {
+                "type": "string"
+              },
+              "description": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              "a": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              "b": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              "status": {
+                "enum": [
+                  "completed",
+                  "planned",
+                  "kept",
+                  "failed"
+                ]
+              },
+              "effect": {
+                "enum": [
+                  "none",
+                  "applied",
+                  "possible"
+                ]
+              },
+              "error": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "dry_run": {
+                "type": "boolean"
+              },
+              "retained": {
+                "type": "boolean"
+              },
+              "redo_available": {
+                "type": "boolean"
+              },
+              "depth_before": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "depth_after": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "record_fields": {
+                "const": "legacy_bounded"
+              },
+              "guards": {
+                "const": "legacy_inverse"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "status": {
+                      "const": "completed"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "retained": {
+                      "const": false
+                    },
+                    "effect": {
+                      "const": "applied"
+                    },
+                    "error": {
+                      "type": "null"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "status": {
+                      "enum": [
+                        "planned",
+                        "kept"
+                      ]
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "retained": {
+                      "const": true
+                    },
+                    "effect": {
+                      "const": "none"
+                    },
+                    "error": {
+                      "type": "null"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "status": {
+                      "const": "failed"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "retained": {
+                      "const": true
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "record",
+              "operation",
+              "requested",
+              "completed",
+              "failed",
+              "planned",
+              "kept",
+              "depth_before",
+              "depth_after",
+              "lost",
+              "stopped",
+              "error"
+            ],
+            "properties": {
+              "record": {
+                "const": "summary"
+              },
+              "operation": {
+                "enum": [
+                  "undo",
+                  "redo",
+                  "rewind"
+                ]
+              },
+              "requested": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "completed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "failed": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "planned": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "kept": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "depth_before": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "depth_after": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "lost": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "stopped": {
+                "type": "boolean"
+              },
+              "error": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "record",
+              "operation",
+              "path",
+              "applied",
+              "durable",
+              "error"
+            ],
+            "properties": {
+              "record": {
+                "enum": [
+                  "cwd",
+                  "checkpoints"
+                ]
+              },
+              "operation": {
+                "const": "rewind"
+              },
+              "path": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              "applied": {
+                "type": "boolean"
+              },
+              "durable": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "error": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "code": {
+          "const": "collection_limit_exceeded"
+        },
+        "effects_may_have_applied": {
+          "const": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "complete": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "status": {
+            "const": 75
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      }
+    }
+  ]
+}

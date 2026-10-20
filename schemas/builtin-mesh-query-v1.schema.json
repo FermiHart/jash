@@ -1,0 +1,461 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:mesh:query:v1",
+  "title": "Mesh read-only native-store query projections",
+  "anyOf": [
+    {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/worker"
+      },
+      "maxItems": 512
+    },
+    {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/task"
+      },
+      "maxItems": 1024
+    },
+    {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/claim"
+      },
+      "maxItems": 512
+    },
+    {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/reputation"
+      },
+      "maxItems": 256
+    },
+    {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/message"
+      },
+      "maxItems": 4096
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "complete",
+        "total",
+        "next_offset",
+        "items"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.mesh.query.v1"
+        },
+        "operation": {
+          "enum": [
+            "workers",
+            "board",
+            "rep",
+            "claims"
+          ]
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "total": {
+          "$ref": "#/$defs/uint"
+        },
+        "next_offset": {
+          "$ref": "#/$defs/uint"
+        },
+        "items": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/worker"
+              },
+              "maxItems": 512
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/task"
+              },
+              "maxItems": 1024
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/claim"
+              },
+              "maxItems": 512
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/reputation"
+              },
+              "maxItems": 256
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/message"
+              },
+              "maxItems": 4096
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "workers"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/worker"
+                    },
+                    "maxItems": 512
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "board"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/task"
+                    },
+                    "maxItems": 1024
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/message"
+                    },
+                    "maxItems": 4096
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "rep"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/reputation"
+                    },
+                    "maxItems": 256
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "claims"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/claim"
+                    },
+                    "maxItems": 512
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "text": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/bytes"
+        }
+      ]
+    },
+    "uint": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "sint": {
+      "type": "integer",
+      "minimum": -9223372036854775808,
+      "maximum": 9223372036854775807
+    },
+    "worker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agent_id",
+        "provider",
+        "model",
+        "status",
+        "headroom",
+        "task",
+        "age_s",
+        "pid",
+        "alive",
+        "last_seen",
+        "timestamp_unit",
+        "liveness_source"
+      ],
+      "properties": {
+        "agent_id": {
+          "$ref": "#/$defs/text"
+        },
+        "provider": {
+          "$ref": "#/$defs/text"
+        },
+        "model": {
+          "$ref": "#/$defs/text"
+        },
+        "status": {
+          "$ref": "#/$defs/text"
+        },
+        "headroom": {
+          "$ref": "#/$defs/text"
+        },
+        "task": {
+          "$ref": "#/$defs/text"
+        },
+        "age_s": {
+          "$ref": "#/$defs/uint"
+        },
+        "pid": {
+          "$ref": "#/$defs/sint"
+        },
+        "alive": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "last_seen": {
+          "$ref": "#/$defs/sint"
+        },
+        "timestamp_unit": {
+          "const": "unix-seconds"
+        },
+        "liveness_source": {
+          "const": "explicit-harness-pid-kill-zero"
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "state",
+        "tag",
+        "owner",
+        "deps",
+        "desc",
+        "claim_ts",
+        "timestamp_unit"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uint"
+        },
+        "state": {
+          "enum": [
+            "ready",
+            "claimed",
+            "done",
+            "failed"
+          ]
+        },
+        "tag": {
+          "$ref": "#/$defs/text"
+        },
+        "owner": {
+          "$ref": "#/$defs/text"
+        },
+        "deps": {
+          "$ref": "#/$defs/text"
+        },
+        "desc": {
+          "$ref": "#/$defs/text"
+        },
+        "claim_ts": {
+          "$ref": "#/$defs/sint"
+        },
+        "timestamp_unit": {
+          "const": "unix-seconds"
+        }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "owner",
+        "claim_ts",
+        "ttl",
+        "note",
+        "timestamp_unit",
+        "ttl_unit"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/text"
+        },
+        "owner": {
+          "$ref": "#/$defs/text"
+        },
+        "claim_ts": {
+          "$ref": "#/$defs/sint"
+        },
+        "ttl": {
+          "$ref": "#/$defs/uint"
+        },
+        "note": {
+          "$ref": "#/$defs/text"
+        },
+        "timestamp_unit": {
+          "const": "unix-seconds"
+        },
+        "ttl_unit": {
+          "const": "seconds"
+        }
+      }
+    },
+    "reputation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "tag",
+        "done",
+        "fail",
+        "score",
+        "source",
+        "verification"
+      ],
+      "properties": {
+        "model": {
+          "$ref": "#/$defs/text"
+        },
+        "tag": {
+          "$ref": "#/$defs/text"
+        },
+        "done": {
+          "$ref": "#/$defs/uint"
+        },
+        "fail": {
+          "$ref": "#/$defs/uint"
+        },
+        "score": {
+          "$ref": "#/$defs/sint"
+        },
+        "source": {
+          "const": "local-chain-events"
+        },
+        "verification": {
+          "const": "not-verified"
+        }
+      }
+    },
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timestamp",
+        "owner",
+        "message",
+        "timestamp_unit"
+      ],
+      "properties": {
+        "timestamp": {
+          "$ref": "#/$defs/sint"
+        },
+        "owner": {
+          "$ref": "#/$defs/text"
+        },
+        "message": {
+          "$ref": "#/$defs/text"
+        },
+        "timestamp_unit": {
+          "const": "unix-seconds"
+        }
+      }
+    }
+  },
+  "$comment": "Unpaged results preserve legacy homogeneous arrays. Explicit --offset/--limit wraps a page; board --messages selects message rows. Queries never create/prune stores. Reputation counts matching local chain command events but does not assert cryptographic verification. Byte strings may be base64 objects."
+}

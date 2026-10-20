@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:sigil-transition-report:v1",
+  "title": "JSON envelope for Sigil recovery receipts and final observation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "receipts",
+        "result"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.transition-report.v1"
+        },
+        "receipts": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:jash:sigil-transition:v1#/$defs/receipt"
+          },
+          "maxItems": 8
+        },
+        "result": {
+          "oneOf": [
+            {
+              "$ref": "urn:jash:sigil-transition:v1#/$defs/quarantineResult"
+            },
+            {
+              "$ref": "urn:jash:sigil-transition:v1#/$defs/ratchetResult"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ]
+}

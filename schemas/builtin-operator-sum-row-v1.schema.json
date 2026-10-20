@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:operator:sum:row:v1",
+  "title": "sum JSONL output row",
+  "description": "Row shape only; field selection, arithmetic and relation to input require the semantic operator tests.",
+  "type": "object",
+  "required": [
+    "sum"
+  ],
+  "properties": {
+    "sum": {
+      "type": "number"
+    }
+  },
+  "minProperties": 1,
+  "maxProperties": 2
+}

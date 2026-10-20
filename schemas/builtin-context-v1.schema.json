@@ -1,0 +1,1297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:context:v1",
+  "title": "Context direct source, lexical and recorded state observations",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "source_basis",
+        "complete",
+        "result",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.context.v1"
+        },
+        "operation": {
+          "const": "map"
+        },
+        "source_basis": {
+          "const": "checked-source-and-recorded-state"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "root",
+                "files",
+                "source_files",
+                "source_bytes_read",
+                "entries_visited",
+                "excluded_entries",
+                "query",
+                "intent",
+                "candidates",
+                "deeply_analyzed",
+                "has_more",
+                "heuristic",
+                "snapshot"
+              ],
+              "properties": {
+                "root": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/map_file"
+                  }
+                },
+                "source_files": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "source_bytes_read": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "entries_visited": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "excluded_entries": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "query": {
+                  "type": "null"
+                },
+                "intent": {
+                  "type": "null"
+                },
+                "candidates": {
+                  "type": "null"
+                },
+                "deeply_analyzed": {
+                  "type": "null"
+                },
+                "has_more": {
+                  "const": false
+                },
+                "heuristic": {
+                  "const": "column-zero-declarations"
+                },
+                "snapshot": {
+                  "const": "individually-stable-files-not-an-atomic-directory-snapshot"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": -9223372036854775808
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "source_basis",
+        "complete",
+        "result",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.context.v1"
+        },
+        "operation": {
+          "const": "ask"
+        },
+        "source_basis": {
+          "const": "checked-source-and-recorded-state"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "root",
+                "files",
+                "source_files",
+                "source_bytes_read",
+                "entries_visited",
+                "excluded_entries",
+                "query",
+                "intent",
+                "candidates",
+                "deeply_analyzed",
+                "has_more",
+                "heuristic",
+                "snapshot"
+              ],
+              "properties": {
+                "root": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/ask_file"
+                  }
+                },
+                "source_files": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "source_bytes_read": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "entries_visited": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "excluded_entries": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "query": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "intent": {
+                  "$ref": "#/$defs/intent"
+                },
+                "candidates": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "deeply_analyzed": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "has_more": {
+                  "type": "boolean"
+                },
+                "heuristic": {
+                  "const": "path-and-first-50-lines-then-top-32-declarations-and-snippets"
+                },
+                "snapshot": {
+                  "const": "individually-stable-files-not-an-atomic-directory-snapshot"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": -9223372036854775808
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "source_basis",
+        "complete",
+        "result",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.context.v1"
+        },
+        "operation": {
+          "const": "fold"
+        },
+        "source_basis": {
+          "const": "checked-source-and-recorded-state"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "bytes",
+                "source_lines",
+                "lines",
+                "bodies_collapsed",
+                "lines_suppressed",
+                "remaining_brace_depth",
+                "heuristic"
+              ],
+              "properties": {
+                "path": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "bytes": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "source_lines": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "lines": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "line",
+                      "text",
+                      "body_collapsed_after"
+                    ],
+                    "properties": {
+                      "line": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 18446744073709551615
+                      },
+                      "text": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "encoding",
+                              "data"
+                            ],
+                            "properties": {
+                              "encoding": {
+                                "const": "base64"
+                              },
+                              "data": {
+                                "type": "string",
+                                "contentEncoding": "base64"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "body_collapsed_after": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "bodies_collapsed": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "lines_suppressed": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "remaining_brace_depth": {
+                  "type": "integer",
+                  "maximum": 9223372036854775807,
+                  "minimum": -9223372036854775808
+                },
+                "heuristic": {
+                  "const": "brace-depth-with-quoted-string-escapes"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": -9223372036854775808
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "source_basis",
+        "complete",
+        "result",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.context.v1"
+        },
+        "operation": {
+          "const": "bundle"
+        },
+        "source_basis": {
+          "const": "checked-source-and-recorded-state"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "intent",
+                "recent",
+                "git",
+                "diff_stat",
+                "consistency"
+              ],
+              "properties": {
+                "intent": {
+                  "$ref": "#/$defs/intent"
+                },
+                "recent": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "source",
+                    "present",
+                    "read_complete",
+                    "source_bytes",
+                    "total_records",
+                    "records",
+                    "has_more",
+                    "cryptographically_verified",
+                    "error"
+                  ],
+                  "properties": {
+                    "source": {
+                      "const": "session_meta.jsonl"
+                    },
+                    "present": {
+                      "type": "boolean"
+                    },
+                    "read_complete": {
+                      "type": "boolean"
+                    },
+                    "source_bytes": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 18446744073709551615
+                    },
+                    "total_records": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 18446744073709551615
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "records": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "source_line",
+                          "timestamp_seconds",
+                          "status",
+                          "duration_ms",
+                          "command_recorded"
+                        ],
+                        "properties": {
+                          "source_line": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 18446744073709551615
+                          },
+                          "timestamp_seconds": {
+                            "type": "integer",
+                            "maximum": 9223372036854775807,
+                            "minimum": -9223372036854775808
+                          },
+                          "status": {
+                            "type": "integer",
+                            "maximum": 9223372036854775807,
+                            "minimum": -9223372036854775808
+                          },
+                          "duration_ms": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 18446744073709551615
+                          },
+                          "command_recorded": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                  "encoding",
+                                  "data"
+                                ],
+                                "properties": {
+                                  "encoding": {
+                                    "const": "base64"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "contentEncoding": "base64"
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "has_more": {
+                      "type": "boolean"
+                    },
+                    "cryptographically_verified": {
+                      "const": false
+                    },
+                    "error": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "git": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "schema",
+                        "status",
+                        "latest_commit",
+                        "latest_commit_requested",
+                        "cryptographically_verified",
+                        "consistency"
+                      ],
+                      "properties": {
+                        "schema": {
+                          "const": "jash.git-observation.v1"
+                        },
+                        "status": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "available",
+                            "started",
+                            "command_status",
+                            "adapter_status",
+                            "output_bytes",
+                            "truncated",
+                            "payload",
+                            "diagnostic_bytes"
+                          ],
+                          "properties": {
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "started": {
+                              "type": "boolean"
+                            },
+                            "command_status": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "maximum": 9223372036854775807,
+                                  "minimum": -9223372036854775808
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "adapter_status": {
+                              "type": "integer",
+                              "maximum": 9223372036854775807,
+                              "minimum": -9223372036854775808
+                            },
+                            "output_bytes": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 18446744073709551615
+                            },
+                            "truncated": {
+                              "type": "boolean"
+                            },
+                            "payload": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "files",
+                                    "git"
+                                  ],
+                                  "properties": {
+                                    "files": {
+                                      "$ref": "urn:jash:git-status:v1#/oneOf/0/properties/files"
+                                    },
+                                    "git": {
+                                      "$ref": "urn:jash:git-status:v1#/oneOf/0/properties/git"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "diagnostic_bytes": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "encoding",
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "encoding": {
+                                      "const": "base64"
+                                    },
+                                    "data": {
+                                      "type": "string",
+                                      "contentEncoding": "base64"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "latest_commit": {
+                          "type": "null"
+                        },
+                        "latest_commit_requested": {
+                          "const": false
+                        },
+                        "cryptographically_verified": {
+                          "const": false
+                        },
+                        "consistency": {
+                          "const": "independent-subprocess-observations"
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "diff_stat": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "available",
+                        "started",
+                        "command_status",
+                        "adapter_status",
+                        "output_bytes",
+                        "truncated",
+                        "payload",
+                        "diagnostic_bytes"
+                      ],
+                      "properties": {
+                        "available": {
+                          "type": "boolean"
+                        },
+                        "started": {
+                          "type": "boolean"
+                        },
+                        "command_status": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "maximum": 9223372036854775807,
+                              "minimum": -9223372036854775808
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "adapter_status": {
+                          "type": "integer",
+                          "maximum": 9223372036854775807,
+                          "minimum": -9223372036854775808
+                        },
+                        "output_bytes": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 18446744073709551615
+                        },
+                        "truncated": {
+                          "type": "boolean"
+                        },
+                        "payload": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "files",
+                                "total"
+                              ],
+                              "properties": {
+                                "files": {
+                                  "$ref": "urn:jash:git-diff-stat:v1#/oneOf/0/properties/files"
+                                },
+                                "total": {
+                                  "$ref": "urn:jash:git-diff-stat:v1#/oneOf/0/properties/total"
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "diagnostic_bytes": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "encoding",
+                                "data"
+                              ],
+                              "properties": {
+                                "encoding": {
+                                  "const": "base64"
+                                },
+                                "data": {
+                                  "type": "string",
+                                  "contentEncoding": "base64"
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "consistency": {
+                  "const": "independent-read-only-observations"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": -9223372036854775808
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "source_basis",
+        "complete",
+        "result",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.context.v1"
+        },
+        "operation": {
+          "const": "help"
+        },
+        "source_basis": {
+          "const": "checked-source-and-recorded-state"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "result": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "operations"
+              ],
+              "properties": {
+                "operations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "maximum": 9223372036854775807,
+              "minimum": -9223372036854775808
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.context.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.context.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "maximum": 9223372036854775807,
+          "minimum": -9223372036854775808
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "$ref": "urn:jash:builtin-error:v1"
+    }
+  ],
+  "$defs": {
+    "line": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line",
+        "text"
+      ],
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "intent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "present",
+        "read_complete",
+        "source_bytes",
+        "text",
+        "error"
+      ],
+      "properties": {
+        "origin": {
+          "enum": [
+            "environment",
+            "intent_store"
+          ]
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "source_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "text": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "map_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bytes",
+        "lines",
+        "signatures",
+        "signatures_total",
+        "signatures_omitted"
+      ],
+      "properties": {
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "lines": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "signatures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/line"
+          }
+        },
+        "signatures_total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "signatures_omitted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        }
+      }
+    },
+    "ask_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "bytes",
+        "lines",
+        "score",
+        "signatures",
+        "signatures_omitted",
+        "snippets",
+        "snippets_omitted"
+      ],
+      "properties": {
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64"
+                }
+              }
+            }
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "lines": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "score": {
+          "type": "integer",
+          "maximum": 9223372036854775807,
+          "minimum": -9223372036854775808
+        },
+        "signatures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/line"
+          }
+        },
+        "signatures_omitted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "snippets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/line"
+          }
+        },
+        "snippets_omitted": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        }
+      }
+    }
+  }
+}

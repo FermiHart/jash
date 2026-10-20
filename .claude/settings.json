@@ -1,0 +1,18 @@
+{
+  "env": {
+    "JASH_SIGIL": "2",
+    "JASH_LLM_BUDGET": "131072"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v jash >/dev/null 2>&1 && jash --agent-guide 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

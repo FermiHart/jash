@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:agent-maintenance-history:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "id", "op", "authority", "snapshot", "next_cursor", "offset", "limit", "total_records", "entries_scanned", "bytes_read", "scan_complete", "items", "ok", "error"],
+  "properties": {
+    "schema": {"const": "jash.agent-maintenance-history.v1"}, "id": {"type": "string"},
+    "op": {"const": "store.history"}, "authority": {"const": "observation-only"},
+    "snapshot": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "next_cursor": {"type": ["string", "null"], "pattern": "^m1:[0-9a-f]{64}:(0|[1-9][0-9]*)$"},
+    "offset": {"type": "integer", "minimum": 0, "maximum": 4096},
+    "limit": {"type": "integer", "minimum": 1, "maximum": 64},
+    "total_records": {"type": ["integer", "null"], "minimum": 0, "maximum": 4096},
+    "entries_scanned": {"type": "integer", "minimum": 0, "maximum": 4096},
+    "bytes_read": {"type": "integer", "minimum": 0, "maximum": 67108864},
+    "scan_complete": {"type": "boolean"}, "ok": {"type": "boolean"}, "error": {"type": ["string", "null"]},
+    "items": {"type": "array", "maxItems": 64, "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["record_key", "target_id", "id_source", "example_ref", "files", "intent_files", "result_files", "staging_files", "signed_receipts", "state", "reason", "effect_admission", "verification"],
+      "properties": {
+        "record_key": {"type": "string", "pattern": "^[tu]:[0-9a-f]{64}$"},
+        "target_id": {"type": ["string", "null"], "minLength": 1, "maxLength": 47},
+        "id_source": {"enum": ["unknown", "unverified_document", "signed_receipt"]},
+        "example_ref": {"oneOf": [{"type": "string"}, {"type": "object", "additionalProperties": false, "required": ["encoding", "data"], "properties": {"encoding": {"const": "base64"}, "data": {"type": "string"}}}]},
+        "files": {"$ref": "#/$defs/count"}, "intent_files": {"$ref": "#/$defs/count"},
+        "result_files": {"$ref": "#/$defs/count"}, "staging_files": {"$ref": "#/$defs/count"}, "signed_receipts": {"$ref": "#/$defs/count"},
+        "state": {"enum": ["committed", "unresolved", "unattributed"]},
+        "reason": {"type": ["string", "null"]},
+        "effect_admission": {"enum": ["unknown", "intent_missing", "intent_invalid", "intent_unverified", "legacy", "decision_missing", "decision_invalid", "admitted", "closed"]},
+        "verification": {"enum": ["checked", "not_checked", "not_applicable"]}
+      }
+    }}
+  },
+  "allOf": [{"if": {"properties": {"ok": {"const": true}}},
+             "then": {"properties": {"snapshot": {"type": "string"}, "total_records": {"type": "integer"}, "scan_complete": {"const": true}, "error": {"type": "null"}}},
+             "else": {"properties": {"snapshot": {"type": "null"}, "next_cursor": {"type": "null"}, "total_records": {"type": "null"}, "scan_complete": {"const": false}, "items": {"maxItems": 0}, "error": {"type": "string"}}}}],
+  "$defs": {"count": {"type": "integer", "minimum": 0, "maximum": 4096}}
+}

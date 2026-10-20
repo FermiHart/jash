@@ -1,0 +1,5 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"urn:jash:agent-local-data:v1",
+  "type":"object","additionalProperties":false,"required":["jash_data","transport","attachment"],
+  "properties":{"jash_data":{"const":1},"transport":{"const":"seqpacket-fd-v1"},"attachment":{"const":"scm-rights-one-byte-v1"}}
+}

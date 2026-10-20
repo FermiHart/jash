@@ -1,0 +1,1223 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:recall:v1",
+  "title": "Native recall records, recorded provenance, and byte-exact overflow pages",
+  "description": "First-argument selectors only. Parsing does not establish chain cryptographic verification. Truncated denotes a requested page with continuation; source read errors never become empty successful collections. Overflow read offsets/limits are bytes, other overflow selectors use result-row offsets.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "source",
+        "results",
+        "analysis",
+        "matched",
+        "offset",
+        "next_offset",
+        "truncated",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.recall.v1"
+        },
+        "operation": {
+          "enum": [
+            "commands",
+            "stats",
+            "adoption",
+            "why",
+            "overflow_list",
+            "overflow_read",
+            "overflow_head",
+            "overflow_tail",
+            "overflow_grep"
+          ]
+        },
+        "source": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/chain_source"
+            },
+            {
+              "$ref": "#/$defs/overflow_source"
+            }
+          ]
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/chain_entry"
+              },
+              {
+                "$ref": "#/$defs/stat"
+              },
+              {
+                "$ref": "#/$defs/feature"
+              },
+              {
+                "$ref": "#/$defs/capture"
+              },
+              {
+                "$ref": "#/$defs/capture_bytes"
+              },
+              {
+                "$ref": "#/$defs/capture_line"
+              }
+            ]
+          },
+          "maxItems": 500
+        },
+        "analysis": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/aggregate"
+            },
+            {
+              "$ref": "#/$defs/why"
+            }
+          ]
+        },
+        "matched": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "next_offset": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "enum": [
+                  "commands"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/chain_entry"
+                },
+                "maxItems": 500
+              },
+              "analysis": {
+                "type": "null"
+              },
+              "source": {
+                "$ref": "#/$defs/chain_source"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "enum": [
+                  "stats"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/stat"
+                },
+                "maxItems": 500
+              },
+              "analysis": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/aggregate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "$ref": "#/$defs/chain_source"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "enum": [
+                  "adoption"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/feature"
+                },
+                "maxItems": 500
+              },
+              "analysis": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/aggregate"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "$ref": "#/$defs/chain_source"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "enum": [
+                  "why"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "maxItems": 0
+              },
+              "analysis": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/why"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "source": {
+                "$ref": "#/$defs/chain_source"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "enum": [
+                  "overflow_list"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/capture"
+                },
+                "maxItems": 500
+              },
+              "analysis": {
+                "type": "null"
+              },
+              "source": {
+                "$ref": "#/$defs/overflow_source"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "enum": [
+                  "overflow_read"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/capture_bytes"
+                },
+                "maxItems": 500
+              },
+              "analysis": {
+                "type": "null"
+              },
+              "source": {
+                "$ref": "#/$defs/overflow_source"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "enum": [
+                  "overflow_head",
+                  "overflow_tail",
+                  "overflow_grep"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/capture_line"
+                },
+                "maxItems": 500
+              },
+              "analysis": {
+                "type": "null"
+              },
+              "source": {
+                "$ref": "#/$defs/overflow_source"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.recall.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.recall.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "chain_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "timestamp_seconds",
+        "timestamp_nanoseconds",
+        "source_line",
+        "status",
+        "hash_recorded",
+        "tag",
+        "command_recorded",
+        "cwd_recorded",
+        "repo",
+        "session",
+        "duration_ms"
+      ],
+      "properties": {
+        "sequence": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timestamp_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "timestamp_nanoseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999999999
+        },
+        "source_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "hash_recorded": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tag": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "command_recorded": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "cwd_recorded": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repo": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "session": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration_ms": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "chain_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "present",
+        "read_complete",
+        "bytes",
+        "records",
+        "session_markers",
+        "cryptographically_verified",
+        "command_fidelity",
+        "cwd_fidelity",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "records": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "session_markers": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "cryptographically_verified": {
+          "const": false
+        },
+        "command_fidelity": {
+          "const": "recorded_bytes_only"
+        },
+        "cwd_fidelity": {
+          "const": "legacy_may_replace_spaces_with_underscores"
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "fs_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "timestamp_seconds",
+        "source_line",
+        "session",
+        "kind",
+        "path_recorded"
+      ],
+      "properties": {
+        "timestamp_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "source_line": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "session": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "kind": {
+          "enum": [
+            "+",
+            "~",
+            "-"
+          ]
+        },
+        "path_recorded": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        }
+      }
+    },
+    "fs_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "present",
+        "read_complete",
+        "bytes",
+        "records",
+        "coverage",
+        "path_fidelity",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "records": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "coverage": {
+          "const": "retained_sampled_changes_only"
+        },
+        "path_fidelity": {
+          "const": "recorded_bytes_without_escaping"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "overflow_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "present",
+        "read_complete",
+        "bytes",
+        "records",
+        "selection",
+        "consistency",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "records": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "selection": {
+          "const": "newest_mtime_then_lexical_name"
+        },
+        "consistency": {
+          "enum": [
+            "live_directory_scan",
+            "stable_regular_file_metadata"
+          ]
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "stat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "first_word_recorded",
+        "runs",
+        "failed"
+      ],
+      "properties": {
+        "first_word_recorded": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "runs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        }
+      }
+    },
+    "feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "feature",
+        "commands"
+      ],
+      "properties": {
+        "feature": {
+          "type": "string"
+        },
+        "commands": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        }
+      }
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "path",
+        "bytes",
+        "mtime_seconds",
+        "mtime_nanoseconds"
+      ],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "mtime_seconds": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "mtime_nanoseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999999999
+        }
+      }
+    },
+    "capture_bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "byte_offset",
+        "bytes",
+        "content"
+      ],
+      "properties": {
+        "byte_offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "content": {
+          "$ref": "#/$defs/bytes"
+        }
+      }
+    },
+    "capture_line": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line_number",
+        "byte_offset",
+        "content",
+        "terminated"
+      ],
+      "properties": {
+        "line_number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "byte_offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "content": {
+          "$ref": "#/$defs/bytes"
+        },
+        "terminated": {
+          "type": "boolean"
+        }
+      }
+    },
+    "aggregate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commands",
+        "failed",
+        "differentiator_uses",
+        "adoption_percent_rounded",
+        "classifier",
+        "classification_complete"
+      ],
+      "properties": {
+        "commands": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "differentiator_uses": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "adoption_percent_rounded": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "classifier": {
+          "enum": [
+            "first_recognized_differentiator_heuristic",
+            "first_whitespace_delimited_word"
+          ]
+        },
+        "classification_complete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "context_change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "before",
+        "after",
+        "changed"
+      ],
+      "properties": {
+        "field": {
+          "enum": [
+            "cwd_recorded",
+            "repo",
+            "session"
+          ]
+        },
+        "before": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "after": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "changed": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "why": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "conclusion",
+        "first_recorded_match",
+        "last_success",
+        "first_failure_after_last_success",
+        "context_changes",
+        "file_changes",
+        "file_changes_matched",
+        "file_changes_truncated",
+        "file_source",
+        "causation_established"
+      ],
+      "properties": {
+        "conclusion": {
+          "enum": [
+            "no_recorded_match",
+            "no_successful_baseline",
+            "no_failure_after_last_success",
+            "temporal_comparison"
+          ]
+        },
+        "first_recorded_match": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/chain_entry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_success": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/chain_entry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "first_failure_after_last_success": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/chain_entry"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "context_changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/context_change"
+          },
+          "maxItems": 3
+        },
+        "file_changes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fs_entry"
+          },
+          "maxItems": 500
+        },
+        "file_changes_matched": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "file_changes_truncated": {
+          "type": "boolean"
+        },
+        "file_source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/fs_source"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "causation_established": {
+          "const": false
+        }
+      }
+    }
+  }
+}

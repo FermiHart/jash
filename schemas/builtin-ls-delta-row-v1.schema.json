@@ -1,0 +1,487 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:ls:delta:row:v1",
+  "title": "ls-delta-row",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "jash.ls.delta.row.v1"
+        },
+        "row_kind": {
+          "const": "header"
+        },
+        "directory": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              },
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "session": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              },
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "key": {
+          "type": "string"
+        },
+        "include_hidden": {
+          "type": "boolean"
+        },
+        "baseline": {
+          "type": "boolean"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                      },
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "present": {
+              "type": "boolean"
+            },
+            "read_complete": {
+              "type": "boolean"
+            },
+            "entries": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "errno": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "collection_complete": {
+              "type": "boolean"
+            },
+            "collection_errno": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "collection_reason": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "path",
+            "present",
+            "read_complete",
+            "entries",
+            "bytes",
+            "errno",
+            "collection_complete",
+            "collection_errno",
+            "collection_reason"
+          ],
+          "additionalProperties": false
+        },
+        "provenance": {
+          "type": "object",
+          "properties": {
+            "fingerprint": {
+              "const": "mtime_ns_size_type"
+            },
+            "content_hashed": {
+              "const": false
+            },
+            "key_algorithm": {
+              "const": "legacy_fnv1a32_session_absolute_path_hidden_suffix"
+            },
+            "snapshot_format": {
+              "const": "JGOLD2_binary"
+            },
+            "legacy_read": {
+              "const": "JGOLD1_strict"
+            },
+            "compare_before_publish": {
+              "const": true
+            }
+          },
+          "required": [
+            "fingerprint",
+            "content_hashed",
+            "key_algorithm",
+            "snapshot_format",
+            "legacy_read",
+            "compare_before_publish"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schema",
+        "row_kind",
+        "directory",
+        "session",
+        "key",
+        "include_hidden",
+        "baseline",
+        "source",
+        "provenance"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "jash.ls.delta.row.v1"
+        },
+        "row_kind": {
+          "const": "change"
+        },
+        "change": {
+          "enum": [
+            "baseline",
+            "added",
+            "removed",
+            "modified"
+          ]
+        },
+        "name": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              },
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "type": {
+          "enum": [
+            "f",
+            "d",
+            "l",
+            "o"
+          ]
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "modified": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "size_delta": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "row_kind",
+        "change",
+        "name",
+        "type",
+        "size",
+        "modified",
+        "size_delta"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "jash.ls.delta.row.v1"
+        },
+        "row_kind": {
+          "const": "summary"
+        },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "baseline": {
+              "type": "boolean"
+            },
+            "changes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "entries": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "since_s": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "source_complete": {
+              "type": "boolean"
+            },
+            "command_status": {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            "cancelled": {
+              "type": "boolean"
+            },
+            "reason": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "baseline",
+            "changes",
+            "entries",
+            "since_s",
+            "source_complete",
+            "command_status",
+            "cancelled",
+            "reason"
+          ],
+          "additionalProperties": false
+        },
+        "publication": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "oneOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                      },
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "applied": {
+              "type": "boolean"
+            },
+            "durable": {
+              "type": "boolean"
+            },
+            "directories_created": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "lock_created": {
+              "type": "boolean"
+            },
+            "bytes_written": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "phase": {
+              "enum": [
+                "not_started",
+                "validation",
+                "directories",
+                "lock",
+                "compare",
+                "temporary",
+                "write",
+                "file_sync",
+                "publish",
+                "directory_sync",
+                "complete",
+                "close_file",
+                "close_lock",
+                "close_directory"
+              ]
+            },
+            "errno": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "path",
+            "applied",
+            "durable",
+            "directories_created",
+            "lock_created",
+            "bytes_written",
+            "phase",
+            "errno"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schema",
+        "row_kind",
+        "summary",
+        "publication"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

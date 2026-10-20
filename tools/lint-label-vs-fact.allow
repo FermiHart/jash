@@ -1,0 +1,7 @@
+# tools/lint-label-vs-fact.allow — excecoes declaradas do lint W6.
+#
+# REGRA: toda entrada precisa de um comentario "# porque:" na linha anterior.
+# Formato: "<regra>: <trecho exato>"
+#
+# porque: este e o proprio probe correto — executa o candidato antes de usar.
+R1 [-x] como prova de executabilidade: runs() { [ -x "$1" ] && "$1" -c 'exit 0' >/dev/null 2>&1; }

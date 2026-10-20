@@ -1,0 +1,1947 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:digest:v1",
+  "title": "Digest project, source, cache and publication observations",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "generator",
+        "root",
+        "fingerprint",
+        "consistency",
+        "coverage",
+        "entries",
+        "level",
+        "counts",
+        "readme",
+        "cache",
+        "complete",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.digest.project.v1"
+        },
+        "generator": {
+          "const": "project-v5"
+        },
+        "root": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "consistency": {
+          "const": "best-effort"
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "gitignore_evaluated",
+            "ignored_directories",
+            "excluded_files",
+            "excluded_special",
+            "excluded_directories",
+            "scope"
+          ],
+          "properties": {
+            "gitignore_evaluated": {
+              "const": false
+            },
+            "ignored_directories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 64
+            },
+            "excluded_files": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "excluded_special": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "excluded_directories": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "scope": {
+              "const": "recognized source, docs, build, config and directories; opaque files excluded"
+            }
+          }
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "kind",
+                  "language",
+                  "blake3",
+                  "bytes",
+                  "lines"
+                ],
+                "properties": {
+                  "path": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/$defs/bytes"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "enum": [
+                      "source",
+                      "header",
+                      "test",
+                      "doc",
+                      "build",
+                      "config"
+                    ]
+                  },
+                  "language": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "C",
+                          "C++",
+                          "Python",
+                          "JavaScript",
+                          "TypeScript",
+                          "Shell",
+                          "Rust",
+                          "HTML",
+                          "CSS",
+                          "Template",
+                          "Script"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "blake3": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "lines": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "kind",
+                  "language"
+                ],
+                "properties": {
+                  "path": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/$defs/bytes"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "const": "directory"
+                  },
+                  "language": {
+                    "type": "null"
+                  }
+                }
+              }
+            ]
+          },
+          "maxItems": 32768
+        },
+        "level": {
+          "enum": [
+            "brief",
+            "standard",
+            "deep"
+          ]
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "files",
+            "directories",
+            "visited",
+            "bytes",
+            "lines"
+          ],
+          "properties": {
+            "files": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "directories": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "visited": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lines": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "readme": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "prefix",
+            "retained_bytes",
+            "prefix_limit"
+          ],
+          "properties": {
+            "path": {
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "$ref": "#/$defs/bytes"
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "prefix": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            "retained_bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "prefix_limit": {
+              "const": 8192
+            }
+          }
+        },
+        "cache": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requested",
+            "key",
+            "hit",
+            "effects_started",
+            "published",
+            "durable",
+            "cas_attempted",
+            "cas_complete",
+            "cas_verified_objects",
+            "ledger_written",
+            "ledger_durable"
+          ],
+          "properties": {
+            "requested": {
+              "type": "boolean"
+            },
+            "key": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "hit": {
+              "type": "boolean"
+            },
+            "effects_started": {
+              "type": "boolean"
+            },
+            "published": {
+              "type": "boolean"
+            },
+            "durable": {
+              "type": "boolean"
+            },
+            "cas_attempted": {
+              "type": "boolean"
+            },
+            "cas_complete": {
+              "type": "boolean"
+            },
+            "cas_verified_objects": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "ledger_written": {
+              "type": "boolean"
+            },
+            "ledger_durable": {
+              "type": "boolean"
+            }
+          }
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "generator",
+        "root",
+        "fingerprint",
+        "consistency",
+        "coverage",
+        "entries"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.project-observation.v1"
+        },
+        "generator": {
+          "const": "project-v5"
+        },
+        "root": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "consistency": {
+          "const": "best-effort"
+        },
+        "coverage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "gitignore_evaluated",
+            "ignored_directories",
+            "excluded_files",
+            "excluded_special",
+            "excluded_directories",
+            "scope"
+          ],
+          "properties": {
+            "gitignore_evaluated": {
+              "const": false
+            },
+            "ignored_directories": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 64
+            },
+            "excluded_files": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "excluded_special": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "excluded_directories": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "scope": {
+              "const": "recognized source, docs, build, config and directories; opaque files excluded"
+            }
+          }
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "kind",
+                  "language",
+                  "blake3",
+                  "bytes",
+                  "lines"
+                ],
+                "properties": {
+                  "path": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/$defs/bytes"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "enum": [
+                      "source",
+                      "header",
+                      "test",
+                      "doc",
+                      "build",
+                      "config"
+                    ]
+                  },
+                  "language": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "C",
+                          "C++",
+                          "Python",
+                          "JavaScript",
+                          "TypeScript",
+                          "Shell",
+                          "Rust",
+                          "HTML",
+                          "CSS",
+                          "Template",
+                          "Script"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "blake3": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "lines": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "kind",
+                  "language"
+                ],
+                "properties": {
+                  "path": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/$defs/bytes"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "const": "directory"
+                  },
+                  "language": {
+                    "type": "null"
+                  }
+                }
+              }
+            ]
+          },
+          "maxItems": 32768
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "generator",
+        "root",
+        "fingerprint",
+        "base_fingerprint",
+        "added",
+        "modified",
+        "removed"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.project-diff.v1"
+        },
+        "generator": {
+          "const": "project-v5"
+        },
+        "root": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "base_fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "kind",
+                  "language",
+                  "blake3",
+                  "bytes",
+                  "lines"
+                ],
+                "properties": {
+                  "path": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/$defs/bytes"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "enum": [
+                      "source",
+                      "header",
+                      "test",
+                      "doc",
+                      "build",
+                      "config"
+                    ]
+                  },
+                  "language": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "C",
+                          "C++",
+                          "Python",
+                          "JavaScript",
+                          "TypeScript",
+                          "Shell",
+                          "Rust",
+                          "HTML",
+                          "CSS",
+                          "Template",
+                          "Script"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "blake3": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "lines": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "kind",
+                  "language"
+                ],
+                "properties": {
+                  "path": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/$defs/bytes"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "const": "directory"
+                  },
+                  "language": {
+                    "type": "null"
+                  }
+                }
+              }
+            ]
+          },
+          "maxItems": 32768
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "kind",
+              "language",
+              "blake3",
+              "bytes",
+              "lines",
+              "old_blake3"
+            ],
+            "properties": {
+              "path": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/bytes"
+                  }
+                ]
+              },
+              "kind": {
+                "enum": [
+                  "source",
+                  "header",
+                  "test",
+                  "doc",
+                  "build",
+                  "config"
+                ]
+              },
+              "language": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "C",
+                      "C++",
+                      "Python",
+                      "JavaScript",
+                      "TypeScript",
+                      "Shell",
+                      "Rust",
+                      "HTML",
+                      "CSS",
+                      "Template",
+                      "Script"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "blake3": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "lines": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "old_blake3": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "maxItems": 32768
+        },
+        "removed": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "kind",
+                  "language",
+                  "blake3",
+                  "bytes",
+                  "lines"
+                ],
+                "properties": {
+                  "path": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/$defs/bytes"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "enum": [
+                      "source",
+                      "header",
+                      "test",
+                      "doc",
+                      "build",
+                      "config"
+                    ]
+                  },
+                  "language": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "C",
+                          "C++",
+                          "Python",
+                          "JavaScript",
+                          "TypeScript",
+                          "Shell",
+                          "Rust",
+                          "HTML",
+                          "CSS",
+                          "Template",
+                          "Script"
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "blake3": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "bytes": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "lines": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "kind",
+                  "language"
+                ],
+                "properties": {
+                  "path": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/$defs/bytes"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "const": "directory"
+                  },
+                  "language": {
+                    "type": "null"
+                  }
+                }
+              }
+            ]
+          },
+          "maxItems": 32768
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "generator",
+        "root",
+        "fingerprint"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.digest.fingerprint.v1"
+        },
+        "generator": {
+          "const": "project-v5"
+        },
+        "root": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "generator",
+        "entries",
+        "bytes",
+        "oldest",
+        "newest"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.digest-cache-status.v1"
+        },
+        "generator": {
+          "const": "project-v5"
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "oldest": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "newest": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "present",
+        "total_rows",
+        "returned_rows",
+        "receipts",
+        "complete"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.digest.ledger.v1"
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "total_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "returned_rows": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "receipts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "schema",
+              "generator",
+              "ts",
+              "root",
+              "level",
+              "fingerprint",
+              "served_from_cache",
+              "bytes_out",
+              "files",
+              "directories",
+              "lines"
+            ],
+            "properties": {
+              "schema": {
+                "const": "jash.digest-receipt.v1"
+              },
+              "generator": {
+                "type": "string"
+              },
+              "ts": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "root": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/bytes"
+                  }
+                ]
+              },
+              "level": {
+                "enum": [
+                  "brief",
+                  "standard",
+                  "deep"
+                ]
+              },
+              "fingerprint": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "served_from_cache": {
+                "type": "boolean"
+              },
+              "bytes_out": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "files": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "directories": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "lines": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "maxItems": 1000
+        },
+        "complete": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "blake3",
+        "bytes",
+        "content",
+        "hash_verified"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.digest.content.v1"
+        },
+        "blake3": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "content": {
+          "$ref": "#/$defs/bytes"
+        },
+        "hash_verified": {
+          "const": true
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "level",
+        "scope",
+        "source",
+        "commands",
+        "returned_commands",
+        "failed_commands",
+        "estimated_command_tokens",
+        "token_estimate_scope",
+        "git_requested",
+        "git",
+        "complete",
+        "status"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.digest.session.v1"
+        },
+        "level": {
+          "enum": [
+            "brief",
+            "standard",
+            "deep"
+          ]
+        },
+        "scope": {
+          "const": "recorded repository chain; not proof of a single session"
+        },
+        "source": {
+          "$ref": "#/$defs/chain_source"
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/chain_entry"
+          },
+          "maxItems": 10000
+        },
+        "returned_commands": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed_commands": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "estimated_command_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "token_estimate_scope": {
+          "const": "recorded command bytes divided by four; no model tokenizer"
+        },
+        "git_requested": {
+          "type": "boolean"
+        },
+        "git": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/git"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "path",
+        "format",
+        "bytes",
+        "blake3",
+        "command_status",
+        "applied",
+        "durable",
+        "error",
+        "prior_effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.digest.output.v1"
+        },
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "format": {
+          "enum": [
+            "json",
+            "jtv2"
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "blake3": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "command_status": {
+          "type": "integer"
+        },
+        "applied": {
+          "type": "boolean"
+        },
+        "durable": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "prior_effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "usage",
+        "depth_limit",
+        "inventory_entry_limit",
+        "file_byte_limit",
+        "total_file_byte_limit",
+        "native_value_byte_limit"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.digest.help.v1"
+        },
+        "usage": {
+          "type": "string"
+        },
+        "depth_limit": {
+          "const": 32
+        },
+        "inventory_entry_limit": {
+          "const": 32768
+        },
+        "file_byte_limit": {
+          "const": 8388608
+        },
+        "total_file_byte_limit": {
+          "const": 134217728
+        },
+        "native_value_byte_limit": {
+          "const": 1048576
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.digest.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.digest.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer"
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "chain_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "timestamp_seconds",
+        "timestamp_nanoseconds",
+        "source_line",
+        "status",
+        "hash_recorded",
+        "tag",
+        "command_recorded",
+        "cwd_recorded",
+        "repo",
+        "session",
+        "duration_ms"
+      ],
+      "properties": {
+        "sequence": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timestamp_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "timestamp_nanoseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999999999
+        },
+        "source_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "hash_recorded": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-fA-F0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tag": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "command_recorded": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "cwd_recorded": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "repo": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "session": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration_ms": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "chain_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "present",
+        "read_complete",
+        "bytes",
+        "records",
+        "session_markers",
+        "cryptographically_verified",
+        "command_fidelity",
+        "cwd_fidelity",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "$ref": "#/$defs/bytes"
+            }
+          ]
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "read_complete": {
+          "type": "boolean"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        },
+        "records": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "session_markers": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "cryptographically_verified": {
+          "const": false
+        },
+        "command_fidelity": {
+          "const": "recorded_bytes_only"
+        },
+        "cwd_fidelity": {
+          "const": "legacy_may_replace_spaces_with_underscores"
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errno": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "git_status_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "files",
+        "git"
+      ],
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status",
+              "index_status",
+              "path"
+            ],
+            "properties": {
+              "status": {
+                "type": "string"
+              },
+              "index_status": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 2
+              },
+              "path": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/bytes"
+                  }
+                ]
+              },
+              "original_path": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "maxItems": 512
+        },
+        "git": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "branch",
+            "dirty",
+            "ahead",
+            "behind"
+          ],
+          "properties": {
+            "branch": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            "dirty": {
+              "type": "boolean"
+            },
+            "ahead": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "behind": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            }
+          }
+        }
+      }
+    },
+    "git_log_payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "commits"
+      ],
+      "properties": {
+        "commits": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "hash",
+              "message",
+              "author",
+              "date"
+            ],
+            "properties": {
+              "hash": {
+                "type": "string",
+                "pattern": "^([0-9a-fA-F]{40}|[0-9a-fA-F]{64})$"
+              },
+              "message": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/bytes"
+                  }
+                ]
+              },
+              "author": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/bytes"
+                  }
+                ]
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "maxItems": 1
+        }
+      }
+    },
+    "git_status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "started",
+        "command_status",
+        "adapter_status",
+        "output_bytes",
+        "truncated",
+        "payload",
+        "diagnostic_bytes"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "started": {
+          "type": "boolean"
+        },
+        "command_status": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "adapter_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "output_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "payload": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/git_status_payload"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diagnostic_bytes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/bytes"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "git_log": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "available",
+        "started",
+        "command_status",
+        "adapter_status",
+        "output_bytes",
+        "truncated",
+        "payload",
+        "diagnostic_bytes"
+      ],
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "started": {
+          "type": "boolean"
+        },
+        "command_status": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "adapter_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "output_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "payload": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/git_log_payload"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "diagnostic_bytes": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/bytes"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "status",
+        "latest_commit",
+        "latest_commit_requested",
+        "cryptographically_verified",
+        "consistency"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.git-observation.v1"
+        },
+        "status": {
+          "$ref": "#/$defs/git_status"
+        },
+        "latest_commit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/git_log"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "latest_commit_requested": {
+          "type": "boolean"
+        },
+        "cryptographically_verified": {
+          "const": false
+        },
+        "consistency": {
+          "const": "independent-subprocess-observations"
+        }
+      }
+    },
+    "entry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "kind",
+            "language",
+            "blake3",
+            "bytes",
+            "lines"
+          ],
+          "properties": {
+            "path": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            "kind": {
+              "enum": [
+                "source",
+                "header",
+                "test",
+                "doc",
+                "build",
+                "config"
+              ]
+            },
+            "language": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "C",
+                    "C++",
+                    "Python",
+                    "JavaScript",
+                    "TypeScript",
+                    "Shell",
+                    "Rust",
+                    "HTML",
+                    "CSS",
+                    "Template",
+                    "Script"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "blake3": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "lines": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "kind",
+            "language"
+          ],
+          "properties": {
+            "path": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/bytes"
+                }
+              ]
+            },
+            "kind": {
+              "const": "directory"
+            },
+            "language": {
+              "type": "null"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

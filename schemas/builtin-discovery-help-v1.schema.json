@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:discovery:help:v1",
+  "title": "help semantic query report",
+  "description": "complete describes collection of all requested observations; status and per-item errors describe the operation outcome.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "command",
+    "complete",
+    "status",
+    "items"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.discovery.v1"
+    },
+    "command": {
+      "const": "help"
+    },
+    "complete": {
+      "const": true
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "found",
+          "summary",
+          "declared_effect",
+          "argv_native",
+          "enabled",
+          "contract_id"
+        ],
+        "properties": {
+          "name": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64"
+                  }
+                }
+              }
+            ]
+          },
+          "found": {
+            "type": "boolean"
+          },
+          "summary": {
+            "oneOf": [
+              {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "declared_effect": {
+            "enum": [
+              "read",
+              "mutate",
+              "exec",
+              "unknown",
+              null
+            ]
+          },
+          "argv_native": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "contract_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^builtin:"
+          }
+        }
+      }
+    }
+  }
+}

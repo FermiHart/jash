@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:json-value:v1",
+  "title": "JSON value projection bridge",
+  "description": "Each complete JTV2 item projected to a JSON line. User RECORD and LIST content is intentionally unconstrained; integers are exact and native byte/path tags follow the explicit projection contract. This schema describes the generic bridge, not a claimed domain record schema.",
+  "type": ["null", "boolean", "integer", "string", "array", "object"]
+}

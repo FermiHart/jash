@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:operator:count:row:v1",
+  "title": "count JSONL output row",
+  "description": "Row shape only; field selection, arithmetic and relation to input require the semantic operator tests.",
+  "type": "object",
+  "required": [
+    "count"
+  ],
+  "properties": {
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65536
+    }
+  },
+  "minProperties": 1,
+  "maxProperties": 2
+}

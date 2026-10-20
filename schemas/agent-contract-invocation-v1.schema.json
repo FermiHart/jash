@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:agent-contract:invocation:v1",
+  "title": "Jash synchronous invocation discovery",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "profile", "target", "id", "availability", "input_transport", "contract_status", "complete", "protocol_versions", "request_version_default", "allowed_fields", "field_types", "field_aliases", "exclusive_fields", "traits", "input_schema", "result_schema", "semantic_validation_required", "source"],
+  "properties": {
+    "schema": {"const": "jash.agent-contract.invocation.v1"},
+    "version": {"const": 1},
+    "profile": {"enum": ["general", "agent-strict"]},
+    "target": {"type": "string", "minLength": 1},
+    "id": {"enum": ["invocation:serve", "invocation:exec-json", "invocation:listen"]},
+    "availability": {"enum": ["compiled", "requires_general_profile", "requires_agent_profile"]},
+    "input_transport": {"enum": ["stdio-jsonl", "argv-json", "unix-jsonl"]},
+    "contract_status": {"const": "structural"},
+    "complete": {"const": false},
+    "protocol_versions": {"const": [1, 2]},
+    "request_version_default": {"const": 1},
+    "allowed_fields": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "field_types": {"type": "object", "additionalProperties": {"enum": ["string", "integer", "boolean", "array", "object", "json_value"]}},
+    "field_aliases": {"const": {"request_version": "protocol_version"}},
+    "exclusive_fields": {"const": [["argv", "line"], ["stdin", "stdin_b64"]]},
+    "traits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id_required", "capabilities_required", "text_line_authorized", "timeout_ms", "stdin_b64_requires_version"],
+      "properties": {
+        "id_required": {"type": "boolean"},
+        "capabilities_required": {"type": "boolean"},
+        "text_line_authorized": {"type": "boolean"},
+        "timeout_ms": {"enum": ["reserved", "effect-exec-only"]},
+        "stdin_b64_requires_version": {"const": 2},
+        "authentication": {"const": "canonical-scope-token-v1"},
+        "control": {"const": {"negotiation": "control=fd-v1", "attachment": "scm-rights-one-byte-v1", "lifetime": "connection-worker", "shared": false}},
+        "shutdown": {"const": {"signals": ["SIGINT", "SIGTERM"], "policy": "drain-workers", "deadline_ms": null, "parent_loss": "cooperative-cleanup"}},
+        "peer": {"const": "same-effective-uid"}
+      }
+    },
+    "input_schema": {"type": "null"},
+    "result_schema": {"type": "null"},
+    "semantic_validation_required": {"const": true},
+    "source": {"const": "c/core/serve.c"}
+  }
+}

@@ -1,0 +1,13 @@
+describe
+disown
+fg
+juxconfig
+logout
+mistake
+preference
+selfcheck
+sortby
+stance
+suspend
+typeset
+uniqby

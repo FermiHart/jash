@@ -1,0 +1,934 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:semantic:brain:v1",
+  "title": "Jash brain semantic result v1",
+  "description": "Actual local Liquid model state and finite binary64 estimates. Predictions advance recurrent state. Status initialization may create the store; intent/guard status are observation-only. JSON and JSON projection of the JTV2 record share this field contract. Native kinds additionally preserve PATH/SYMBOL/FILESIZE and exact I64/U64. The terminal is a separate JTV2 contract; this document alone does not prove stream completion.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "engine",
+        "input",
+        "intent_class",
+        "intent",
+        "ok",
+        "state_advanced",
+        "persisted",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.brain.v1"
+        },
+        "operation": {
+          "const": "intent"
+        },
+        "engine": {
+          "const": "keyword-classifier"
+        },
+        "input": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "intent_class": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
+        },
+        "intent": {
+          "type": "string"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "state_advanced": {
+          "type": "boolean"
+        },
+        "persisted": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "engine",
+        "enabled",
+        "ok",
+        "state_advanced",
+        "persisted",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.brain.v1"
+        },
+        "operation": {
+          "const": "guard"
+        },
+        "engine": {
+          "const": "local-liquid-model"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "state_advanced": {
+          "type": "boolean"
+        },
+        "persisted": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "engine",
+        "model",
+        "ok",
+        "state_advanced",
+        "persisted",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.brain.v1"
+        },
+        "operation": {
+          "enum": [
+            "status",
+            "reward",
+            "reset"
+          ]
+        },
+        "engine": {
+          "const": "local-liquid-model"
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "input_dimensions",
+            "hidden_size",
+            "command_classes",
+            "intent_classes",
+            "examples_seen",
+            "last_saved_ns",
+            "clock",
+            "average_loss",
+            "accuracy_estimated"
+          ],
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "input_dimensions": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "hidden_size": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "command_classes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "intent_classes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "examples_seen": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "last_saved_ns": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "clock": {
+              "const": "monotonic"
+            },
+            "average_loss": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "significand",
+                "exponent2",
+                "negative_zero"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "jash.number.binary64.v1"
+                },
+                "significand": {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                "exponent2": {
+                  "type": "integer",
+                  "minimum": -1074,
+                  "maximum": 1023
+                },
+                "negative_zero": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "accuracy_estimated": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "significand",
+                "exponent2",
+                "negative_zero"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "jash.number.binary64.v1"
+                },
+                "significand": {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                "exponent2": {
+                  "type": "integer",
+                  "minimum": -1074,
+                  "maximum": 1023
+                },
+                "negative_zero": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "state_advanced": {
+          "type": "boolean"
+        },
+        "persisted": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "engine",
+        "input",
+        "observed_status",
+        "reward",
+        "model",
+        "ok",
+        "state_advanced",
+        "persisted",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.brain.v1"
+        },
+        "operation": {
+          "const": "learn"
+        },
+        "engine": {
+          "const": "local-liquid-model"
+        },
+        "input": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "observed_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "reward": {
+          "enum": [
+            -1,
+            0,
+            1
+          ]
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "input_dimensions",
+            "hidden_size",
+            "command_classes",
+            "intent_classes",
+            "examples_seen",
+            "last_saved_ns",
+            "clock",
+            "average_loss",
+            "accuracy_estimated"
+          ],
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "input_dimensions": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "hidden_size": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "command_classes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "intent_classes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "examples_seen": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "last_saved_ns": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "clock": {
+              "const": "monotonic"
+            },
+            "average_loss": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "significand",
+                "exponent2",
+                "negative_zero"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "jash.number.binary64.v1"
+                },
+                "significand": {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                "exponent2": {
+                  "type": "integer",
+                  "minimum": -1074,
+                  "maximum": 1023
+                },
+                "negative_zero": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "accuracy_estimated": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "significand",
+                "exponent2",
+                "negative_zero"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "jash.number.binary64.v1"
+                },
+                "significand": {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                "exponent2": {
+                  "type": "integer",
+                  "minimum": -1074,
+                  "maximum": 1023
+                },
+                "negative_zero": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "state_advanced": {
+          "type": "boolean"
+        },
+        "persisted": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "engine",
+        "input",
+        "intent",
+        "intent_confidence_estimated",
+        "risk_estimated",
+        "confidence_estimated",
+        "next_commands",
+        "basis",
+        "verified_blast_radius",
+        "model",
+        "ok",
+        "state_advanced",
+        "persisted",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.brain.v1"
+        },
+        "operation": {
+          "enum": [
+            "suggest",
+            "impact"
+          ]
+        },
+        "engine": {
+          "const": "local-liquid-model"
+        },
+        "input": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "intent": {
+          "type": "string"
+        },
+        "intent_confidence_estimated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "significand",
+            "exponent2",
+            "negative_zero"
+          ],
+          "properties": {
+            "schema": {
+              "const": "jash.number.binary64.v1"
+            },
+            "significand": {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            "exponent2": {
+              "type": "integer",
+              "minimum": -1074,
+              "maximum": 1023
+            },
+            "negative_zero": {
+              "type": "boolean"
+            }
+          }
+        },
+        "risk_estimated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "significand",
+            "exponent2",
+            "negative_zero"
+          ],
+          "properties": {
+            "schema": {
+              "const": "jash.number.binary64.v1"
+            },
+            "significand": {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            "exponent2": {
+              "type": "integer",
+              "minimum": -1074,
+              "maximum": 1023
+            },
+            "negative_zero": {
+              "type": "boolean"
+            }
+          }
+        },
+        "confidence_estimated": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "schema",
+            "significand",
+            "exponent2",
+            "negative_zero"
+          ],
+          "properties": {
+            "schema": {
+              "const": "jash.number.binary64.v1"
+            },
+            "significand": {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            "exponent2": {
+              "type": "integer",
+              "minimum": -1074,
+              "maximum": 1023
+            },
+            "negative_zero": {
+              "type": "boolean"
+            }
+          }
+        },
+        "next_commands": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "class",
+              "label",
+              "score_estimated"
+            ],
+            "properties": {
+              "class": {
+                "type": "integer",
+                "minimum": -9223372036854775808,
+                "maximum": 9223372036854775807
+              },
+              "label": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64",
+                        "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                      }
+                    }
+                  }
+                ]
+              },
+              "score_estimated": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "schema",
+                  "significand",
+                  "exponent2",
+                  "negative_zero"
+                ],
+                "properties": {
+                  "schema": {
+                    "const": "jash.number.binary64.v1"
+                  },
+                  "significand": {
+                    "type": "integer",
+                    "minimum": -9223372036854775808,
+                    "maximum": 9223372036854775807
+                  },
+                  "exponent2": {
+                    "type": "integer",
+                    "minimum": -1074,
+                    "maximum": 1023
+                  },
+                  "negative_zero": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "maxItems": 3,
+          "minItems": 3
+        },
+        "basis": {
+          "enum": [
+            "synthetic-one-mutation-feature-vector",
+            "recurrent-state-and-command-features"
+          ]
+        },
+        "verified_blast_radius": {
+          "const": false
+        },
+        "model": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "input_dimensions",
+            "hidden_size",
+            "command_classes",
+            "intent_classes",
+            "examples_seen",
+            "last_saved_ns",
+            "clock",
+            "average_loss",
+            "accuracy_estimated"
+          ],
+          "properties": {
+            "version": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "input_dimensions": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "hidden_size": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "command_classes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "intent_classes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "examples_seen": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "last_saved_ns": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "clock": {
+              "const": "monotonic"
+            },
+            "average_loss": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "significand",
+                "exponent2",
+                "negative_zero"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "jash.number.binary64.v1"
+                },
+                "significand": {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                "exponent2": {
+                  "type": "integer",
+                  "minimum": -1074,
+                  "maximum": 1023
+                },
+                "negative_zero": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "accuracy_estimated": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "significand",
+                "exponent2",
+                "negative_zero"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "jash.number.binary64.v1"
+                },
+                "significand": {
+                  "type": "integer",
+                  "minimum": -9223372036854775808,
+                  "maximum": 9223372036854775807
+                },
+                "exponent2": {
+                  "type": "integer",
+                  "minimum": -1074,
+                  "maximum": 1023
+                },
+                "negative_zero": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "state_advanced": {
+          "type": "boolean"
+        },
+        "persisted": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.brain.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.brain.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ]
+}

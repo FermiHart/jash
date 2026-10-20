@@ -1,0 +1,927 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:grep-query-row:v1",
+  "title": "Grep native semantic query row projection",
+  "description": "JSON projection of grep native JDV1 records for line/context, predicate/count, stdin, fuzzy/smart, and JSON-paged query variants. Each stream ends its item sequence with one summary; JTV2 terminal and transport outcome are separate. Paths and content retain distinct native kinds; content is always a byte value. Integer tokens retain the entire unsigned 64-bit range.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/result"
+    },
+    {
+      "$ref": "#/$defs/summary"
+    }
+  ],
+  "$defs": {
+    "bytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      }
+    },
+    "path": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/bytes"
+        }
+      ]
+    },
+    "span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "line": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "source",
+        "file",
+        "line",
+        "content",
+        "role",
+        "matched",
+        "span",
+        "unit"
+      ],
+      "properties": {
+        "record": {
+          "const": "line"
+        },
+        "source": {
+          "enum": [
+            "file",
+            "stdin"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/path"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "content": {
+          "$ref": "#/$defs/bytes"
+        },
+        "role": {
+          "enum": [
+            "context",
+            "selected"
+          ]
+        },
+        "matched": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "span": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/span"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "unit": {
+          "const": "byte"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "file"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "file": {
+                "$ref": "#/$defs/path"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "file": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "context"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "matched": {
+                "type": "null"
+              },
+              "span": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "matched": {
+                "type": "boolean"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "matched": {
+                      "const": true
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "span": {
+                      "$ref": "#/$defs/span"
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "span": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "span_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "source",
+        "file",
+        "line",
+        "content",
+        "role",
+        "matched",
+        "span",
+        "unit"
+      ],
+      "properties": {
+        "record": {
+          "const": "span"
+        },
+        "source": {
+          "enum": [
+            "file",
+            "stdin"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/path"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 67108864
+        },
+        "content": {
+          "$ref": "#/$defs/bytes"
+        },
+        "role": {
+          "const": "selected"
+        },
+        "matched": {
+          "const": true
+        },
+        "span": {
+          "$ref": "#/$defs/span"
+        },
+        "unit": {
+          "const": "byte"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "file"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "file": {
+                "$ref": "#/$defs/path"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "file": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "count": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "source",
+        "file",
+        "count",
+        "complete"
+      ],
+      "properties": {
+        "record": {
+          "const": "count"
+        },
+        "source": {
+          "enum": [
+            "file",
+            "stdin"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/path"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "complete": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "file"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "file": {
+                "$ref": "#/$defs/path"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "file": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "source",
+        "file",
+        "matched",
+        "complete",
+        "scanned_to_end"
+      ],
+      "properties": {
+        "record": {
+          "const": "file"
+        },
+        "source": {
+          "enum": [
+            "file",
+            "stdin"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/path"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "matched": {
+          "type": "boolean"
+        },
+        "complete": {
+          "const": true
+        },
+        "scanned_to_end": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "file"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "file": {
+                "$ref": "#/$defs/path"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "file": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "matched": {
+                "const": false
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "scanned_to_end": {
+                "const": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record",
+        "source",
+        "file",
+        "error",
+        "errno"
+      ],
+      "properties": {
+        "record": {
+          "const": "error"
+        },
+        "source": {
+          "enum": [
+            "file",
+            "stdin",
+            "command"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/path"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "error": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "errno": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 2147483647
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "file"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "file": {
+                "$ref": "#/$defs/path"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "file": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "record",
+        "mode",
+        "matcher",
+        "inverted",
+        "any_selected_line",
+        "predicate",
+        "complete",
+        "scan_complete",
+        "sources_observed",
+        "source_failures",
+        "source_bytes",
+        "selected_lines_observed",
+        "records_total",
+        "records_returned",
+        "offset",
+        "limit",
+        "next_offset",
+        "context_before",
+        "context_after",
+        "max_count",
+        "stop_reason",
+        "exit_code",
+        "source_policy",
+        "since_sequence",
+        "since_seconds",
+        "since_source",
+        "since_source_bytes",
+        "fuzzy_distance",
+        "fuzzy_work",
+        "smart_rule"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.grep.query.v1"
+        },
+        "record": {
+          "const": "summary"
+        },
+        "mode": {
+          "enum": [
+            "quiet",
+            "files-without-match",
+            "count",
+            "files-with-matches",
+            "spans",
+            "lines"
+          ]
+        },
+        "matcher": {
+          "enum": [
+            "fuzzy",
+            "smart",
+            "fixed",
+            "pcre-lite",
+            "ere",
+            "bre"
+          ]
+        },
+        "inverted": {
+          "type": "boolean"
+        },
+        "any_selected_line": {
+          "type": "boolean"
+        },
+        "predicate": {
+          "type": "boolean"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "scan_complete": {
+          "type": "boolean"
+        },
+        "sources_observed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "source_failures": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "source_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "selected_lines_observed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "records_total": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "records_returned": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "limit": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_offset": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "context_before": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "context_after": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "max_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stop_reason": {
+          "enum": [
+            "request_cancelled",
+            "query_collection_limit",
+            "total_source_byte_limit",
+            "fuzzy_work_limit",
+            "walk_depth_limit",
+            "walk_visit_limit",
+            "match_limit",
+            "source_errors",
+            "command_error",
+            "page_limit",
+            null
+          ]
+        },
+        "exit_code": {
+          "enum": [
+            0,
+            1,
+            2,
+            75,
+            130,
+            143
+          ]
+        },
+        "source_policy": {
+          "const": "stable-regular-or-stdin-eof"
+        },
+        "since_sequence": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "since_seconds": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "since_source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/path"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "since_source_bytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16777216
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fuzzy_distance": {
+          "enum": [
+            2,
+            null
+          ]
+        },
+        "fuzzy_work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 50000000
+        },
+        "smart_rule": {
+          "enum": [
+            "case-insensitive-any-pattern-word-substring",
+            null
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "complete": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "stop_reason": {
+                "type": "null"
+              },
+              "exit_code": {
+                "enum": [
+                  0,
+                  1
+                ]
+              },
+              "source_failures": {
+                "const": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "stop_reason": {
+                "type": "string"
+              },
+              "scan_complete": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "stop_reason": {
+                "const": "request_cancelled"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "exit_code": {
+                "enum": [
+                  130,
+                  143
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "matcher": {
+                "const": "fuzzy"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "fuzzy_distance": {
+                "const": 2
+              },
+              "smart_rule": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "fuzzy_distance": {
+                "type": "null"
+              },
+              "fuzzy_work": {
+                "const": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "matcher": {
+                "const": "smart"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "smart_rule": {
+                "const": "case-insensitive-any-pattern-word-substring"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "smart_rule": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "since_sequence": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "since_seconds": {
+                "type": "null"
+              },
+              "since_source": {
+                "type": "null"
+              },
+              "since_source_bytes": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "since_seconds": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9223372036854775807
+              },
+              "since_source": {
+                "$ref": "#/$defs/path"
+              },
+              "since_source_bytes": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16777216
+              }
+            }
+          }
+        }
+      ],
+      "description": "A query snapshot. complete means the requested predicate or results were established without source error, match/work/collection cap, or undisclosed page tail; scan_complete additionally requires evaluating the whole source set. -q and filename existence can be complete with scan_complete false. A JTV2 terminal remains authoritative if delivery or later cancellation changes the stream outcome."
+    },
+    "result": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/line"
+        },
+        {
+          "$ref": "#/$defs/span_row"
+        },
+        {
+          "$ref": "#/$defs/count"
+        },
+        {
+          "$ref": "#/$defs/file"
+        },
+        {
+          "$ref": "#/$defs/error"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:jash:query:stat:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "consistency", "items", "count", "failed", "next_offset", "exit_code"],
+  "properties": {
+    "schema": {"const": "jash.query.stat.v1"}, "consistency": {"const": "live"},
+    "count": {"type": "integer", "minimum": 0}, "failed": {"type": "integer", "minimum": 0},
+    "next_offset": {"type": ["integer", "null"], "minimum": 0}, "exit_code": {"type": "integer"},
+    "items": {"type": "array", "items": {"oneOf": [{"$ref": "#/$defs/stat"}, {"$ref": "#/$defs/error"}]}}
+  },
+  "$defs": {
+    "integer": {"type": ["integer", "string"]},
+    "text": {"oneOf": [{"type": ["string", "null"]}, {"type": "object", "additionalProperties": false, "required": ["encoding", "data"], "properties": {"encoding": {"const": "base64"}, "data": {"type": "string"}}}]},
+    "error": {"type": "object", "additionalProperties": false, "required": ["name", "error", "errno"],
+      "properties": {"name": {"$ref": "#/$defs/text"}, "error": {"const": "stat_failed"}, "errno": {"type": "integer"}}},
+    "stat": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "type", "size", "mode", "perms", "nlink", "uid", "gid", "inode", "device", "mtime", "atime", "ctime", "mtime_nsec", "atime_nsec", "ctime_nsec"],
+      "properties": {
+        "name": {"$ref": "#/$defs/text"}, "target": {"$ref": "#/$defs/text"}, "type": {"type": "string"},
+        "size": {"$ref": "#/$defs/integer"}, "mode": {"type": "string"}, "perms": {"type": "string"},
+        "nlink": {"$ref": "#/$defs/integer"}, "uid": {"$ref": "#/$defs/integer"}, "gid": {"$ref": "#/$defs/integer"},
+        "inode": {"$ref": "#/$defs/integer"}, "device": {"$ref": "#/$defs/integer"},
+        "mtime": {"$ref": "#/$defs/integer"}, "atime": {"$ref": "#/$defs/integer"}, "ctime": {"$ref": "#/$defs/integer"},
+        "mtime_nsec": {"type": "integer", "minimum": 0, "maximum": 999999999},
+        "atime_nsec": {"type": "integer", "minimum": 0, "maximum": 999999999},
+        "ctime_nsec": {"type": "integer", "minimum": 0, "maximum": 999999999}
+      }
+    }
+  }
+}

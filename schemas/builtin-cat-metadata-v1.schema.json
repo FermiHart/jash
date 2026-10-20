@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:query:cat-metadata:v1",
+  "title": "cat --json metadata and per-input errors",
+  "type": "array",
+  "items": {
+    "oneOf": [
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "size_bytes",
+          "lines"
+        ],
+        "properties": {
+          "path": {
+            "$ref": "#/$defs/byteString"
+          },
+          "size_bytes": {
+            "$ref": "#/$defs/uint"
+          },
+          "lines": {
+            "$ref": "#/$defs/uint"
+          }
+        }
+      },
+      {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "error",
+          "errno"
+        ],
+        "properties": {
+          "path": {
+            "$ref": "#/$defs/byteString"
+          },
+          "error": {
+            "const": "read_failed"
+          },
+          "errno": {
+            "type": "integer"
+          }
+        }
+      }
+    ]
+  },
+  "$defs": {
+    "byteString": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "encoding",
+            "data"
+          ],
+          "properties": {
+            "encoding": {
+              "const": "base64"
+            },
+            "data": {
+              "type": "string",
+              "contentEncoding": "base64"
+            }
+          }
+        }
+      ]
+    },
+    "uint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      ]
+    }
+  }
+}

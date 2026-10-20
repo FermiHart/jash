@@ -1,0 +1,368 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:semantic:cost:v1",
+  "title": "Jash cost semantic result v1",
+  "description": "Actual combined child output-byte counts and monotonic duration, or explicit argv-byte lower bound under --dry-run. Fixed legacy price coefficients are estimates, not current market prices. JSON retains numeric seconds/USD; JTV2 represents them as exact versioned factored rationals. JSON and JSON projection of the JTV2 record share this field contract. Native kinds additionally preserve PATH/SYMBOL/FILESIZE and exact I64/U64. The terminal is a separate JTV2 contract; this document alone does not prove stream completion.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "argv",
+        "executed",
+        "basis",
+        "bytes",
+        "tokens_estimated",
+        "token_estimator",
+        "duration_ns",
+        "seconds",
+        "input_usd",
+        "output_usd",
+        "total_usd",
+        "price_policy",
+        "command_status",
+        "adapter_status",
+        "ok",
+        "error",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.cost.v1"
+        },
+        "argv": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                  }
+                }
+              }
+            ]
+          },
+          "maxItems": 63,
+          "minItems": 1
+        },
+        "executed": {
+          "type": "boolean"
+        },
+        "basis": {
+          "enum": [
+            "argv-bytes-lower-bound",
+            "combined-child-output-bytes"
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "tokens_estimated": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "token_estimator": {
+          "const": "bytes-divided-by-four"
+        },
+        "duration_ns": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "seconds": {
+          "oneOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "number",
+                  "minimum": 0
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "schema",
+                    "units",
+                    "value",
+                    "coefficient",
+                    "denominator"
+                  ],
+                  "properties": {
+                    "schema": {
+                      "const": "jash.estimate.scaled-integer.v1"
+                    },
+                    "units": {
+                      "const": "seconds"
+                    },
+                    "value": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 18446744073709551615
+                    },
+                    "coefficient": {
+                      "const": 1
+                    },
+                    "denominator": {
+                      "const": 1000000000
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "input_usd": {
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "units",
+                "value",
+                "coefficient",
+                "denominator"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "jash.estimate.scaled-integer.v1"
+                },
+                "units": {
+                  "const": "USD"
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "coefficient": {
+                  "const": 30
+                },
+                "denominator": {
+                  "const": 1000000
+                }
+              }
+            }
+          ]
+        },
+        "output_usd": {
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "units",
+                "value",
+                "coefficient",
+                "denominator"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "jash.estimate.scaled-integer.v1"
+                },
+                "units": {
+                  "const": "USD"
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "coefficient": {
+                  "const": 60
+                },
+                "denominator": {
+                  "const": 1000000
+                }
+              }
+            }
+          ]
+        },
+        "total_usd": {
+          "oneOf": [
+            {
+              "type": "number",
+              "minimum": 0
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "schema",
+                "units",
+                "value",
+                "coefficient",
+                "denominator"
+              ],
+              "properties": {
+                "schema": {
+                  "const": "jash.estimate.scaled-integer.v1"
+                },
+                "units": {
+                  "const": "USD"
+                },
+                "value": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "coefficient": {
+                  "const": 90
+                },
+                "denominator": {
+                  "const": 1000000
+                }
+              }
+            }
+          ]
+        },
+        "price_policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "current_market_price",
+            "input_usd_per_million_tokens",
+            "output_usd_per_million_tokens",
+            "basis"
+          ],
+          "properties": {
+            "source": {
+              "const": "legacy-fixed-estimate-policy"
+            },
+            "current_market_price": {
+              "const": false
+            },
+            "input_usd_per_million_tokens": {
+              "const": 30
+            },
+            "output_usd_per_million_tokens": {
+              "const": 60
+            },
+            "basis": {
+              "const": "same-estimated-token-count-for-input-and-output"
+            }
+          }
+        },
+        "command_status": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "adapter_status": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "ok": {
+          "type": "boolean"
+        },
+        "error": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.cost.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.cost.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ]
+}

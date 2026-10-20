@@ -1,0 +1,25 @@
+# ADR-0036 W2 — builtins migrated to the argv_fn (quote-aware) calling
+# convention. Add a name here ONLY after migrating it in registry.c +
+# builtin.h + its .c file. NEVER remove a name once added — that would be a
+# silent regression back to the string-joined legacy path (BUG-038 class).
+# Checked by tests/test_argv_ratchet.sh.
+printf
+grep
+cp
+# JINV-066: se test/[ voltarem a porta de string, o `!` deixa de ser operador
+# e vira operando outra vez — e toda clausula `[ ! -f "$x" ] && rm -rf ...`
+# dispara SEMPRE. Estas duas linhas sao o que impede a volta silenciosa.
+test
+[
+# JINV-079: se o `echo` voltar a porta de string, a saida volta a ser montada
+# da LINHA CRUA — e ali `echo "  x"` e `echo   x` ja sao a mesma sequencia de
+# bytes. O branco citado da esquerda some outra vez e o branco entre palavras
+# para de colapsar. E o caminho mais quente do shell (1034 das 1122 linhas do
+# corpus de conformidade contem `echo`): esta regressao apareceria em massa.
+echo
+gap
+# ADR-0053: graph recebeu argv_fn junto com a reescrita living-graph.
+graph
+# ADR-0054: mem nasce ja na porta argv (query com aspas chega como um argv[i]).
+mem
+assert

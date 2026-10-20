@@ -1,0 +1,69 @@
+# Build artifacts
+/build/
+/build-asan/
+*.o
+*.a
+*.so
+*.dylib
+*.modjash
+jash-release
+
+# Benchmark / generated data
+/tests/benchmark_history/
+
+# IDE / OS / Local Agent caches
+.DS_Store
+._*
+.cache/
+.qwen/
+.jash/
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Test / temp artifacts
+/tmp/
+*.tmp
+# Runtime state jash writes into whatever directory it runs in. Without these,
+# simply USING jash inside its own repo left untracked files behind, `git
+# status --porcelain` reported the tree dirty, and the next build stamped the
+# binary "<hash>+dirty" — a build marked dirty by the shell's own scratch files
+# rather than by any source change. Tracked-file edits still mark it dirty,
+# which is the signal that matters.
+.jash_ratchet.key
+.jash_chain.log
+.jash_chain.log.*
+.jash_session*
+
+
+# scratchpad: local analysis clones, logs, backups — never tracked
+scratchpad/claude-mem-analysis/
+scratchpad/graphify-analysis/
+scratchpad/*.log
+scratchpad/*.bak
+
+# ── W7: binarios NUNCA sao versionados ──────────────────────────────────────
+# Custo ja pago por versiona-los: build-speed/jash-release e um Mach-O de macOS
+# que tres gates preferiam a build/jash (morriam em rc 126), que produziu um
+# "hang" fantasma investigado por semanas em test_jinv132 (nao travava — estava
+# executando um Mach-O), e que o install_verify.sh chegou a um passo de copiar
+# por cima de /usr/local/bin/jash, trocando o shell do sistema por um que o
+# kernel recusa.
+#
+# Um .modjash embute um shared object NATIVO: o do mac e Mach-O e nao carrega no
+# Linux ("invalid ELF header"), e vice-versa. Construa por host —
+# modules/build_module.sh ja faz isso corretamente nos dois desde 2026-08-05.
+build-*/
+build_*/
+/scratchpad/
+/Docs/
+/audits/
+/patches-proposal/
+/downloads/
+c/compiler/benchmark
+c/compiler/test_bytecode
+plugins/**/*.so

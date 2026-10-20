@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:agent-job-result:v1",
+  "title": "Retained runtime session-end job observation",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "id", "protocol_version", "op", "job_id", "available", "origin", "request_json", "response_json", "error"],
+  "properties": {
+    "schema": {"const": "jash.agent-job-result.v1"},
+    "id": {"type": "string"}, "protocol_version": {"const": 2},
+    "op": {"const": "job.result"}, "job_id": {"type": "string"},
+    "available": {"type": "boolean"}, "origin": {"const": "runtime-session-end"},
+    "retention": {"enum": ["kept", "released", "unknown"]},
+    "request_json": {"type": ["string", "null"]}, "response_json": {"type": ["string", "null"]},
+    "error": {"enum": [null, "archive_unavailable"]}
+  },
+  "allOf": [{"if": {"properties": {"available": {"const": true}}},
+    "then": {"properties": {"request_json": {"type": "string"}, "response_json": {"type": "string"}, "error": {"type": "null"}}},
+    "else": {"properties": {"request_json": {"type": "null"}, "response_json": {"type": "null"}, "error": {"const": "archive_unavailable"}}}}]
+}

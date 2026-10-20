@@ -1,0 +1,449 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:semantic:token:v1",
+  "title": "Jash token semantic result v1",
+  "description": "Counter unavailability is explicit. History preserves stored lines as strings or tagged bytes. The budget operation remains a proposal and does not change the environment. JSON and JSON projection of the JTV2 record share this field contract. Native kinds additionally preserve PATH/SYMBOL/FILESIZE and exact I64/U64. The terminal is a separate JTV2 contract; this document alone does not prove stream completion.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "source",
+        "estimator",
+        "available",
+        "source_exists",
+        "input_tokens_estimated",
+        "output_tokens_estimated",
+        "commands",
+        "execution_ms",
+        "budget"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.token.v1"
+        },
+        "operation": {
+          "const": "count"
+        },
+        "source": {
+          "const": "home-token-usage-session"
+        },
+        "estimator": {
+          "const": "bytes-divided-by-four"
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "source_exists": {
+          "type": "boolean"
+        },
+        "input_tokens_estimated": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_tokens_estimated": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "commands": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_ms": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "budget": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "source",
+        "estimator",
+        "available",
+        "source_exists",
+        "input_tokens_estimated",
+        "output_tokens_estimated",
+        "commands",
+        "execution_ms",
+        "budget",
+        "suggestions",
+        "suggestion_source"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.token.v1"
+        },
+        "operation": {
+          "const": "optimize"
+        },
+        "source": {
+          "const": "home-token-usage-session"
+        },
+        "estimator": {
+          "const": "bytes-divided-by-four"
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "source_exists": {
+          "type": "boolean"
+        },
+        "input_tokens_estimated": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_tokens_estimated": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "commands": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_ms": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "budget": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "suggestions": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                  }
+                }
+              }
+            ]
+          },
+          "maxItems": 5,
+          "minItems": 5
+        },
+        "suggestion_source": {
+          "const": "static-heuristic"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "source",
+        "estimator",
+        "available",
+        "source_exists",
+        "input_tokens_estimated",
+        "output_tokens_estimated",
+        "commands",
+        "execution_ms",
+        "budget",
+        "entries",
+        "entry_format"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.token.v1"
+        },
+        "operation": {
+          "const": "history"
+        },
+        "source": {
+          "const": "home-token-usage-session"
+        },
+        "estimator": {
+          "const": "bytes-divided-by-four"
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "source_exists": {
+          "type": "boolean"
+        },
+        "input_tokens_estimated": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "output_tokens_estimated": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "commands": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "execution_ms": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "budget": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "encoding",
+                  "data"
+                ],
+                "properties": {
+                  "encoding": {
+                    "const": "base64"
+                  },
+                  "data": {
+                    "type": "string",
+                    "contentEncoding": "base64",
+                    "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                  }
+                }
+              }
+            ]
+          },
+          "maxItems": 4096
+        },
+        "entry_format": {
+          "const": "stored-legacy-log-line"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "requested_budget",
+        "applied",
+        "scope",
+        "environment_variable"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.token.v1"
+        },
+        "operation": {
+          "const": "budget"
+        },
+        "requested_budget": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "applied": {
+          "const": false
+        },
+        "scope": {
+          "const": "proposal"
+        },
+        "environment_variable": {
+          "const": "JASH_LLM_BUDGET"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.token.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.token.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ]
+}

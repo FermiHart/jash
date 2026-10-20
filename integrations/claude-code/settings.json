@@ -1,0 +1,24 @@
+{
+  "//": "jash + Claude Code — drop into .claude/settings.json (project) or ~/.claude/settings.json (global).",
+  "//sigil": "JASH_SIGIL=2 → every agent command is recorded in the attested BLAKE3 chain + Ed25519-signed, so recall/dashboard/rewind work and the run is provable.",
+  "//nudge": "JASH_NUDGE=1 → after a failure, jash suggests the differential that would have helped (drives adoption). Set 0 to silence.",
+  "//budget": "JASH_LLM_BUDGET → huge command output overflows to a recall-able file (context governor) instead of blowing your window. 131072 = 128k.",
+  "//hooks": "ADR-0037: the SessionStart hook injects the jash agent field guide into the model's context at t=0 — the only deterministic way the agent learns it is in jash (rules files depend on someone pasting them; runtime tips arrive too late). Without this, agents assume bash and bypass every differential.",
+  "env": {
+    "JASH_SIGIL": "2",
+    "JASH_NUDGE": "1",
+    "JASH_LLM_BUDGET": "131072"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v jash >/dev/null 2>&1 && jash --agent-guide 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}

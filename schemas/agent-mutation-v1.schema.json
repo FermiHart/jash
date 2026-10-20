@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:mutation:v1",
+  "title": "Native filesystem mutation --json result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "operation", "granularity", "undo_refs", "items", "status", "exit_code", "mode", "error_code", "counts"],
+  "properties": {
+    "schema": {"const": "jash.mutation.v1"},
+    "operation": {"enum": ["cp", "mv", "rm", "touch", "mkdir", "rmdir", "ln", "chmod", "chown", "sed"]},
+    "granularity": {"enum": ["filesystem_action", "operand_tree"]},
+    "undo_refs": {"enum": ["not_exported", "validated_local"]},
+    "items": {"type": "array", "items": {"$ref": "#/$defs/item"}},
+    "status": {"enum": ["completed", "planned", "failed", "partial", "cancelled"]},
+    "exit_code": {"type": "integer", "minimum": 0, "maximum": 255},
+    "mode": {"enum": ["apply", "preview"]},
+    "transaction": {"enum": ["not_started", "preview", "committed", "rolled_back", "partial"]},
+    "error_code": {"type": ["string", "null"]},
+    "counts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["completed", "skipped", "failed", "planned", "partial"],
+      "properties": {
+        "completed": {"$ref": "#/$defs/uint"}, "skipped": {"$ref": "#/$defs/uint"},
+        "failed": {"$ref": "#/$defs/uint"}, "planned": {"$ref": "#/$defs/uint"},
+        "partial": {"$ref": "#/$defs/uint"}
+      }
+    }
+  },
+  "$defs": {
+    "uint": {"oneOf": [{"type": "integer", "minimum": 0, "maximum": 9007199254740991}, {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"}]},
+    "path": {
+      "oneOf": [
+        {"type": ["string", "null"]},
+        {"type": "object", "additionalProperties": false, "required": ["encoding", "data"],
+         "properties": {"encoding": {"const": "base64"}, "data": {"type": "string", "contentEncoding": "base64"}}}
+      ]
+    },
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["source", "destination", "action", "status", "effect", "code", "bytes_written", "verified", "undo"],
+      "properties": {
+        "source": {"$ref": "#/$defs/path"}, "destination": {"$ref": "#/$defs/path"},
+        "action": {"enum": ["copy", "hardlink", "symlink", "copy_tree", "ensure_directory", "preserve_directory", "move", "remove", "trash", "touch", "mkdir", "rmdir", "chmod", "chown", "edit"]},
+        "status": {"enum": ["completed", "skipped", "failed", "planned", "partial"]},
+        "effect": {"enum": ["none", "changed", "possible"]},
+        "code": {"type": ["string", "null"]},
+        "bytes_written": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/uint"}]},
+        "verified": {"type": ["boolean", "null"]},
+        "undo": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/recovery_ref"}]},
+        "recovery_path": {"$ref": "#/$defs/path"}
+      },
+      "allOf": [{"if": {"properties": {"status": {"enum": ["skipped", "planned"]}}},
+                 "then": {"properties": {"effect": {"const": "none"}}}}]
+    },
+    "recovery_ref": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ref", "scope", "entry_id", "coverage"],
+      "properties": {
+        "ref": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+        "scope": {"const": "local-user-store"},
+        "entry_id": {"type": "string", "pattern": "^[1-9][0-9]*$"},
+        "coverage": {"enum": ["file_content", "created_entry", "created_directory", "empty_directory_mode", "mode_owner", "timestamps", "moved_entry", "trashed_entry"]}
+      }
+    }
+  }
+}

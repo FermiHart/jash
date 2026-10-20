@@ -1,0 +1,12 @@
+jashproof/1
+session_id: 7f2b0beacd0ac8bf
+start_ts: 1781827748.151434000
+end_ts: 1781827748.156453000
+user: admin
+host: MacBook-Pro-de-MacBook.local
+chain_file: /var/folders/8l/rdvh97wx1sdg9d00qsgr2phr0000gq/T/tmp.5PsyF0q4ln/.jash/chain.log
+chain_entries: 4
+chain_tip: d02ea56049430a1606c970a550797b0d4794f139e23864c518ba0395778dd2b4
+pubkey: ced8c5918bbc6ebe5bd17ee5b85d43d35a76e8271443252747064f41cc038a4f
+sig_algo: ed25519
+sig: 12c119a0520c736268228ba8fe6288499ac18f7c20d3aaedb7a4f2321bb9ba392627507e0a29201905c01d2148d692e70aa7407b103453a0b3f7f0d2f07f9e0a

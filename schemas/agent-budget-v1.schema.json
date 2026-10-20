@@ -1,0 +1,14 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"urn:jash:agent-budget:v1",
+  "type":"object","additionalProperties":false,
+  "required":["schema","id","op","observation","units","cas_and_archives","journal","job_slots_used","job_slots_max","volatile_buffer_bytes","stdin_snapshot_bytes","stream_slots_used","stream_slots_max","stream_credit_bytes","stream_in_flight_bytes","durable_artifact_bytes","buffer_and_artifact_limit_bytes","memory_available_bytes","rate_bytes_per_second","eta_seconds","eviction","measurement_complete","ok"],
+  "properties":{
+    "schema":{"const":"jash.agent-budget.v1"},"id":{"type":"string"},"op":{"const":"budget.get"},"observation":{"const":"live"},"units":{"const":"logical-bytes"},
+    "cas_and_archives":{"type":"object","additionalProperties":false,"required":["used_bytes","limit_bytes"],"properties":{"used_bytes":{"$ref":"#/$defs/quantity"},"limit_bytes":{"$ref":"#/$defs/quantity"}}},
+    "journal":{"type":"object","additionalProperties":false,"required":["used_bytes","limit_bytes","required_headroom_bytes"],"properties":{"used_bytes":{"$ref":"#/$defs/quantity"},"limit_bytes":{"$ref":"#/$defs/quantity"},"required_headroom_bytes":{"$ref":"#/$defs/quantity"}}},
+    "job_slots_used":{"type":"integer","minimum":0,"maximum":32},"job_slots_max":{"const":32},"volatile_buffer_bytes":{"$ref":"#/$defs/quantity"},"stdin_snapshot_bytes":{"$ref":"#/$defs/quantity"},
+    "stream_slots_used":{"type":"integer","minimum":0,"maximum":8},"stream_slots_max":{"const":8},"stream_credit_bytes":{"type":"integer","minimum":0,"maximum":524288},"stream_in_flight_bytes":{"type":"integer","minimum":0,"maximum":262144},
+    "durable_artifact_bytes":{"$ref":"#/$defs/quantity"},"buffer_and_artifact_limit_bytes":{"$ref":"#/$defs/quantity"},
+    "memory_available_bytes":{"type":"null"},"rate_bytes_per_second":{"type":"null"},"eta_seconds":{"type":"null"},"eviction":{"const":"explicit-verified-only"},"measurement_complete":{"type":"boolean"},"ok":{"const":true}
+  },"$defs":{"quantity":{"oneOf":[{"type":"null"},{"type":"integer","minimum":0,"maximum":9007199254740991},{"type":"string","pattern":"^(0|[1-9][0-9]*)$"}]}}
+}

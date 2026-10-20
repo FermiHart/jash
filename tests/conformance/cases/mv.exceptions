@@ -1,0 +1,1 @@
+movable.txt destdir/ :: RESOLVED (ADR-0044): mv's "moved N file(s)" confirmation now goes to STDERR (only with -v), not stdout — so `x=$(mv a b)` is POSIX-clean for scripts/agents. Plain mv is silent on stdout, matching POSIX. -v prints 'src' -> 'dst' to stdout like GNU mv -v.

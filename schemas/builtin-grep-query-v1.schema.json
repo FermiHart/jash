@@ -1,0 +1,211 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "items",
+    "summary"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.grep.query.v1"
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "$ref": "urn:jash:grep-query-row:v1#/$defs/result"
+      }
+    },
+    "summary": {
+      "$ref": "urn:jash:grep-query-row:v1#/$defs/summary"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:grep-query:v1",
+  "title": "Grep semantic query report",
+  "description": "One document emitted by the JSON variants that need line, context, count, filename, quiet, stdin, fuzzy/smart, or explicit page semantics. Ordinary exact match JSON arrays retain their existing schema. The same native result rows precede the summary item in JTV2. Error documents before collection use urn:jash:builtin-error:v1. Consult summary.complete, scan_complete, predicate, stop_reason and exit_code independently.",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "summary": {
+            "properties": {
+              "mode": {
+                "const": "quiet"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "urn:jash:grep-query-row:v1#/$defs/error"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "summary": {
+            "properties": {
+              "mode": {
+                "const": "count"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "items": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "urn:jash:grep-query-row:v1#/$defs/count"
+                },
+                {
+                  "$ref": "urn:jash:grep-query-row:v1#/$defs/error"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "summary": {
+            "properties": {
+              "mode": {
+                "const": "files-with-matches"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "items": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "urn:jash:grep-query-row:v1#/$defs/file"
+                },
+                {
+                  "$ref": "urn:jash:grep-query-row:v1#/$defs/error"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "summary": {
+            "properties": {
+              "mode": {
+                "const": "files-without-match"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "items": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "urn:jash:grep-query-row:v1#/$defs/file"
+                },
+                {
+                  "$ref": "urn:jash:grep-query-row:v1#/$defs/error"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "summary": {
+            "properties": {
+              "mode": {
+                "const": "lines"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "items": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "urn:jash:grep-query-row:v1#/$defs/line"
+                },
+                {
+                  "$ref": "urn:jash:grep-query-row:v1#/$defs/error"
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "summary": {
+            "properties": {
+              "mode": {
+                "const": "spans"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "items": {
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "urn:jash:grep-query-row:v1#/$defs/span_row"
+                },
+                {
+                  "$ref": "urn:jash:grep-query-row:v1#/$defs/error"
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "urn:jash:grep-query-row:v1#/$defs/line"
+                    },
+                    {
+                      "properties": {
+                        "role": {
+                          "const": "context"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

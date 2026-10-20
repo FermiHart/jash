@@ -1,0 +1,513 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:mutation:data:row:v1",
+  "title": "Jash mutation-data-row v1",
+  "description": "JSON projection of one native mutation receipt. The closed envelope retains SYMBOL operation/kind, PATH source/destination, FILESIZE byte counts and U64 identity natively. Header precedes effects, each action receipt is flushed before the next action, progress is not an action, and summary must agree with the final JTV2 terminal. Operational JSON mutation receipts deliberately bypass JASH_LLM_BUDGET; they remain checked incremental reports and retain their own framing/value bounds. Schema validation alone cannot establish those sequencing and effect properties.",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "kind",
+        "data"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.mutation.data.v1"
+        },
+        "operation": {
+          "enum": [
+            "cp",
+            "mv",
+            "rm",
+            "touch",
+            "mkdir",
+            "rmdir",
+            "ln",
+            "chmod",
+            "chown",
+            "sed"
+          ]
+        },
+        "kind": {
+          "const": "header"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "granularity",
+            "undo_refs"
+          ],
+          "properties": {
+            "granularity": {
+              "enum": [
+                "filesystem_action",
+                "operand_tree"
+              ]
+            },
+            "undo_refs": {
+              "const": "validated_local"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "kind",
+        "data"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.mutation.data.v1"
+        },
+        "operation": {
+          "enum": [
+            "cp",
+            "mv",
+            "rm",
+            "touch",
+            "mkdir",
+            "rmdir",
+            "ln",
+            "chmod",
+            "chown",
+            "sed"
+          ]
+        },
+        "kind": {
+          "const": "action"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "index",
+            "source",
+            "destination",
+            "action",
+            "status",
+            "effect",
+            "code",
+            "bytes_written",
+            "verified",
+            "undo",
+            "recovery_path"
+          ],
+          "properties": {
+            "index": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            "source": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "destination": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "action": {
+              "enum": [
+                "copy",
+                "hardlink",
+                "symlink",
+                "copy_tree",
+                "ensure_directory",
+                "preserve_directory",
+                "move",
+                "remove",
+                "trash",
+                "touch",
+                "mkdir",
+                "rmdir",
+                "chmod",
+                "chown",
+                "edit"
+              ]
+            },
+            "status": {
+              "enum": [
+                "completed",
+                "skipped",
+                "failed",
+                "planned",
+                "partial"
+              ]
+            },
+            "effect": {
+              "enum": [
+                "none",
+                "changed",
+                "possible"
+              ]
+            },
+            "code": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "bytes_written": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                }
+              ]
+            },
+            "verified": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "undo": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ref",
+                    "scope",
+                    "entry_id",
+                    "coverage"
+                  ],
+                  "properties": {
+                    "ref": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{32}$"
+                    },
+                    "scope": {
+                      "const": "local-user-store"
+                    },
+                    "entry_id": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 18446744073709551615
+                    },
+                    "coverage": {
+                      "enum": [
+                        "file_content",
+                        "created_entry",
+                        "created_directory",
+                        "empty_directory_mode",
+                        "mode_owner",
+                        "timestamps",
+                        "moved_entry",
+                        "trashed_entry"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "recovery_path": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                        }
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "skipped",
+                      "planned"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "effect": {
+                    "const": "none"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "kind",
+        "data"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.mutation.data.v1"
+        },
+        "operation": {
+          "enum": [
+            "cp",
+            "mv",
+            "rm",
+            "touch",
+            "mkdir",
+            "rmdir",
+            "ln",
+            "chmod",
+            "chown",
+            "sed"
+          ]
+        },
+        "kind": {
+          "const": "progress"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase"
+          ],
+          "properties": {
+            "phase": {
+              "const": "atomic_pending"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "operation",
+        "kind",
+        "data"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.mutation.data.v1"
+        },
+        "operation": {
+          "enum": [
+            "cp",
+            "mv",
+            "rm",
+            "touch",
+            "mkdir",
+            "rmdir",
+            "ln",
+            "chmod",
+            "chown",
+            "sed"
+          ]
+        },
+        "kind": {
+          "const": "summary"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "exit_code",
+            "mode",
+            "error_code",
+            "transaction",
+            "counts"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "completed",
+                "planned",
+                "failed",
+                "partial",
+                "cancelled"
+              ]
+            },
+            "exit_code": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "mode": {
+              "enum": [
+                "preview",
+                "apply"
+              ]
+            },
+            "error_code": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "transaction": {
+              "oneOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "enum": [
+                    "not_started",
+                    "preview",
+                    "committed",
+                    "rolled_back",
+                    "partial"
+                  ]
+                }
+              ]
+            },
+            "counts": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "completed",
+                "skipped",
+                "failed",
+                "planned",
+                "partial"
+              ],
+              "properties": {
+                "completed": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "skipped": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "failed": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "planned": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                },
+                "partial": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 18446744073709551615
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

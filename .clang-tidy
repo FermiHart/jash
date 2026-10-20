@@ -1,0 +1,30 @@
+# jash — clang-tidy profile (ADR-0036 W6.2)
+#
+# Focused on the check families that catch REAL C defects — bug patterns,
+# the static analyzer, and CERT string-handling rules — the same classes the
+# W3 string-safety sweep and the fuzz driver hunted by hand. Run in CI on
+# changed files:
+#   clang-tidy -p build-speed $(git diff --name-only origin/main -- 'c/**.c')
+#
+# A few bugprone checks are notoriously noisy in idiomatic systems C and add
+# no signal here; they are disabled explicitly so the profile stays actionable
+# (a check nobody acts on is worse than no check). F E R M I ∞ H A R T
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  cert-str34-c,
+  cert-str30-c,
+  cert-str31-c,
+  cert-str32-c,
+  cert-err33-c,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  -bugprone-assignment-in-if-condition,
+  -bugprone-switch-missing-default-case
+
+# Treat nothing as error at the tidy layer — the -Werror gate (W6.1) owns
+# build-breaking; tidy is advisory in CI, surfaced as review comments.
+WarningsAsErrors: ''
+HeaderFilterRegex: 'c/.*\.h$'
+FormatStyle: none

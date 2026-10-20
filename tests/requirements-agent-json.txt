@@ -1,0 +1,2 @@
+# Qualification-only dependency; the C runtime and regular regression gate use none.
+jsonschema==4.23.0

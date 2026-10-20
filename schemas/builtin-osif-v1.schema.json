@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:osif:v1",
+  "title": "OSIF semantic report and scaffold result",
+  "description": "complete describes receipt/result collection, not operation success. Per-item operation_complete and status describe source/publication outcome. JSON mutation receipts bypass the prose budget; JTV2 framing has its own authoritative terminal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "command",
+    "complete",
+    "status",
+    "items"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.osif.v1"
+    },
+    "command": {
+      "const": "osif"
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 255
+    },
+    "items": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "$ref": "urn:jash:osif-row:v1"
+      }
+    },
+    "error": {
+      "type": "object"
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"urn:jash:agent-stream:v1",
+  "type":"object","additionalProperties":false,
+  "required":["schema","id","protocol_version","op","stream_ref","ok"],
+  "properties":{
+    "schema":{"const":"jash.agent-stream.v1"},"id":{"type":"string"},"protocol_version":{"const":2},
+    "op":{"enum":["data.stream.open","data.stream.credit","data.stream.cancel"]},
+    "job_id":{"type":"string","minLength":1},"stream":{"enum":["stdout","stderr"]},
+    "stream_ref":{"type":"string","pattern":"^s-[0-9a-f]{32}-[0-9a-f]{16}$"},
+    "offset":{"$ref":"#/$defs/quantity"},"source_size_bytes":{"$ref":"#/$defs/quantity"},
+    "source_terminal":{"type":"boolean"},"delivery":{"const":"pull-credit"},
+    "packet_sent":{"type":"boolean"},"blocked":{"type":"boolean"},"credit_applied":{"type":"boolean"},
+    "sequence":{"$ref":"#/$defs/quantity"},"bytes":{"type":"integer","minimum":0,"maximum":16384},
+    "next_sequence":{"$ref":"#/$defs/quantity"},"next_offset":{"$ref":"#/$defs/quantity"},
+    "ack_offset":{"$ref":"#/$defs/quantity"},"credit_available_bytes":{"type":"integer","minimum":0,"maximum":65536},
+    "in_flight_bytes":{"type":"integer","minimum":0,"maximum":65536},"eof":{"type":"boolean"},
+    "complete":{"type":"boolean"},"final_ref":{"oneOf":[{"type":"null"},{"type":"string","minLength":1}]},
+    "final_blake3":{"oneOf":[{"type":"null"},{"type":"string","pattern":"^[0-9a-f]{64}$"}]},
+    "cancel_applied":{"type":"boolean"},"ok":{"const":true}
+  },
+  "oneOf":[
+    {"properties":{"op":{"const":"data.stream.open"}},"required":["job_id","stream","offset","source_size_bytes","source_terminal","delivery"]},
+    {"properties":{"op":{"const":"data.stream.credit"}},"required":["packet_sent","blocked","credit_applied","sequence","offset","bytes","next_sequence","next_offset","ack_offset","credit_available_bytes","in_flight_bytes","eof","complete","final_ref","final_blake3"]},
+    {"properties":{"op":{"const":"data.stream.cancel"}},"required":["cancel_applied"]}
+  ],
+  "$defs":{"quantity":{"oneOf":[{"type":"integer","minimum":0,"maximum":9007199254740991},{"type":"string","pattern":"^(0|[1-9][0-9]*)$"}]}}
+}

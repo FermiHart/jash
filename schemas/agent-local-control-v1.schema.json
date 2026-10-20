@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:local-control:v1",
+  "title": "Negotiated private cancellation socket attachment notice",
+  "description": "After authenticated opt-in, followed by one C byte with one SCM_RIGHTS descriptor, then the runtime handshake.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["jash_control", "transport", "attachment"],
+  "properties": {
+    "jash_control": {"const": 1},
+    "transport": {"const": "fd-jsonl"},
+    "attachment": {"const": "scm-rights-one-byte-v1"}
+  }
+}

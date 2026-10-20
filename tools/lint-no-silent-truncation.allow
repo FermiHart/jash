@@ -1,0 +1,276 @@
+# Exceções do lint de truncamento silencioso — JINV-029.
+#
+# Três seções, e a diferença entre elas é o ponto inteiro deste arquivo:
+#
+#   SEGURO  — não trunca DADO. Clampar um índice de profundidade num vetor de
+#             slots é projeto deliberado, não perda de informação. Permanente.
+#   MORTO   — o clamp é inalcançável (uma guarda acima já recusa, ou o buffer
+#             de destino é do tamanho da origem). Não é dívida: é código a
+#             REMOVER, ou a virar assert. Não se conserta o que nunca roda.
+#   DÍVIDA  — trunca dado de verdade. Está aqui declarado, não perdoado. O
+#             número de linhas desta seção é uma CATRACA: nunca sobe.
+#
+# Uma exceção sem a linha `# porque:` é dívida escondida — que é exatamente o
+# hábito de onde esta família de bugs (JINV-021..028) veio.
+#
+# ─────────────────────────────────────────────────────────────────────────
+# 2026-07-28 — a DÍVIDA subiu de 11 para 75, e isso NÃO é regressão.
+#
+# É a primeira medição correta. Até 2026-07-27 a alternativa `sizeof(...)` do
+# regex do lint estava escrita como `sizeof\([a-zA-Z_>.\[\]-]+\)`, e dentro de
+# uma classe POSIX o `\]` FECHA a classe: aquele ramo nunca casou com nada, em
+# nenhum commit. O lint dizia "4 seguro · 11 dívida" porque enxergava só as
+# formas com macro em CAIXA ALTA e com literal numérico.
+#
+# Com o ramo consertado aparecem 99 sítios (83 entradas): entre eles o corpo do
+# `if`, o corpo do subshell, o `read`, o `[ … ]` e o `fc` — ou seja, a família
+# que este arquivo existe para impedir estava viva e invisível o tempo todo.
+#
+# Uma entrada pode cobrir mais de um sítio (mesmo texto, linhas diferentes); a
+# contagem de sítios está escrita na justificativa quando é maior que um.
+#
+# Ordem da seção DÍVIDA: por IMPACTO — o que o usuário perde quando estoura.
+# Começa no que muda o que EXECUTA e termina no que só muda apresentação.
+# ─────────────────────────────────────────────────────────────────────────
+# 2026-08-11 — a DÍVIDA caiu de 72 para 66 → 66
+# (brain key recusa alto; expr_buf, val/tag brain e brain key obsoletos removidos)
+# 2026-08-16 — a DÍVIDA caiu de 66 para 64 → 64
+# (globstar e lista de palavras do for agora crescem dinamicamente)
+# 2026-08-16 — a DÍVIDA caiu de 64 para 61 → 61
+# (argumentos de função diretos, redirecionados e em pipeline agora são dinâmicos)
+# ─────────────────────────────────────────────────────────────────────────
+
+# Os marcadores de seção são os tokens fixos @@SEGURO@@, @@MORTO@@ e
+# @@DIVIDA@@, e NÃO a prosa do título. A razão é a mesma que criou o
+# @@DIVIDA@@ do mutation-check (JINV-061): um contador que procura o título
+# devolve zero tanto quando a seção está vazia quanto quando alguém trocou um
+# travessão — e as duas respostas são indistinguíveis. Medido aqui: com o
+# título em prosa, `awk` casava o marcador e `grep -E` NÃO casava, no mesmo
+# arquivo. Token ASCII fixo não tem esse problema, e a falta dele é denunciada.
+# O marcador é a linha SOZINHA — `# @@SEGURO@@` e nada mais. Assim ele não
+# depende de nenhuma palavra do título e ninguém o quebra reescrevendo prosa.
+# ─────────────────────────────────────────────────────────────────────────
+# @@SEGURO@@
+# porque: dirent name length is used only to validate prefix/suffix/digits;
+# no destination buffer is written, clamped, or truncated here.
+c/builtins/builtin_goal.c:     size_t n = strlen(name), pn = sizeof(prefix) - 1, sn = sizeof(suffix) - 1;
+# não trunca DADO. Índice, deslocamento, slot. Permanente.
+# ─────────────────────────────────────────────────────────────────────────
+
+# porque: índice de profundidade num vetor de slots de scratch, não dado.
+# Recursão além do teto compartilha o último slot — comportamento
+# projetado (ADR-0036 W4), e o pior caso é reuso de buffer, nunca perda
+# de texto.
+c/parser/cmdsub.c:     if (caller_depth >= JASH_CMDSUB_MAX_DEPTH) caller_depth = JASH_CMDSUB_MAX_DEPTH - 1;
+# porque: idem — índice de slot, não conteúdo.
+c/parser/cmdsub.c:     if (depth >= JASH_CMDSUB_MAX_DEPTH) depth = JASH_CMDSUB_MAX_DEPTH - 1;
+# porque: idem — índice no anel de saída.
+c/parser/cmdsub.c:     if (depth >= JASH_CMDSUB_OUT_SLOTS) depth = JASH_CMDSUB_OUT_SLOTS - 1;
+# porque: idem — índice de profundidade do avaliador (eval_depth_buf). 2
+# sítios (608, 626).
+c/parser/eval.c:     if (idx >= JASH_EVAL_MAX_DEPTH) idx = JASH_EVAL_MAX_DEPTH - 1;
+# porque: deslocamento, não conteúdo: dentro do macro DADD, o `o` já
+# passou por snprintf (que é quem trunca, e trunca declaradamente em
+# diffs[400]); este clamp só impede `diffs + o` de sair do vetor quando
+# snprintf devolve o tamanho QUE CABERIA. Nenhum byte se perde aqui que
+# não tenha se perdido uma linha acima.
+c/core/drift.c:         if (o >= sizeof(diffs)) o = sizeof(diffs) - 1; } } while (0)
+
+# ─────────────────────────────────────────────────────────────────────────
+# @@MORTO@@
+# inalcançável — a guarda de cima já recusa, ou origem e destino têm o
+# mesmo tamanho. Remover, não consertar. Não é dívida: nunca roda.
+# ─────────────────────────────────────────────────────────────────────────
+
+# porque: inalcançável por construção, e o próprio código diz:
+# `part[256]` recebe uma alternativa de `pattern[256]` do único chamador
+# (case_pattern_match, linha 720), e a aparadura só encolhe. Candidato a
+# virar assert ou sumir — não a conserto.
+c/parser/case_stmt.c:         if (len >= sizeof(part)) len = sizeof(part) - 1;
+# porque: inalcançável desde o JINV-027: `jash_unquote(token_buf,
+# unquoted, 256)` devolve no máximo 255 ou -1 (recusa alto quando não
+# coube), então `unquoted_len >= 256` nunca é verdade. É o resíduo do
+# conserto que já aconteceu — remover, não consertar.
+c/parser/quotes.c:                     unquoted_len = sizeof(token_storage[token_count]) - 1;
+
+# ─────────────────────────────────────────────────────────────────────────
+# @@DIVIDA@@
+# trunca dado. Declarada, não perdoada. Esta seção só encolhe.
+# Ordenada por impacto: o que o usuário perde quando estoura.
+# ─────────────────────────────────────────────────────────────────────────
+
+# porque: DÍVIDA #1 EM IMPACTO. A CONDIÇÃO do `if` cortada em 255 bytes.
+# O usuário perde o FIM da condição — onde moram o `]`, o `-a`, o `&&` —
+# e o `if` toma o RAMO ERRADO sem uma palavra. É o menor teto (256) sobre
+# a construção mais quente de qualquer script.
+c/parser/script.c:     if (cond_len >= sizeof(cond_buf)) cond_len = sizeof(cond_buf) - 1;
+# porque: DÍVIDA #2. `[ EXPR ]` cortado em 255 bytes dentro do próprio
+# builtin (jash_builtin_bracket). O usuário perde o operador e o operando
+# direito: `[ "$a" = "$b" ]` com valores longos devolve verdadeiro/falso
+# sobre uma expressão que ele não escreveu.
+c/builtins/builtin_test.c:     if (len >= sizeof(expr)) len = sizeof(expr) - 1;
+# porque: DÍVIDA #3. O `read` perde todo campo acima de 511 bytes — em
+# silêncio, sem rc de erro. `while read linha` sobre JSON, log ou base64
+# entrega dado corrompido a tudo que vem depois. 2 sítios (70 no `read
+# -a`, 257 no `read` de campos).
+c/builtins/read.c:         if (len >= sizeof(val)) len = sizeof(val) - 1;
+# porque: DÍVIDA #4. O CORPO do ramo `then` cortado em 511 bytes: os
+# últimos comandos do ramo simplesmente não rodam, e o `if` devolve o
+# status do que sobrou.
+c/parser/script.c:     if (then_len >= sizeof(then_buf)) then_len = sizeof(then_buf) - 1;
+# porque: DÍVIDA #5. Idem no ramo `else`.
+c/parser/script.c:         if (else_len >= sizeof(else_buf)) else_len = sizeof(else_buf) - 1;
+# porque: DÍVIDA #6. Corpo de `( … )` e de `{ …; }` cortado em 511 bytes
+# e executado JÁ NO FILHO (`jash_eval_line` seguido de `sys_exit`): o
+# subshell roda um comando diferente do escrito e devolve o status dele.
+# 2 sítios (1416 subshell, 1451 grupo).
+c/parser/pipeline.c:                     if (bl >= sizeof(body)) bl = sizeof(body) - 1;
+# porque: DÍVIDA #8. Substituição de processo `<(cmd)` / `>(cmd)` cortada
+# em 1023: o produtor roda truncado e quem lê o fifo recebe dado
+# plausível e errado. 2 sítios (850 e 896).
+c/parser/eval.c:                     if (cmd_len >= sizeof(cmd)) cmd_len = sizeof(cmd) - 1;
+# porque: DÍVIDA #10. Corpo do `for ((;;))` cortado em 2047 bytes — e o
+# corpo truncado roda A CADA VOLTA.
+c/parser/for_loop.c:     if (body_len >= sizeof(body)) body_len = sizeof(body) - 1;
+# porque: DÍVIDA. Corpo do `select` cortado em 1023 bytes, mesma forma do
+# for.
+c/parser/select_loop.c:     if (body_len >= sizeof(body)) body_len = sizeof(body) - 1;
+# porque: DÍVIDA. Corpo do `coproc { … }` cortado em 1023 bytes, e o
+# buffer é `static` num caminho reentrante (dois coprocs aninhados
+# escrevem no mesmo lugar). Já está medido em ACHADO-buffers-fixos.md
+# como teto aberto.
+c/parser/eval.c:                             if (bl >= sizeof(cp_body)) bl = sizeof(cp_body) - 1;
+# porque: DÍVIDA. O `fc` RE-EXECUTA a linha do histórico
+# (`jash_eval_line`) cortada em 511 bytes (JASH_HIST_LINE_LEN): é a forma
+# exata do JINV-022 — dado virando comando —, só que com o comando do
+# usuário.
+c/builtins/fc.c:             if (ol >= sizeof(cmd)) ol = sizeof(cmd) - 1;
+# porque: DÍVIDA. Prefixo `VAR=x cmd`: o NOME salvo para restauro é
+# cortado em 127 bytes, então o restauro devolve o valor à variável
+# errada.
+c/parser/eval.c:                                 kl = sizeof(inline_save[inline_n].k) - 1;
+# porque: DÍVIDA. Pior que o anterior: o VALOR ANTIGO salvo para restauro
+# é cortado em 1023 bytes. Uma variável de 5 KB que o usuário nem tocou
+# volta truncada depois de `VAR=tmp cmd`.
+c/parser/eval.c:                                     pl = sizeof(inline_save[inline_n].old) - 1;
+# porque: DÍVIDA. Padrão do `case` cortado em 255 bytes: o `case` casa o
+# RAMO ERRADO.
+c/parser/case_stmt.c:         if (pattern_len >= sizeof(pattern)) pattern_len = sizeof(pattern) - 1;
+# porque: DÍVIDA. Idem, no padrão depois da expansão de parâmetro.
+c/parser/case_stmt.c:                 if (pl >= sizeof(pattern)) pl = sizeof(pattern) - 1;
+# porque: DÍVIDA. Expressão do `case` (o `$x` de `case $x in`) cortada em
+# 255 bytes antes de casar.
+c/parser/case_stmt.c:                 if (expr_len >= sizeof(expr)) expr_len = sizeof(expr) - 1;
+# porque: DÍVIDA. Idem, no ramo sem `in`.
+c/parser/case_stmt.c:         if (expr_len >= sizeof(expr)) expr_len = sizeof(expr) - 1;
+# porque: DÍVIDA. Valor do `case` cortado em 511 bytes antes da expansão.
+c/parser/case_stmt.c:         if (len >= sizeof(tmp)) len = sizeof(tmp) - 1;
+# porque: DÍVIDA. Idem, depois da substituição de comando — `case $(cmd)
+# in` compara os primeiros 511 bytes da saída.
+c/parser/case_stmt.c:                 if (cslen >= sizeof(tmp)) cslen = sizeof(tmp) - 1;
+# porque: DÍVIDA. Valor expandido do `case` cortado em 511 bytes.
+c/parser/case_stmt.c:                     if (elen >= sizeof(expr_value)) elen = sizeof(expr_value) - 1;
+# porque: DÍVIDA. Idem, no caminho de `$VAR` simples.
+c/parser/case_stmt.c:                     if (vlen >= sizeof(expr_value)) vlen = sizeof(expr_value) - 1;
+# porque: DÍVIDA. Idem, no caminho literal.
+c/parser/case_stmt.c:                 if (tlen >= sizeof(expr_value)) tlen = sizeof(expr_value) - 1;
+# porque: DÍVIDA. Operando esquerdo de `-a` / `-o` cortado em 511 bytes:
+# o `test` avalia meia expressão. 2 sítios (357 e 368).
+c/builtins/builtin_test.c:     if (ll >= sizeof(left)) ll = sizeof(left) - 1;
+# porque: DÍVIDA. Lista de itens do `select` cortada em 511 bytes: some
+# do menu o que o usuário listou.
+c/parser/select_loop.c:     if (words_len >= sizeof(words)) words_len = sizeof(words) - 1;
+# porque: DÍVIDA. Cada item do `select` cortado em 127 bytes.
+c/parser/select_loop.c:         if (len >= sizeof(items[0])) len = sizeof(items[0]) - 1;
+# porque: DÍVIDA. Token `VAR=valor` de prefixo cortado em 2047 bytes
+# antes mesmo de ser partido no `=`.
+c/parser/pipeline.c:         if (tl >= sizeof(tbuf)) tl = sizeof(tbuf) - 1;
+# porque: DÍVIDA. NOME da variável de prefixo cortado em 127 bytes: a
+# atribuição pousa numa variável que o usuário não nomeou.
+c/parser/pipeline.c:         if (nl >= sizeof(name)) nl = sizeof(name) - 1;
+# porque: DÍVIDA. VALOR citado do prefixo `VAR="…" cmd` cortado em 2047
+# bytes.
+c/parser/pipeline.c:             if (cl >= sizeof(vbuf)) cl = sizeof(vbuf) - 1;
+# porque: DÍVIDA. Nome de variável em atribuição cortado em 127 bytes —
+# escreve na variável errada, sem aviso. 3 sítios (2246, 2497, 2866).
+c/parser/eval.c:                     if (vname_len >= sizeof(vname)) vname_len = sizeof(vname) - 1;
+# porque: DÍVIDA. Elemento de array cortado em 1023 bytes na atribuição
+# por palavras.
+c/parser/eval.c:                                     if (fl >= sizeof(field)) fl = sizeof(field) - 1;
+# porque: DÍVIDA. Idem, na atribuição por campos com separador \x1E.
+c/parser/eval.c:                                         if (fl >= sizeof(field)) fl = sizeof(field) - 1;
+# 2026-08-04 — as quatro entradas de `exp_args`/`exp_sp` em pipeline.c saíram
+# daqui porque o código saiu de lá: JINV-082/090 trocou os buffers fixos de
+# 16383 bytes por `jash_param_expand`, que aloca. A dívida foi PAGA, não
+# perdoada — e foi o próprio lint que cobrou, recusando entradas órfãs.
+# porque: DÍVIDA. Expressão condicional expandida cortada em 511 bytes
+# antes de `jash_parse_conditional`.
+c/parser/eval.c:                         if (exlen >= sizeof(expanded_buf)) exlen = sizeof(expanded_buf) - 1;
+# porque: DÍVIDA. Nome do coproc cortado em 63 bytes: os descritores vão
+# parar num nome que ninguém escreveu.
+c/parser/eval.c:                     if (nlen >= sizeof(cp_name)) nlen = sizeof(cp_name) - 1;
+# porque: DÍVIDA. Prefixo da expansão de chaves cortado em 255 bytes:
+# `pre{a,b}` gera nomes de arquivo errados.
+c/parser/expand.c:     if (pre_len >= sizeof(pre)) pre_len = sizeof(pre) - 1;
+# porque: DÍVIDA. Idem, no sufixo.
+c/parser/expand.c:     if (suf_len >= sizeof(suf)) suf_len = sizeof(suf) - 1;
+# porque: DÍVIDA. Nome do array em `${#arr[@]}` cortado em 63 bytes:
+# conta os elementos de outro array.
+c/parser/arithmetic.c:                     if (bl >= sizeof(base)) bl = sizeof(base) - 1;
+# porque: DÍVIDA. `optstring` do getopts cortado em 127 bytes: opções
+# válidas passam a ser recusadas.
+c/builtins/getopts.c:     if (optstring_len >= sizeof(optstring)) optstring_len = sizeof(optstring) - 1;
+# porque: DÍVIDA. Nome da variável de destino do getopts cortado em 63
+# bytes.
+c/builtins/getopts.c:     if (name_len >= sizeof(name)) name_len = sizeof(name) - 1;
+# porque: DÍVIDA. Token de `wait` (pid/jobspec) cortado em 63 bytes:
+# espera pelo processo errado ou por nenhum.
+c/builtins/builtin_wait.c:         if (tok_len >= sizeof(tok)) tok_len = sizeof(tok) - 1;
+# porque: DÍVIDA. Diretório do completamento cortado em 255 bytes:
+# completa a partir de outro diretório.
+c/builtins/compgen.c:             if (dl >= sizeof(dirbuf)) dl = sizeof(dirbuf) - 1;
+# porque: DÍVIDA. Diretório do alvo do `ls` cortado em 511 bytes.
+c/builtins/builtin_ls.c:         if (dirlen >= sizeof(dir_path)) dirlen = sizeof(dir_path) - 1;
+# porque: DÍVIDA. Consulta do `context` cortada em 1023 bytes (e o buffer
+# é `static`).
+c/builtins/builtin_context.c:     if (len >= sizeof(query)) len = sizeof(query) - 1;
+# porque: DÍVIDA. Texto do `intent` cortado em 511 bytes ao tirar as
+# aspas — JASH_INTENT guarda meia frase.
+c/builtins/builtin_intent.c:         if (len >= sizeof(buf)) len = sizeof(buf) - 1;
+# porque: DÍVIDA. Idem, no `llm invoice`, com teto de 255.
+c/builtins/builtin_llm_invoice.c:                 if (n >= sizeof(buf)) n = sizeof(buf) - 1;
+# porque: DÍVIDA. Argumento citado do `brain` cortado em 511 bytes
+# (buffer `static`).
+c/builtins/builtin_brain.c:                 if (n >= sizeof(hist_buf)) n = sizeof(hist_buf) - 1;
+# porque: DÍVIDA. Nome do alvo de conformidade cortado em 63 bytes.
+c/builtins/osif.c:             if (tlen >= sizeof(target_name)) tlen = sizeof(target_name) - 1;
+# porque: DÍVIDA. Índice textual de `a[N]` cortado em 31 bytes antes do
+# atoi: escreve/lê o elemento errado.
+c/builtins/array.c:         if (idx_len >= sizeof(idx_str)) idx_len = sizeof(idx_str) - 1;
+# porque: DÍVIDA, benigna: nome de usuário do prompt cortado em 63 bytes.
+# É apresentação.
+c/core/jash_fastpath.c:     if (n >= sizeof(g_user_name)) n = sizeof(g_user_name) - 1;
+# porque: DÍVIDA, benigna: palavra-chave normalizada cortada em 31 bytes
+# — duas palavras com prefixo comum viram uma no índice. Só afeta ranking.
+c/core/jash_fastpath.c:                 if (n >= sizeof(words[0])) n = sizeof(words[0]) - 1;
+# porque: DÍVIDA. Caminho de arquivo cortado no registro de frecência: o
+# caminho gravado deixa de ser o caminho real, então a pontuação vai para
+# uma chave que não existe. Dano contido (só ranking), mas é perda
+# silenciosa. 3 sítios (56, 75, 159).
+c/core/frecency.c:         if (len >= FRECENCY_PATH_MAX) len = FRECENCY_PATH_MAX - 1;
+# porque: DÍVIDA. Mesmo caso, no outro ponto de entrada.
+c/core/frecency.c:         if (path_len >= FRECENCY_PATH_MAX) path_len = FRECENCY_PATH_MAX - 1;
+# porque: DÍVIDA. Rótulo de cache de módulo cortado.
+c/core/jash_mcache.c:         if (n >= MCACHE_LABEL_MAX) n = MCACHE_LABEL_MAX - 1;
+# porque: DÍVIDA. Comando gravado para predição fica cortado — a predição
+# aprende um comando que ninguém digitou. 2 sítios (72, 95).
+c/core/predict.c:         if (clen >= PREDICT_CMD_LEN) clen = PREDICT_CMD_LEN - 1;
+# porque: DÍVIDA. Idem, no outro ponto de entrada.
+c/core/predict.c:         if (cmd_len >= PREDICT_CMD_LEN) cmd_len = PREDICT_CMD_LEN - 1;
+# porque: DÍVIDA. Contexto de predição cortado. 2 sítios (76, 99).
+c/core/predict.c:         if (xlen >= PREDICT_CONTEXT_LEN) xlen = PREDICT_CONTEXT_LEN - 1;
+# porque: DÍVIDA. Idem.
+c/core/predict.c:         if (ctx_len >= PREDICT_CONTEXT_LEN) ctx_len = PREDICT_CONTEXT_LEN - 1;
+# porque: DÍVIDA, a mais benigna: token cortado só no realce de sintaxe,
+# que é apresentação. Não altera o que executa.
+c/core/syntax_highlight.c:         if (word_len >= MAX_TOKEN_LEN) word_len = MAX_TOKEN_LEN - 1;

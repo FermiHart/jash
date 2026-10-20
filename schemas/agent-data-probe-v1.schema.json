@@ -1,0 +1,6 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"urn:jash:agent-data-probe:v1",
+  "type":"object","additionalProperties":false,"required":["schema","id","op","sealed_fd","fallback","ok","error"],
+  "properties":{"schema":{"const":"jash.agent-data-probe.v1"},"id":{"type":"string"},"op":{"const":"data.probe"},"fallback":{"const":"explicit-only"},"ok":{"type":"boolean"},"error":{"type":["string","null"]},
+    "sealed_fd":{"type":"object","additionalProperties":false,"required":["compiled","available","permitted","lane_enabled","qualification"],"properties":{"compiled":{"type":"boolean"},"available":{"type":"boolean"},"permitted":{"type":"boolean"},"lane_enabled":{"type":"boolean"},"qualification":{"enum":["linux-targeted-gates","unqualified"]}}}}
+}

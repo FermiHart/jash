@@ -1,0 +1,775 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:state:v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "type": "object",
+          "required": [
+            "cwd",
+            "intent",
+            "git",
+            "last_status",
+            "timeline",
+            "timeline_total",
+            "timeline_truncated",
+            "env",
+            "jobs",
+            "complete",
+            "consistency"
+          ],
+          "properties": {
+            "cwd": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "intent": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "git": {
+              "type": "object",
+              "required": [
+                "present",
+                "branch",
+                "dirty",
+                "status_short",
+                "diff_stat",
+                "recent_commits",
+                "preview",
+                "requested",
+                "complete",
+                "status_preview_truncated",
+                "diff_preview_truncated",
+                "latest_commit_limit",
+                "observation",
+                "diff_observation",
+                "recent_preview_truncated"
+              ],
+              "properties": {
+                "present": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "branch": {
+                  "anyOf": [
+                    {
+                      "oneOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "encoding",
+                            "data"
+                          ],
+                          "properties": {
+                            "encoding": {
+                              "const": "base64"
+                            },
+                            "data": {
+                              "type": "string",
+                              "contentEncoding": "base64"
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "dirty": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "status_short": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "diff_stat": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "recent_commits": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                },
+                "preview": {
+                  "const": true
+                },
+                "requested": {
+                  "type": "boolean"
+                },
+                "complete": {
+                  "type": "boolean"
+                },
+                "status_preview_truncated": {
+                  "type": "boolean"
+                },
+                "diff_preview_truncated": {
+                  "type": "boolean"
+                },
+                "latest_commit_limit": {
+                  "const": 1
+                },
+                "observation": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "schema",
+                        "status",
+                        "latest_commit",
+                        "latest_commit_requested",
+                        "cryptographically_verified",
+                        "consistency"
+                      ],
+                      "properties": {
+                        "schema": {
+                          "const": "jash.git-observation.v1"
+                        },
+                        "status": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "available",
+                            "started",
+                            "command_status",
+                            "adapter_status",
+                            "output_bytes",
+                            "truncated",
+                            "payload",
+                            "diagnostic_bytes"
+                          ],
+                          "properties": {
+                            "available": {
+                              "type": "boolean"
+                            },
+                            "started": {
+                              "type": "boolean"
+                            },
+                            "command_status": {
+                              "anyOf": [
+                                {
+                                  "type": "integer",
+                                  "maximum": 9223372036854775807,
+                                  "minimum": -9223372036854775808
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "adapter_status": {
+                              "type": "integer",
+                              "maximum": 9223372036854775807,
+                              "minimum": -9223372036854775808
+                            },
+                            "output_bytes": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 18446744073709551615
+                            },
+                            "truncated": {
+                              "type": "boolean"
+                            },
+                            "payload": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "files",
+                                    "git"
+                                  ],
+                                  "properties": {
+                                    "files": {
+                                      "$ref": "urn:jash:git-status:v1#/oneOf/0/properties/files"
+                                    },
+                                    "git": {
+                                      "$ref": "urn:jash:git-status:v1#/oneOf/0/properties/git"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "diagnostic_bytes": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "required": [
+                                    "encoding",
+                                    "data"
+                                  ],
+                                  "properties": {
+                                    "encoding": {
+                                      "const": "base64"
+                                    },
+                                    "data": {
+                                      "type": "string",
+                                      "contentEncoding": "base64"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        "latest_commit": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "available",
+                                "started",
+                                "command_status",
+                                "adapter_status",
+                                "output_bytes",
+                                "truncated",
+                                "payload",
+                                "diagnostic_bytes"
+                              ],
+                              "properties": {
+                                "available": {
+                                  "type": "boolean"
+                                },
+                                "started": {
+                                  "type": "boolean"
+                                },
+                                "command_status": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "maximum": 9223372036854775807,
+                                      "minimum": -9223372036854775808
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "adapter_status": {
+                                  "type": "integer",
+                                  "maximum": 9223372036854775807,
+                                  "minimum": -9223372036854775808
+                                },
+                                "output_bytes": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 18446744073709551615
+                                },
+                                "truncated": {
+                                  "type": "boolean"
+                                },
+                                "payload": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": false,
+                                      "required": [
+                                        "commits"
+                                      ],
+                                      "properties": {
+                                        "commits": {
+                                          "$ref": "urn:jash:git-log:v1#/oneOf/0/properties/commits"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "diagnostic_bytes": {
+                                  "anyOf": [
+                                    {
+                                      "type": "object",
+                                      "additionalProperties": false,
+                                      "required": [
+                                        "encoding",
+                                        "data"
+                                      ],
+                                      "properties": {
+                                        "encoding": {
+                                          "const": "base64"
+                                        },
+                                        "data": {
+                                          "type": "string",
+                                          "contentEncoding": "base64"
+                                        }
+                                      }
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "latest_commit_requested": {
+                          "const": true
+                        },
+                        "cryptographically_verified": {
+                          "const": false
+                        },
+                        "consistency": {
+                          "const": "independent-subprocess-observations"
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "diff_observation": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "available",
+                        "started",
+                        "command_status",
+                        "adapter_status",
+                        "output_bytes",
+                        "truncated",
+                        "payload",
+                        "diagnostic_bytes"
+                      ],
+                      "properties": {
+                        "available": {
+                          "type": "boolean"
+                        },
+                        "started": {
+                          "type": "boolean"
+                        },
+                        "command_status": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "maximum": 9223372036854775807,
+                              "minimum": -9223372036854775808
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "adapter_status": {
+                          "type": "integer",
+                          "maximum": 9223372036854775807,
+                          "minimum": -9223372036854775808
+                        },
+                        "output_bytes": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 18446744073709551615
+                        },
+                        "truncated": {
+                          "type": "boolean"
+                        },
+                        "payload": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "files",
+                                "total"
+                              ],
+                              "properties": {
+                                "files": {
+                                  "$ref": "urn:jash:git-diff-stat:v1#/oneOf/0/properties/files"
+                                },
+                                "total": {
+                                  "$ref": "urn:jash:git-diff-stat:v1#/oneOf/0/properties/total"
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "diagnostic_bytes": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "encoding",
+                                "data"
+                              ],
+                              "properties": {
+                                "encoding": {
+                                  "const": "base64"
+                                },
+                                "data": {
+                                  "type": "string",
+                                  "contentEncoding": "base64"
+                                }
+                              }
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "recent_preview_truncated": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "last_status": {
+              "type": "object",
+              "required": [
+                "rc",
+                "cmd"
+              ],
+              "properties": {
+                "rc": {
+                  "type": "integer"
+                },
+                "cmd": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "encoding",
+                        "data"
+                      ],
+                      "properties": {
+                        "encoding": {
+                          "const": "base64"
+                        },
+                        "data": {
+                          "type": "string",
+                          "contentEncoding": "base64"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "timeline": {
+              "type": "array",
+              "maxItems": 20,
+              "items": {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "a",
+                  "b"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "integer"
+                  },
+                  "a": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "b": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "encoding",
+                          "data"
+                        ],
+                        "properties": {
+                          "encoding": {
+                            "const": "base64"
+                          },
+                          "data": {
+                            "type": "string",
+                            "contentEncoding": "base64"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "timeline_total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "timeline_truncated": {
+              "type": "boolean"
+            },
+            "env": {
+              "type": "object",
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "encoding",
+                      "data"
+                    ],
+                    "properties": {
+                      "encoding": {
+                        "const": "base64"
+                      },
+                      "data": {
+                        "type": "string",
+                        "contentEncoding": "base64"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "jobs": {
+              "type": "object",
+              "required": [
+                "count",
+                "available"
+              ],
+              "properties": {
+                "count": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "available": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "complete": {
+              "type": "boolean"
+            },
+            "consistency": {
+              "const": "independent-shell-and-git-observations"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.state.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.state.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer"
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$comment": "Shell state uses actual env/timeline/session job-table values. Git is fixed read-only plumbing with exact status/diff/latest observations. Legacy display fields are bounded derived previews; absence/failure yields nullable facts and incomplete state, not a clean repository. --no-git does not spawn a command. latest_commit_limit is explicitly one. No descendant-quiescence or child deadline is promised by the Git collector."
+}

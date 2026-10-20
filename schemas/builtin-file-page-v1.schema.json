@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:file-page:v1",
+  "title": "cat --data bounded byte page",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "operation",
+    "path",
+    "offset",
+    "bytes_returned",
+    "total_bytes",
+    "eof",
+    "freshness",
+    "page_blake3",
+    "text",
+    "data"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.file-page.v1"
+    },
+    "operation": {
+      "const": "file.read"
+    },
+    "path": {
+      "$ref": "#/$defs/byteString"
+    },
+    "offset": {
+      "$ref": "#/$defs/uint"
+    },
+    "bytes_returned": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 16384
+    },
+    "total_bytes": {
+      "$ref": "#/$defs/uint"
+    },
+    "eof": {
+      "type": "boolean"
+    },
+    "freshness": {
+      "const": "descriptor-stable"
+    },
+    "page_blake3": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "text": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "encoding",
+        "data"
+      ],
+      "properties": {
+        "encoding": {
+          "const": "base64"
+        },
+        "data": {
+          "type": "string",
+          "contentEncoding": "base64"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "byteString": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "encoding",
+            "data"
+          ],
+          "properties": {
+            "encoding": {
+              "const": "base64"
+            },
+            "data": {
+              "type": "string",
+              "contentEncoding": "base64"
+            }
+          }
+        }
+      ]
+    },
+    "uint": {
+      "oneOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      ]
+    }
+  }
+}

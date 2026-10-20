@@ -1,0 +1,6 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"urn:jash:agent-artifact:v1",
+  "type":"object","additionalProperties":false,"required":["schema","id","op","artifact_ref","blake3","bytes","durability","retention","published","receipt_ref","receipt_blake3","receipt_pubkey","ok"],
+  "properties":{"schema":{"const":"jash.agent-artifact.v1"},"id":{"type":"string"},"op":{"const":"data.promote"},"artifact_ref":{"type":"string","pattern":"^a:blake3-[0-9a-f]{64}-[0-9]+\\.bin$"},"blake3":{"$ref":"#/$defs/hash"},"bytes":{"type":"integer","minimum":0,"maximum":16777216},"durability":{"const":"durable"},"retention":{"const":"keep"},"published":{"type":"boolean"},"receipt_ref":{"type":"string"},"receipt_blake3":{"$ref":"#/$defs/hash"},"receipt_pubkey":{"$ref":"#/$defs/hash"},"ok":{"const":true}},
+  "$defs":{"hash":{"type":"string","pattern":"^[0-9a-f]{64}$"}}
+}

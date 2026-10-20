@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:jash:recovery-quota:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "units", "used_bytes", "limit_bytes", "proposed_bytes", "fits", "applied", "error", "exit_code"],
+  "properties": {
+    "schema": {"const": "jash.recovery-quota.v1"}, "units": {"const": "logical-record-bytes"},
+    "used_bytes": {"type": ["integer", "string", "null"]}, "limit_bytes": {"type": ["integer", "string", "null"]},
+    "proposed_bytes": {"type": ["integer", "string", "null"]}, "fits": {"type": ["boolean", "null"]}, "applied": {"type": "boolean"},
+    "error": {"type": ["string", "null"]}, "exit_code": {"type": "integer", "minimum": 0}
+  }
+}

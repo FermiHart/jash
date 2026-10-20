@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:pwd:v1",
+  "title": "Successful pwd --json directory observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cwd"
+  ],
+  "properties": {
+    "cwd": {
+      "$ref": "#/$defs/byteString"
+    }
+  },
+  "$defs": {
+    "byteString": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "encoding",
+            "data"
+          ],
+          "properties": {
+            "encoding": {
+              "const": "base64"
+            },
+            "data": {
+              "type": "string",
+              "contentEncoding": "base64"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

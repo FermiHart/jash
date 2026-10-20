@@ -1,0 +1,914 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:agent-contract:inventory:v1",
+  "title": "Jash agent contract inventory (incremental discovery)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "profile",
+    "target",
+    "inventory_scope",
+    "complete",
+    "coverage",
+    "operations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "jash.agent-contract.inventory.v1"
+    },
+    "version": {
+      "const": 1
+    },
+    "profile": {
+      "enum": [
+        "general",
+        "agent-strict"
+      ]
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inventory_scope": {
+      "const": "compiled-builtins-and-job-operations"
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compiled_builtins",
+        "runtime_operations",
+        "qualified_complete",
+        "denominator_frozen",
+        "classified_builtin_names",
+        "structured_candidates",
+        "execution_envelope_names",
+        "interactive_names",
+        "builtin_name_catalog_complete"
+      ],
+      "properties": {
+        "compiled_builtins": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "runtime_operations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "qualified_complete": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "denominator_frozen": {
+          "type": "boolean"
+        },
+        "classified_builtin_names": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "structured_candidates": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "execution_envelope_names": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "interactive_names": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "builtin_name_catalog_complete": {
+          "type": "boolean"
+        }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/builtin"
+          },
+          {
+            "$ref": "#/$defs/runtime"
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "builtin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "summary",
+        "availability",
+        "argv_native",
+        "declared_effect",
+        "contract_status",
+        "complete",
+        "options",
+        "input_schema",
+        "result_schema",
+        "source",
+        "structured_relevance",
+        "alias_of",
+        "implementation_source",
+        "structured_modes",
+        "operations_complete",
+        "operation_exclusions",
+        "legacy_output_compatibility"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^builtin:.+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "builtin"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "availability": {
+          "const": "compiled"
+        },
+        "argv_native": {
+          "type": "boolean"
+        },
+        "declared_effect": {
+          "enum": [
+            "read",
+            "mutate",
+            "exec",
+            "unknown"
+          ]
+        },
+        "contract_status": {
+          "enum": [
+            "pending",
+            "qualified"
+          ]
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "options": {
+          "type": "null"
+        },
+        "input_schema": {
+          "type": "null"
+        },
+        "native_cancellation": {
+          "const": {
+            "profile": "agent-strict",
+            "mode": "cooperative",
+            "required_first_argument": "--json",
+            "timeout_ms": false
+          }
+        },
+        "result_schema": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "$ref",
+                "x-required-option",
+                "x-option-scope"
+              ],
+              "properties": {
+                "$ref": {
+                  "enum": [
+                    "urn:jash:mutation:v1",
+                    "urn:jash:undo-result:v1",
+                    "urn:jash:query:df:v1",
+                    "urn:jash:timeline:v1",
+                    "urn:jash:gossip:v1",
+                    "urn:jash:mirror:receipt:v1",
+                    "urn:jash:query:stat:v1",
+                    "urn:jash:query:wc:v1",
+                    "urn:jash:checkpoints:v1"
+                  ]
+                },
+                "x-required-option": {
+                  "enum": [
+                    "--json",
+                    "--json-report",
+                    "--channel"
+                  ]
+                },
+                "x-required-selector": {
+                  "enum": [
+                    "--ref",
+                    "--receipt"
+                  ]
+                },
+                "x-option-scope": {
+                  "const": "prefix"
+                }
+              }
+            }
+          ]
+        },
+        "result_variants": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "const": {
+                  "$ref": "urn:jash:recovery-store:v1",
+                  "selectors": [
+                    "--store",
+                    "--gc",
+                    "--pin",
+                    "--unpin"
+                  ]
+                }
+              },
+              {
+                "const": {
+                  "$ref": "urn:jash:recovery-quota:v1",
+                  "selectors": [
+                    "--quota",
+                    "--usage"
+                  ]
+                }
+              },
+              {
+                "const": {
+                  "$ref": "urn:jash:trash-gc:v1",
+                  "selectors": [
+                    "empty --json",
+                    "gc --json"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "conditional_effects": {
+          "oneOf": [
+            {
+              "const": [
+                {
+                  "option": "--baseline",
+                  "effect": "mutate"
+                }
+              ]
+            },
+            {
+              "const": [
+                {
+                  "option": "--json",
+                  "effect": "read"
+                },
+                {
+                  "option": "--json-report",
+                  "effect": "read"
+                }
+              ]
+            },
+            {
+              "const": [
+                {
+                  "option": "--json-report",
+                  "effect": "read"
+                }
+              ]
+            },
+            {
+              "const": [
+                {
+                  "option": "--json",
+                  "effect": "read"
+                }
+              ]
+            }
+          ]
+        },
+        "source": {
+          "const": "c/builtins/registry.c"
+        },
+        "structured_relevance": {
+          "enum": [
+            "structured",
+            "execution-envelope",
+            "interactive",
+            "unclassified"
+          ]
+        },
+        "alias_of": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "implementation_source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "structured_modes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "json",
+            "data"
+          ],
+          "properties": {
+            "json": {
+              "$ref": "#/$defs/structuredMode"
+            },
+            "data": {
+              "$ref": "#/$defs/structuredMode"
+            }
+          }
+        },
+        "operations_complete": {
+          "type": "boolean"
+        },
+        "operation_exclusions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operationExclusion"
+          }
+        },
+        "legacy_output_compatibility": {
+          "type": "array",
+          "description": "Historical output/selector shapes remain compatibility paths. These are not aliases of the qualified canonical modes.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "selector_scope",
+              "framing",
+              "shape",
+              "source",
+              "qualification",
+              "note"
+            ],
+            "properties": {
+              "selector_scope": {
+                "type": "string",
+                "minLength": 1
+              },
+              "framing": {
+                "enum": [
+                  "json",
+                  "jsonl",
+                  "json_or_text_legacy"
+                ]
+              },
+              "shape": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "qualification": {
+                "const": "legacy_compatibility_only"
+              },
+              "note": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "summary",
+        "availability",
+        "contract_status",
+        "protocol_version",
+        "complete",
+        "required_fields",
+        "allowed_fields",
+        "field_types",
+        "field_aliases",
+        "capability",
+        "semantic_validation_required",
+        "input_schema",
+        "result_schema",
+        "source",
+        "result_schema_scope"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^runtime:.+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "const": "runtime_operation"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "availability": {
+          "enum": [
+            "compiled",
+            "requires_agent_profile"
+          ]
+        },
+        "contract_status": {
+          "const": "structural"
+        },
+        "protocol_version": {
+          "const": 2
+        },
+        "complete": {
+          "const": false
+        },
+        "required_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "allowed_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "field_types": {
+          "type": "object",
+          "additionalProperties": {
+            "enum": [
+              "string",
+              "integer",
+              "boolean",
+              "array",
+              "object"
+            ]
+          }
+        },
+        "field_aliases": {
+          "const": {
+            "request_version": "protocol_version"
+          }
+        },
+        "capability": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "semantic_validation_required": {
+          "const": true
+        },
+        "input_schema": {
+          "type": "object"
+        },
+        "result_schema": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "$ref"
+              ],
+              "properties": {
+                "$ref": {
+                  "enum": [
+                    "urn:jash:agent-job-result:v1",
+                    "urn:jash:agent-store:v1",
+                    "urn:jash:agent-stream:v1",
+                    "urn:jash:agent-maintenance-history:v1",
+                    "urn:jash:agent-maintenance-resolution:v1",
+                    "urn:jash:agent-maintenance-inspection:v1",
+                    "urn:jash:agent-budget:v1",
+                    "urn:jash:agent-data:v1",
+                    "urn:jash:agent-data-policy:v1",
+                    "urn:jash:agent-data-probe:v1",
+                    "urn:jash:agent-artifact:v1"
+                  ]
+                }
+              }
+            },
+            {
+              "const": {
+                "oneOf": [
+                  {
+                    "$ref": "urn:jash:agent-store:v1"
+                  },
+                  {
+                    "$ref": "urn:jash:agent-maintenance-inspection:v1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "source": {
+          "const": "c/core/serve.c"
+        },
+        "result_schema_scope": {
+          "const": "operation-result; admission/protocol errors may use an unversioned error object"
+        },
+        "result_variants": {
+          "const": [
+            {
+              "when": {
+                "not": {
+                  "required": [
+                    "target_id"
+                  ]
+                }
+              },
+              "result_schema": {
+                "$ref": "urn:jash:agent-store:v1"
+              }
+            },
+            {
+              "when": {
+                "required": [
+                  "target_id"
+                ]
+              },
+              "result_schema": {
+                "$ref": "urn:jash:agent-maintenance-inspection:v1"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "schemaReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$ref"
+      ],
+      "properties": {
+        "$ref": {
+          "type": "string",
+          "pattern": "^urn:jash:"
+        }
+      }
+    },
+    "modeOption": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "enum": [
+            "flag",
+            "string",
+            "integer"
+          ]
+        },
+        "takes_value": {
+          "type": "boolean"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "minimum": {
+          "type": "integer"
+        },
+        "maximum": {
+          "type": "integer"
+        },
+        "form": {
+          "enum": [
+            "equals"
+          ]
+        },
+        "enum": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "attached_value": {
+          "type": "boolean"
+        },
+        "equals_value": {
+          "type": "boolean"
+        },
+        "optional_value": {
+          "type": "boolean"
+        },
+        "repeatable": {
+          "type": "boolean"
+        },
+        "semantics": {
+          "type": "string"
+        },
+        "grammar": {
+          "type": "string"
+        }
+      }
+    },
+    "modeVariant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "selector",
+        "selector_scope",
+        "framing",
+        "contract_status",
+        "complete",
+        "options_complete",
+        "options",
+        "semantic_validation_required",
+        "input_schema",
+        "result_schema",
+        "error_schema",
+        "error_policy",
+        "notes",
+        "input_framing",
+        "resource_limits",
+        "qualified",
+        "qualification_scope",
+        "operations",
+        "semantic_tests"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "selector": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "selector_scope": {
+          "enum": [
+            "first-argument",
+            "leading-options",
+            "leading-options-before-program",
+            "before-double-dash",
+            "exact-trailing-status",
+            "default"
+          ]
+        },
+        "framing": {
+          "enum": [
+            "json",
+            "jsonl",
+            "jtv1",
+            "jtv2"
+          ]
+        },
+        "contract_status": {
+          "enum": [
+            "partial",
+            "qualified"
+          ]
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "options_complete": {
+          "type": "boolean"
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modeOption"
+          }
+        },
+        "semantic_validation_required": {
+          "const": true
+        },
+        "input_schema": {
+          "type": "object"
+        },
+        "result_schema": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/schemaReference"
+            }
+          ]
+        },
+        "error_schema": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/schemaReference"
+            }
+          ]
+        },
+        "error_policy": {
+          "enum": [
+            "stderr",
+            "mixed",
+            "report",
+            "typed-terminal",
+            "separate-document"
+          ]
+        },
+        "notes": {
+          "type": "string"
+        },
+        "input_framing": {
+          "enum": [
+            null,
+            "none",
+            "bytes",
+            "jsonl",
+            "jtv2"
+          ]
+        },
+        "resource_limits": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": [
+                  "integer",
+                  "string",
+                  "boolean",
+                  "array",
+                  "object",
+                  "null"
+                ]
+              }
+            }
+          ]
+        },
+        "qualified": {
+          "type": "boolean"
+        },
+        "qualification_scope": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "semantic_tests": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^tests/"
+          }
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "grammar",
+              "effect"
+            ],
+            "properties": {
+              "grammar": {
+                "type": "string",
+                "minLength": 1
+              },
+              "effect": {
+                "enum": [
+                  "read",
+                  "mutate",
+                  "exec"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    "structuredMode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "implementation",
+        "qualification",
+        "complete",
+        "variants_complete",
+        "variants"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "missing",
+            "partial",
+            "not-applicable",
+            "deferred",
+            "unclassified",
+            "qualified"
+          ]
+        },
+        "implementation": {
+          "enum": [
+            "none",
+            "native",
+            "alternate",
+            "optional-module"
+          ]
+        },
+        "qualification": {
+          "enum": [
+            "pending",
+            "qualified"
+          ]
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "variants_complete": {
+          "type": "boolean"
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/modeVariant"
+          }
+        }
+      }
+    },
+    "operationExclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grammar",
+        "disposition",
+        "reason"
+      ],
+      "properties": {
+        "grammar": {
+          "type": "string",
+          "minLength": 1
+        },
+        "disposition": {
+          "enum": [
+            "execution-envelope",
+            "interactive",
+            "external-fallback",
+            "unimplemented",
+            "presentation-only"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

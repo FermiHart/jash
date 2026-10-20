@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:jash:gossip:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "channel", "error", "persisted", "sequence", "messages", "next_cursor"],
+  "properties": {
+    "schema": {"const": "jash.gossip.v1"}, "channel": {"type": "string"}, "error": {"type": ["string", "null"]},
+    "persisted": {"type": "boolean"}, "sequence": {"type": ["integer", "string"]}, "next_cursor": {"type": ["integer", "string"]},
+    "messages": {"type": "array", "maxItems": 32, "items": {
+      "type": "object", "additionalProperties": false, "required": ["sequence", "message", "timestamp"],
+      "properties": {"sequence": {"type": ["integer", "string"]}, "timestamp": {"type": ["integer", "string"]},
+        "message": {"oneOf": [{"type": "string"}, {"type": "object", "required": ["encoding", "data"], "properties": {"encoding": {"const": "base64"}, "data": {"type": "string"}}, "additionalProperties": false}]}}
+    }}
+  }
+}

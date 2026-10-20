@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:agent-store:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "id", "op", "quota_scope", "quota_bytes", "used_bytes", "dry_run", "applied", "root_retention", "scan_complete", "root_error", "coordination", "entries_scanned", "reclaimed_files", "reclaimed_bytes", "planned_files", "reconciled_files", "items", "ok", "error"],
+  "properties": {
+    "schema": {"const": "jash.agent-store.v1"}, "id": {"type": "string"},
+    "op": {"enum": ["store.inspect", "store.gc", "store.quota", "store.release", "store.journal.quota", "store.journal.gc"]},
+    "quota_scope": {"const": "cas-and-job-archives-including-staging"},
+    "journal_quota_scope": {"const": "maintenance-regular-files-including-staging"},
+    "journal_quota_bytes": {"$ref": "#/$defs/nullable_uint"},
+    "journal_used_bytes": {"$ref": "#/$defs/nullable_uint"},
+    "journal_usage_phase": {"const": "before-operation"},
+    "journal_measurement_complete": {"type": "boolean"},
+    "journal_entries": {"type": "integer", "minimum": 0, "maximum": 4096},
+    "journal_required_headroom_bytes": {"$ref": "#/$defs/uint"},
+    "journal_fs_available_bytes": {"$ref": "#/$defs/nullable_uint"},
+    "journal_gc": {
+      "type": "object", "additionalProperties": false,
+      "required": ["quota_mode", "attempted", "scan_complete", "entries_scanned", "planned_files", "reclaimed_files", "reclaimed_bytes", "verification_bytes_charged", "items"],
+      "properties": {
+        "quota_mode": {"const": "redundant-gc-exempt"}, "attempted": {"type": "boolean"}, "scan_complete": {"type": "boolean"},
+        "entries_scanned": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "planned_files": {"$ref": "#/$defs/uint"}, "reclaimed_files": {"$ref": "#/$defs/uint"},
+        "reclaimed_bytes": {"$ref": "#/$defs/uint"}, "verification_bytes_charged": {"$ref": "#/$defs/uint"},
+        "items": {"type": "array", "maxItems": 4096, "items": {
+          "type": "object", "additionalProperties": false, "required": ["ref", "public_ref", "bytes", "action", "retained_as"],
+          "properties": {
+            "ref": {"type": "string"}, "public_ref": {"type": "string", "pattern": "^[0-9a-f]{64}\\.result$"},
+            "bytes": {"$ref": "#/$defs/nullable_uint"}, "action": {"type": "string"}, "retained_as": {"type": ["string", "null"]}
+          }
+        }}
+      }
+    },
+    "quota_bytes": {"$ref": "#/$defs/nullable_uint"}, "used_bytes": {"$ref": "#/$defs/nullable_uint"},
+    "dry_run": {"type": "boolean"}, "applied": {"type": "boolean"}, "ok": {"type": "boolean"},
+    "error": {"type": ["string", "null"]}, "root_retention": {"enum": ["keep", "explicit-release"]},
+    "transaction": {"enum": ["observation", "not_started", "committed", "indeterminate"]},
+    "effect_admission": {"enum": ["unknown", "admitted", "closed"]},
+    "maintenance_complete": {"type": "boolean"},
+    "receipt_phase": {"const": "maintenance"}, "receipt_ref": {"type": "string"},
+    "receipt_blake3": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "receipt_pubkey": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "scan_complete": {"type": "boolean"}, "root_error": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/text"}]},
+    "coordination": {"enum": ["shared", "exclusive"]},
+    "entries_scanned": {"$ref": "#/$defs/uint"}, "reclaimed_files": {"$ref": "#/$defs/uint"},
+    "reclaimed_bytes": {"$ref": "#/$defs/uint"}, "planned_files": {"$ref": "#/$defs/uint"}, "reconciled_files": {"$ref": "#/$defs/uint"},
+    "items": {"type": "array", "maxItems": 4096, "items": {
+      "type": "object", "additionalProperties": false, "required": ["namespace", "name", "kind", "bytes", "action"],
+      "properties": {
+        "namespace": {"enum": ["overflow", "agent_job_results", "agent_receipts", "agent_requests", "agent_jobs"]},
+        "name": {"$ref": "#/$defs/text"}, "kind": {"enum": ["cas", "gc_hold", "cas_staging", "job_archive", "receipt", "idempotency", "spool", "other"]},
+        "bytes": {"$ref": "#/$defs/nullable_uint"}, "action": {"type": "string"}, "retained_as": {"$ref": "#/$defs/text"},
+        "root_blake3": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "retention": {"enum": ["not-root", "kept", "released", "unknown"]}
+      }
+    }}
+  },
+  "allOf": [{"if": {"required": ["transaction"], "properties": {"transaction": {"const": "committed"}}},
+             "then": {"required": ["receipt_phase", "receipt_ref", "receipt_blake3", "receipt_pubkey"]}}],
+  "$defs": {
+    "uint": {"oneOf": [{"type": "integer", "minimum": 0, "maximum": 9007199254740991}, {"type": "string", "pattern": "^(0|[1-9][0-9]*)$"}]},
+    "nullable_uint": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/uint"}]},
+    "text": {"oneOf": [{"type": "string"}, {"type": "object", "additionalProperties": false, "required": ["encoding", "data"], "properties": {"encoding": {"const": "base64"}, "data": {"type": "string"}}}]}
+  }
+}

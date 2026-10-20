@@ -1,0 +1,28 @@
+# tests/test_debt.txt — gates that exist but are not wired into tests/test_suite.sh.
+# Each non-comment line is a test filename.
+#
+# Format convention: keep orphan filenames on their own lines so that
+# tests/test_builtin_contract.sh can compare them mechanically with comm(1).
+# Commentary goes on # lines above or below the filename.
+
+# Real failures triaged 2026-08-05; owner: CTO.
+asan_test.sh
+bash_compat_test.sh
+fishux_test.sh
+test_adoption_auto.sh
+test_adoption_repo.sh
+test_ai_auto_mode.sh
+test_autofloor.sh
+test_beyond.sh
+test_cat_highlight.sh
+test_dashboard.sh
+test_install_parity.sh
+test_ls_locale_sort.sh
+test_ls_pretty.sh
+test_minix_ipc.sh
+test_minix_osif.sh
+test_minix_osif_target.sh
+test_minix_poll.sh
+test_minix_surface.sh
+test_preexec.sh
+test_tx_undo.sh

@@ -1,0 +1,677 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:sigil-transition:v1",
+  "title": "Sigil recovery publication receipt or final producer result",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/receipt"
+    },
+    {
+      "$ref": "#/$defs/quarantineResult"
+    },
+    {
+      "$ref": "#/$defs/ratchetResult"
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "ok",
+        "error"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.v1"
+        },
+        "ok": {
+          "const": false
+        },
+        "error": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "error",
+        "command_status",
+        "effects_may_have_applied"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.v1"
+        },
+        "error": {
+          "const": "semantic_value_limit"
+        },
+        "command_status": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "effects_may_have_applied": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "row_kind",
+        "operation",
+        "stage",
+        "path",
+        "auxiliary",
+        "manifest",
+        "reason",
+        "scope",
+        "applied",
+        "durable",
+        "outcome",
+        "errno",
+        "sequence",
+        "entries",
+        "fragments",
+        "retained_offset"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.transition.v1"
+        },
+        "row_kind": {
+          "const": "receipt"
+        },
+        "operation": {
+          "enum": [
+            "quarantine.apply",
+            "ratchet.rekey",
+            "ratchet.adopt"
+          ]
+        },
+        "stage": {
+          "enum": [
+            "quarantine-orphan-witness",
+            "quarantine-tail",
+            "quarantine-active-pair",
+            "quarantine-migration",
+            "create-fresh-pair",
+            "seal-boundary",
+            "seal-boundary-and-advance-witness",
+            "preserve-retired-witness",
+            "publish-replacement-witness",
+            "append-retirement-record"
+          ]
+        },
+        "path": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "auxiliary": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "manifest": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scope": {
+          "enum": [
+            "active-ledger-recovery-group",
+            "pinned-ledger-ratchet-publication-group"
+          ]
+        },
+        "applied": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "durable": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outcome": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "errno": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -9223372036854775808,
+              "maximum": 9223372036854775807
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sequence": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "fragments": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "retained_offset": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "quarantineResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "row_kind",
+        "chain",
+        "ratchet",
+        "applied_groups",
+        "failed_groups",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written",
+        "operation",
+        "active_reset",
+        "tail_salvaged"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.transition.v1"
+        },
+        "row_kind": {
+          "const": "result"
+        },
+        "chain": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "ratchet": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "applied_groups": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "failed_groups": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        },
+        "operation": {
+          "const": "quarantine.apply"
+        },
+        "active_reset": {
+          "type": "boolean"
+        },
+        "tail_salvaged": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ratchetResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "row_kind",
+        "chain",
+        "ratchet",
+        "applied_groups",
+        "failed_groups",
+        "complete",
+        "error",
+        "exit_code",
+        "scope",
+        "module_initialization_may_have_written",
+        "operation",
+        "mode",
+        "from_shared",
+        "boundary_sealed",
+        "boundary_sequence",
+        "previous_entries",
+        "previous_advances",
+        "previous_advances_scope",
+        "retired_witness",
+        "sidecar",
+        "outgoing_published",
+        "retired_published",
+        "replacement_published",
+        "sidecar_written",
+        "exclusivity",
+        "past_entries_promoted_to_verified"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.sigil.transition.v1"
+        },
+        "row_kind": {
+          "const": "result"
+        },
+        "chain": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "ratchet": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "encoding",
+                "data"
+              ],
+              "properties": {
+                "encoding": {
+                  "const": "base64"
+                },
+                "data": {
+                  "type": "string",
+                  "contentEncoding": "base64",
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              }
+            }
+          ]
+        },
+        "applied_groups": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "failed_groups": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exit_code": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        },
+        "scope": {
+          "const": "pinned-module-ledger"
+        },
+        "module_initialization_may_have_written": {
+          "const": true
+        },
+        "operation": {
+          "enum": [
+            "ratchet.rekey",
+            "ratchet.adopt"
+          ]
+        },
+        "mode": {
+          "anyOf": [
+            {
+              "enum": [
+                "adopt",
+                "rekey",
+                "rotate"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "from_shared": {
+          "type": "boolean"
+        },
+        "boundary_sealed": {
+          "type": "boolean"
+        },
+        "boundary_sequence": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 18446744073709551615
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "previous_entries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "previous_advances": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "previous_advances_scope": {
+          "enum": [
+            "shared-aggregate-across-repos",
+            "repo-local"
+          ]
+        },
+        "retired_witness": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sidecar": {
+          "anyOf": [
+            {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "encoding",
+                    "data"
+                  ],
+                  "properties": {
+                    "encoding": {
+                      "const": "base64"
+                    },
+                    "data": {
+                      "type": "string",
+                      "contentEncoding": "base64",
+                      "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outgoing_published": {
+          "type": "boolean"
+        },
+        "retired_published": {
+          "type": "boolean"
+        },
+        "replacement_published": {
+          "type": "boolean"
+        },
+        "sidecar_written": {
+          "type": "boolean"
+        },
+        "exclusivity": {
+          "enum": [
+            "derived-from-shared; weaker exclusivity",
+            "fresh-key; unrelated to retired key"
+          ]
+        },
+        "past_entries_promoted_to_verified": {
+          "const": false
+        }
+      }
+    }
+  }
+}

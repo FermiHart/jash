@@ -1,0 +1,6 @@
+name=sigil
+version=0.7.0
+description=Verifiable execution chain — BLAKE3 + ratchet + pledge + replay (S1-S9)
+caps=0x0000049B
+provides_verbs=sigil
+provides_hooks=post_cmd

@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:jash:operator:avg:row:v1",
+  "title": "avg JSONL or native-projection output row",
+  "description": "Row shape only; field selection, arithmetic and relation to input require the semantic operator tests.",
+  "type": "object",
+  "required": [
+    "avg"
+  ],
+  "properties": {
+    "avg": {
+      "oneOf": [
+        {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        {
+          "$ref": "#/$defs/mixed_rational"
+        }
+      ]
+    }
+  },
+  "minProperties": 1,
+  "maxProperties": 2,
+  "$defs": {
+    "mixed_rational": {
+      "description": "Value is (-1 if negative else 1) * (whole + numerator/denominator), in the declared unit. The fractional part is strictly positive, proper and reduced; semantic gates check numerator < denominator and gcd=1. Integer means retain their existing primitive kind.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "negative",
+        "whole",
+        "numerator",
+        "denominator",
+        "unit"
+      ],
+      "properties": {
+        "schema": {
+          "const": "jash.number.mixed_rational.v1"
+        },
+        "negative": {
+          "type": "boolean"
+        },
+        "whole": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 18446744073709551615
+        },
+        "numerator": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "denominator": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 65536
+        },
+        "unit": {
+          "enum": [
+            "scalar",
+            "bytes",
+            "nanoseconds",
+            "unix_nanoseconds"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "bytes"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "negative": {
+                "const": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

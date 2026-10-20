@@ -1,0 +1,27 @@
+# args only, no tool name — runner prefixes system path / jash builtin.
+# Quote any pattern with shell-meaningful chars (\ | * etc.) or the shell
+# eats it before grep ever sees it.
+TODO sample.txt
+-c TODO sample.txt
+-v TODO sample.txt
+-n TODO sample.txt
+-l TODO sample.txt
+-w foo sample.txt
+-o TODO sample.txt
+-i todo sample.txt
+-E '\bstrcpy\b' code.c
+-c -E '\bstrcpy\b' code.c
+-E my_strcpy_thing code.c
+-E 'a\sb' spacefile.txt
+-E '\w+' code.c
+-E 'TODO|FIXME' sample.txt
+-c nomatch sample.txt
+-F 'strcpy(a,b);' code.c
+-x TODO sample.txt
+-x 'TODO fix' sample.txt
+-r strcpy .
+-r --include=*.c strcpy .
+TODO sample.txt -c
+TODO -c sample.txt
+-i TODO sample.txt -c
+

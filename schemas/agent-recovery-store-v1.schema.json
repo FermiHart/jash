@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "urn:jash:recovery-store:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "operation", "consistency", "items", "scanned", "affected", "truncated", "exit_code"],
+  "properties": {
+    "schema": {"const": "jash.recovery-store.v1"}, "operation": {"enum": ["list", "gc", "pin", "unpin"]}, "consistency": {"const": "live"},
+    "scanned": {"type": ["integer", "string"]}, "affected": {"type": ["integer", "string"]}, "truncated": {"type": "boolean"},
+    "exit_code": {"type": "integer"},
+    "items": {"type": "array", "items": {
+      "type": "object", "additionalProperties": false, "required": ["ref", "action", "state", "pinned", "eligible", "payload_bytes"],
+       "properties": {"ref": {"type": "string", "pattern": "^[0-9a-f]{32}$"}, "action": {"type": "string"},
+         "storage_state": {"enum": ["published", "pending", "gc_hold"]},
+        "state": {"enum": ["ready", "active", "consumed", "unknown"]}, "pinned": {"type": "boolean"},
+        "eligible": {"type": "boolean"}, "payload_bytes": {"type": ["integer", "string", "null"]}}
+    }}
+  }
+}
