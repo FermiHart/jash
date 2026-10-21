@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 /* Explicit advanced ls queries over the existing bounded filesystem collector.
  * Basic JSON/JTV rows retain their historical schemas. Advanced selectors use
  * a versioned header/entry/summary protocol with exact observation provenance. */
@@ -458,10 +459,10 @@ static int ls_structured_query(jash_state_t* state, jash_writer_t writer, void* 
         const char* slash = strrchr(options->related, '/'); const char* name = slash ? slash + 1 : options->related;
         if (!*name || strlen(name) >= sizeof(related_base) || length >= sizeof(related_directory) || options->directory)
             return jash_structured_error(writer, context, "ls", "invalid_relation_target", 2);
-        strcpy(related_base, name); char* dot = strrchr(related_base, '.'); if (dot && dot != related_base) *dot = 0;
+        if (jash_copy_cstr(related_base, sizeof(related_base), name)) { return jash_structured_error(writer, context, "ls", "invalid_relation_target", 2); } char* dot = strrchr(related_base, '.'); if (dot && dot != related_base) *dot = 0;
         size_t dir_length = slash ? (size_t)(slash - options->related) : 0;
         if (slash) { if (!dir_length) dir_length = 1; memcpy(related_directory, options->related, dir_length); related_directory[dir_length] = 0; }
-        else strcpy(related_directory, ".");
+        else if (jash_copy_cstr(related_directory, sizeof(related_directory), ".")) { return jash_structured_error(writer, context, "ls", "invalid_relation_target", 2); }
         related = related_base;
         lsx_collect(&query, related_directory, related_directory, 0, 0, 1);
     } else for (size_t i = 0; i < root_count; i++) {

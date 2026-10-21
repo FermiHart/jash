@@ -474,7 +474,8 @@ static int eval_cond_loop(jash_state_t* s, jash_writer_t w, void* ctx,
      * flips (or break / SIGINT). A hard 10000 cap silently corrupted long loops. */
     for (;;) {
         /* Evaluate condition */
-        int cond_result = jash_eval_line(s, w, ctx, cond);
+        int cond_result = jash_eval_line_from(s, w, ctx, cond, cond_start);
+        if (s->exit_requested) { exit_code = cond_result; break; }
         
         /* while: exit when condition is false (non-zero)
          * until: exit when condition is true (zero) */
@@ -484,7 +485,7 @@ static int eval_cond_loop(jash_state_t* s, jash_writer_t w, void* ctx,
             if (cond_result != 0) break;  /* while: condition false, exit */
         }
 
-        exit_code = jash_eval_line(s, w, ctx, body);
+        exit_code = jash_eval_line_from(s, w, ctx, body, body_start);
         /* BUG-012: return/exit from inside the loop stops it and bubbles up. */
         if (s->return_requested || s->exit_requested) break;
         /* Handle break (255) and continue (254) — BUG-166: N-level control

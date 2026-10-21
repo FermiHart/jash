@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 /* Included by recall_native.inc. Captures remain bytes; line selection never
  * discards empty lines or treats embedded NUL as end of capture. */
 typedef struct { char name[256]; struct stat info; } recall_capture_t;
@@ -28,7 +29,7 @@ static int recall_capture_scan(memory_store_t* store, recall_capture_t* captures
         if (entry->d_name[0] == '.') continue;
         if (*count == 4096 || strlen(entry->d_name) >= sizeof(captures[0].name)) { error = E2BIG; break; }
         recall_capture_t* capture = &captures[*count];
-        strcpy(capture->name, entry->d_name);
+        if (jash_copy_cstr(capture->name, sizeof(capture->name), entry->d_name)) { error = errno; break; }
         if (fstatat(store->directory, capture->name, &capture->info, AT_SYMLINK_NOFOLLOW)) { error = errno; break; }
         if (!S_ISREG(capture->info.st_mode) || capture->info.st_uid != geteuid() ||
             capture->info.st_nlink != 1 || (capture->info.st_mode & 0022) || capture->info.st_size < 0) { error = EPERM; break; }

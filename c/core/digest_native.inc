@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 /* The project reader/hash/classifier above is shared with the text engine.
  * This adapter retains its real observations before any publication. */
 #include "digest_native.h"
@@ -65,7 +66,7 @@ static int dn_read_at(int dir, const char* name, size_t maximum, int private_fil
 
 static int dn_open_relative(int root, const char* path) {
     if (!path || !*path || path[0] == '/' || strlen(path) >= DIGEST_MAX_PATH) { errno = EINVAL; return -1; }
-    char copy[DIGEST_MAX_PATH]; strcpy(copy, path);
+    char copy[DIGEST_MAX_PATH]; if (jash_copy_cstr(copy, sizeof(copy), path)) { return -1; }
     int dir = dup(root); if (dir < 0) return -1;
     char* part = copy;
     for (;;) {
@@ -133,7 +134,7 @@ int digest_snapshot_prepare(const digest_cfg_t* cfg, digest_snapshot_t** output)
         if (dn_read_at(AT_FDCWD, cfg->diff_base, DIGEST_DIFF_MAX_BASE_BYTES, 0, &bytes, &length)) goto failed;
         int parsed = digest_manifest_parse(bytes, length, &snapshot->base); free(bytes);
         if (parsed) { errno = EINVAL; goto failed; }
-        strcpy(obs->base_fingerprint, snapshot->base.base_fp);
+        if (jash_copy_cstr(obs->base_fingerprint, sizeof(obs->base_fingerprint), snapshot->base.base_fp)) { goto failed; }
     }
     size_t capacity = inv->count + snapshot->base.count;
     snapshot->rows = calloc(capacity ? capacity : 1, sizeof *snapshot->rows);

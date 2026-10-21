@@ -271,9 +271,9 @@ int jash_eval_for_c_style(jash_state_t* s, jash_writer_t w, void* ctx,
         if (body_is_arith) {
             exit_code = jash_eval_arith_command(s, w, ctx, skip_ws(body));
             if (exit_code < 0)
-                exit_code = jash_eval_line(s, w, ctx, body);
+                exit_code = jash_eval_line_from(s, w, ctx, body, body_start);
         } else {
-            exit_code = jash_eval_line(s, w, ctx, body);
+            exit_code = jash_eval_line_from(s, w, ctx, body, body_start);
         }
         /* BUG-012: return/exit from inside the loop must STOP it and bubble up
          * (leave the flag set for the function boundary / driver to consume). */
@@ -469,6 +469,7 @@ int jash_eval_for_loop(jash_state_t* s, jash_writer_t w, void* ctx,
     char words_inline[65536];
     char* words = words_inline;
     char* words_heap = NULL;
+    const char* words_start = p;
 
     /* ═══ JINV-078 — `for VAR; do … done` (sem `in`) ═══════════════════════
      *
@@ -521,7 +522,7 @@ int jash_eval_for_loop(jash_state_t* s, jash_writer_t w, void* ctx,
     }
 
     p = skip_ws(p + 2);
-    const char* words_start = p;
+    words_start = p;
     /* BUG-059/bash parity: the word list ends at ';' OR at a newline —
      * `for i in 1 2<newline>do ...<newline>done` is the canonical multi-line
      * form every agent harness emits. skip_ws() below already eats the
@@ -642,6 +643,19 @@ int jash_eval_for_loop(jash_state_t* s, jash_writer_t w, void* ctx,
     jash_ifs_field_begin(s, 1);
     jash_ifs_word_mark_enable(1);
     if (jash_has_cmdsub(expanded)) {
+        /* The word list is an exact source slice until expansion starts. */
+        unsigned* words_map = jash_source_map_slice(words_start, strlen(words));
+        if (!words_map) {
+            jash_writes(jash_stderr_writer, 0, "jash: source location allocation failed\n");
+            s->exit_requested = 1;
+            s->last_status.code = 2;
+            jash_ifs_word_mark_enable(0);
+            jash_ifs_field_end();
+            ret_code = 2;
+            goto for_body_done;
+        }
+        jash_source_span words_span;
+        jash_source_push(&words_span, words, strlen(words), words_map, words_map[0]);
         /* JINV-087: a divisão por IFS acontece DENTRO da expansão, onde ainda
          * se sabe se o `$(…)` estava entre aspas. Ligado só em volta desta
          * chamada; restaurado logo abaixo. */
@@ -650,6 +664,8 @@ int jash_eval_for_loop(jash_state_t* s, jash_writer_t w, void* ctx,
         g_jash_cmdsub_field_split = 1;
         const char* x = jash_expand_cmdsub_known(s, expanded);
         g_jash_cmdsub_field_split = fld_saved;
+        jash_source_pop(&words_span);
+        free(words_map);
         if (x) expanded = x;
         if (jash_cmdsub_error()) {
             jash_writes(jash_stderr_writer, 0, jash_cmdsub_error_msg());
@@ -894,9 +910,9 @@ int jash_eval_for_loop(jash_state_t* s, jash_writer_t w, void* ctx,
                 /* Same rule as the streaming path: if the real call bails,
                  * fall back to the full evaluator. */
                 if (!fast_arith_assign(s, w, ctx, body, &exit_code, 0))
-                    exit_code = jash_eval_line(s, w, ctx, body);
+                    exit_code = jash_eval_line_from(s, w, ctx, body, body_start);
             } else {
-                exit_code = jash_eval_line(s, w, ctx, body);
+                exit_code = jash_eval_line_from(s, w, ctx, body, body_start);
             }
             /* BUG-012: return/exit bubbles up, stops the loop. */
             if (s->return_requested || s->exit_requested) break;
@@ -977,9 +993,9 @@ int jash_eval_for_loop(jash_state_t* s, jash_writer_t w, void* ctx,
                      * evaluation, so fall back to the full evaluator if the
                      * real call bails (e.g. empty arithmetic result). */
                     if (!fast_arith_assign(s, w, ctx, body, &exit_code, 0))
-                        exit_code = jash_eval_line(s, w, ctx, body);
+                        exit_code = jash_eval_line_from(s, w, ctx, body, body_start);
                 } else {
-                    exit_code = jash_eval_line(s, w, ctx, body);
+                    exit_code = jash_eval_line_from(s, w, ctx, body, body_start);
                 }
 
                 /* BUG-012: return/exit bubbles up, stops the loop. */

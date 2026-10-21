@@ -394,6 +394,21 @@ static const char* frame_slot(const jash_state_t* s, unsigned n) {
 
 const char* jash_env_get(const jash_state_t* s, const char* key) {
     if (!s || !key) return 0;
+    /* A native caller stack, not mutable environment pseudo-elements. */
+    if (!strncmp(key, "BASH_LINENO", 11) && (key[11] == 0 || key[11] == '[')) {
+        long index = 0;
+        if (key[11]) {
+            char* end;
+            index = strtol(key + 12, &end, 10);
+            if (end == key + 12 || *end != ']' || end[1]) return NULL;
+            if (index < 0) index += (long)s->bash_lineno_depth;
+        }
+        if (index < 0 || (unsigned long)index >= s->bash_lineno_depth) return NULL;
+        static char values[JASH_SOURCE_FRAME_MAX][16];
+        snprintf(values[index], sizeof(values[index]), "%u",
+                 s->bash_lineno[s->bash_lineno_depth - 1 - (unsigned)index]);
+        return values[index];
+    }
     if (s->func_depth > 0) {
         unsigned fidx = 0;
         int fk = frame_key_kind(key, &fidx);

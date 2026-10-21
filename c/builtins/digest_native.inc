@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 #include <core/digest_native.h>
 #include <module/blake3.h>
 #include <module/jash_crypto.h>
@@ -149,9 +150,9 @@ static int digest_native_output(semantic_builtin_t* call, jdv_value_t value, int
     if (result) { jash_structured_buffer_free(&bytes); return result; }
     char parent[PATH_MAX], name[PATH_MAX];
     if (strlen(path) >= sizeof parent) { jash_structured_buffer_free(&bytes); return semantic_error(call, "output_path_limit", 2); }
-    strcpy(parent, path); char* slash = strrchr(parent, '/');
-    if (slash) { strcpy(name, slash + 1); if (slash == parent) slash[1] = 0; else *slash = 0; }
-    else { strcpy(name, path); strcpy(parent, "."); }
+    if (jash_copy_cstr(parent, sizeof(parent), path)) { jash_structured_buffer_free(&bytes); return semantic_error(call, "output_path_limit", 2); } char* slash = strrchr(parent, '/');
+    if (slash) { if (jash_copy_cstr(name, sizeof(name), slash + 1)) { jash_structured_buffer_free(&bytes); return semantic_error(call, "output_path_limit", 2); } if (slash == parent) slash[1] = 0; else *slash = 0; }
+    else { if (jash_copy_cstr(name, sizeof(name), path)) { jash_structured_buffer_free(&bytes); return semantic_error(call, "output_path_limit", 2); } if (jash_copy_cstr(parent, sizeof(parent), ".")) { jash_structured_buffer_free(&bytes); return semantic_error(call, "output_path_limit", 2); } }
     int directory = open(parent, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     int error = directory < 0 ? errno : 0;
     if (!*name || !strcmp(name, ".") || !strcmp(name, "..")) error = EINVAL;

@@ -325,7 +325,7 @@ static void eval_env_rollback(jash_state_t* s, eval_env_snapshot_t* snap) {
  * que redir_save_targets() em parser/pipeline.c ja adotara. F E R M I ∞ H A R T */
 static int parse_function_def(const char* line, char* name, unsigned ncap,
                               char* body, unsigned bcap, const char** out_rest,
-                              char** out_body_heap) {
+                              char** out_body_heap, const char** out_body_start) {
     const char* p = line;
     if (out_body_heap) *out_body_heap = NULL;   /* JINV-086 */
     while (*p == ' ' || *p == '\t') p++;
@@ -386,6 +386,7 @@ static int parse_function_def(const char* line, char* name, unsigned ncap,
                              *bstart == ';' || *bstart == '\n')) bstart++;
     while (bend > bstart && (bend[-1] == ' ' || bend[-1] == '\t' ||
                              bend[-1] == ';' || bend[-1] == '\n')) bend--;
+    if (out_body_start) *out_body_start = bstart;
     unsigned blen = (unsigned)(bend - bstart);
     /* JINV-086: aqui morava `if (blen >= bcap) blen = bcap - 1;` — o corte
      * mudo. Agora o corpo grande migra para o heap, do tamanho exato. */
@@ -1261,7 +1262,7 @@ static const char* eval_procsub_phase(jash_state_t* s, jash_writer_t w, void* ct
                             sys_close(pipefd[0]);  /* close read end */
                             sys_dup2(pipefd[1], 1);
                             sys_close(pipefd[1]);
-                            jash_eval_line(s, w, ctx, cmd);
+                            jash_eval_line_from(s, w, ctx, cmd, cmd_start);
                             sys_exit(0);
                         } else if (pid > 0) {
                             /* Parent: keep read end, close write end */
@@ -1472,6 +1473,42 @@ static const char* jash_block_tail(const char* line,
     return jash_block_split(line, open_kw, close_kw, 0);
 }
 
+static int eval_mapped_handler(jash_state_t* s, jash_writer_t w, void* ctx,
+                               const char* text, const char* origin,
+                               int (*handler)(jash_state_t*, jash_writer_t, void*, const char*)) {
+    unsigned* map = jash_source_map_slice(origin, strlen(text));
+    if (!map) {
+        jash_writes(jash_stderr_writer, 0, "jash: source location allocation failed\n");
+        s->last_status.code = 2; s->exit_requested = 1; return 2;
+    }
+    jash_source_span span;
+    jash_source_push(&span, text, strlen(text), map, map[0]);
+    int rc = handler(s, w, ctx, text);
+    jash_source_pop(&span);
+    free(map);
+    return rc;
+}
+
+int jash_eval_line_mapped(jash_state_t* s, jash_writer_t w, void* ctx,
+                          const char* line, const unsigned* map, unsigned first) {
+    jash_source_span span;
+    jash_source_push(&span, line, strlen(line), map, first);
+    int rc = jash_eval_line(s, w, ctx, line);
+    jash_source_pop(&span);
+    return rc;
+}
+int jash_eval_line_from(jash_state_t* s, jash_writer_t w, void* ctx,
+                        const char* line, const char* origin) {
+    unsigned* map = jash_source_map_slice(origin, strlen(line));
+    if (!map) {
+        jash_writes(jash_stderr_writer, 0, "jash: source location allocation failed\n");
+        s->last_status.code = 2; s->exit_requested = 1; return 2;
+    }
+    int rc = jash_eval_line_mapped(s, w, ctx, line, map, map[0]);
+    free(map);
+    return rc;
+}
+
 int jash_eval_line(jash_state_t* s, jash_writer_t w, void* ctx, const char* line) {
     if (!s || !line) return 0;
     /* BUG-030: re-expand any registered heredoc/here-string body referenced by
@@ -1588,7 +1625,10 @@ int jash_eval_line(jash_state_t* s, jash_writer_t w, void* ctx, const char* line
     }
 
     g_eval_depth++;
-    if (g_eval_depth == 1) g_lineno++;  /* count top-level command lines */
+    int saved_lineno = g_lineno;
+    const char* command_start = line;
+    while (*command_start == ' ' || *command_start == '\t' || *command_start == '\n') ++command_start;
+    g_lineno = (int)jash_source_line_at(command_start);
 
 #ifndef JASH_AGENT_ONLY
     struct timespec _brain_t0 = {0}, _brain_t1 = {0};
@@ -1596,8 +1636,11 @@ int jash_eval_line(jash_state_t* s, jash_writer_t w, void* ctx, const char* line
     int _brain_tl_before = toplevel ? jash_timeline_count() : 0;
 #endif
 
+    jash_source_span* source_mark = jash_source_mark();
     int jash_eval_rc = jash_eval_line_inner(s, w, ctx, line);
+    jash_source_restore(source_mark);
     eval_procsub_cleanup();
+    g_lineno = saved_lineno;
     g_eval_depth--;
 
     if (toplevel) {
@@ -1773,6 +1816,7 @@ static int eval_literal_builtin(const char* line) {
 }
 
 static int jash_eval_line_inner(jash_state_t* s, jash_writer_t w, void* ctx, const char* line) {
+    jash_source_span comment_span;
     // SECURITY: history expansion (bash-compatible !!, !n, !str, !?str?)
     static char* expanded_slots[JASH_EVAL_MAX_DEPTH];
     char* expanded = eval_depth_buf(expanded_slots, 4096);
@@ -1848,8 +1892,12 @@ static int jash_eval_line_inner(jash_state_t* s, jash_writer_t w, void* ctx, con
              *    secao 4.2);
              *  - devolveu -1 (nao coube no buffer): a linha ORIGINAL segue
              *    intacta em vez de ser truncada. */
-            int nch = jash_strip_comments_and_joins(line, cbuf, 4096);
+            static char* cmap_slots[JASH_EVAL_MAX_DEPTH];
+            unsigned* cmap = (unsigned*)eval_depth_buf(cmap_slots, 4096 * sizeof(unsigned));
+            if (!cmap) { s->last_status.code = 2; s->exit_requested = 1; return 2; }
+            int nch = jash_strip_comments_and_joins_mapped(line, cbuf, 4096, cmap);
             if (nch > 0) {
+                jash_source_push(&comment_span, cbuf, strlen(cbuf), cmap, cmap[0]);
                 line = cbuf;
                 if (!*line) return 0;
             }
@@ -1978,7 +2026,7 @@ static int jash_eval_line_inner(jash_state_t* s, jash_writer_t w, void* ctx, con
             if (sub_pid == 0) {
                 signal(SIGINT, SIG_DFL);
                 signal(SIGQUIT, SIG_DFL);
-                int erc = jash_eval_line(s, w, ctx, sub_body);
+                int erc = jash_eval_line_from(s, w, ctx, sub_body, body_start);
                 sys_exit(erc);
                 for (;;) { }
             } else if (sub_pid > 0) {
@@ -2002,7 +2050,7 @@ static int jash_eval_line_inner(jash_state_t* s, jash_writer_t w, void* ctx, con
             s->last_status.code = sub_rc;
 
             if (after_copy) {
-                int rest_rc = jash_eval_line(s, w, ctx, after_copy);
+                int rest_rc = jash_eval_line_from(s, w, ctx, after_copy, after);
                 free(after_copy);
                 s->last_status.code = rest_rc;
                 return rest_rc;
@@ -2020,8 +2068,9 @@ skip_subshell:
         char fname[64], fbody[JASH_FN_BODY_INLINE];
         char* fbody_heap = NULL;   /* JINV-086 */
         const char* rest = NULL;
+        const char* body_start = NULL;
         int fdef = parse_function_def(line, fname, sizeof(fname),
-                                      fbody, sizeof(fbody), &rest, &fbody_heap);
+                                      fbody, sizeof(fbody), &rest, &fbody_heap, &body_start);
         if (fdef < 0) {
             /* JINV-086: sem memória para o corpo. RECUSA ALTA — definir uma
              * função com o corpo cortado é registrar um programa diferente do
@@ -2038,8 +2087,8 @@ skip_subshell:
             /* JINV-086: o retorno era DESCARTADO. Tabela cheia ou falta de
              * memória sumiam sem uma palavra, e a chamada seguinte caía em
              * "command not found" (ou, pior, num externo homônimo). */
-            int drc = jash_function_define(s->functions, fname,
-                                           fbody_heap ? fbody_heap : fbody);
+            int drc = jash_function_define_from(s->functions, fname,
+                                           fbody_heap ? fbody_heap : fbody, body_start);
             if (fbody_heap) { free(fbody_heap); fbody_heap = NULL; }
             if (drc != JASH_FUNC_OK) {
                 jash_writef(jash_stderr_writer, 0,
@@ -2288,7 +2337,7 @@ skip_subshell:
             }
             /* Execute body as a command list IN THE CURRENT SHELL (brace group
              * shares scope — assignments persist, unlike a `(..)` subshell). */
-            rc = jash_eval_line(s, w, ctx, body);
+            rc = jash_eval_line_from(s, w, ctx, body, bg + 1);
             free(body_heap);   /* JINV-084 */
             s->last_status.code = rc;
             /* BUG-059: restore saved fds */
@@ -2417,7 +2466,7 @@ skip_brace_group:   /* JINV-084: `{ … } && …` — quem parte a lista AND-OR 
          * mesmo predicado de antes, para que este conserto nao mude qual
          * parser atende cada forma. */
         if (!strstr(line, "elif") && !strchr(line, '\n') && !strstr(line + 2, " if ")) {
-            rc = jash_eval_if_statement(s, w, ctx, blk);
+            rc = eval_mapped_handler(s, w, ctx, blk, line, jash_eval_if_statement);
             if (rc >= 0) {
                 free(blk_heap);
                 s->last_status.code = rc;
@@ -2431,7 +2480,7 @@ skip_brace_group:   /* JINV-084: `{ … } && …` — quem parte a lista AND-OR 
                 return rc;
             }
         }
-        rc = jash_eval_if_block(s, w, ctx, blk);
+        rc = eval_mapped_handler(s, w, ctx, blk, line, jash_eval_if_block);
         if (rc >= 0) {
             free(blk_heap);
             s->last_status.code = rc;
@@ -2659,7 +2708,7 @@ skip_brace_group:   /* JINV-084: `{ … } && …` — quem parte a lista AND-OR 
                         }
                     }
                     last_rc = (slen > 0)
-                              ? jash_eval_line(s, w, ctx, seg)
+                              ? jash_eval_line_from(s, w, ctx, seg, cursor)
                               : 0;
                     if (negate) last_rc = last_rc ? 0 : 1;
                     s->last_status.code = last_rc;
@@ -4140,7 +4189,7 @@ full_word_expansion:
                 bl[bn] = '\0';
                 bn = (unsigned)jash_rtrim_unquoted(bl);
                 bl[bn] = '\0';
-                int brc = jash_bg_spawn(s, w, ctx, bl);
+                int brc = eval_mapped_handler(s, w, ctx, bl, line, jash_bg_spawn);
                 free(bl);
                 s->last_status.code = brc;
                 return brc;
@@ -4417,7 +4466,7 @@ full_word_expansion:
             bg_line[bg_len] = '\0';
             bg_len = (unsigned)jash_rtrim_unquoted(bg_line);
             bg_line[bg_len] = '\0';
-            int bg_rc = jash_bg_spawn(s, w, ctx, bg_line);
+            int bg_rc = eval_mapped_handler(s, w, ctx, bg_line, line, jash_bg_spawn);
             free(bg_line);
             s->last_status.code = bg_rc;
             return bg_rc;
@@ -4911,6 +4960,7 @@ static int jash_bg_spawn(jash_state_t* s, jash_writer_t w, void* ctx,
          * immediately (bash parity), while the child stays the job
          * leader so reaping/status are unchanged. */
         jash_pipeline_bg_exec(s, w, ctx, bg_line);
+        if (s->exit_requested) sys_exit(s->last_status.code);
         int _bg_rc = jash_eval_line(s, w, ctx, bg_line);
         sys_exit(_bg_rc & 0xFF);
     }
@@ -4935,8 +4985,9 @@ static int jash_bg_spawn(jash_state_t* s, jash_writer_t w, void* ctx,
     return 0;
 }
 
-int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
-                       const char* name, const char* fbody, const char* args) {
+static int eval_function_with_diagnostic(jash_state_t* s, jash_writer_t w, void* ctx,
+                       const char* name, const char* fbody, const char* args,
+                       const char* diagnostic_name) {
     /* Parse $1..$N from already-expanded, quoted args first: when the
      * callee takes no args and the caller has no positionals, the whole
      * snapshot/replace/restore frame is provably a no-op and is skipped
@@ -4955,11 +5006,11 @@ int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
             if (parse_rc == -2)
                 jash_writef(jash_stderr_writer, 0,
                             "jash: %s: more than %d positional parameters — refusing\n",
-                            name, JASH_POS_MAX);
+                            diagnostic_name, JASH_POS_MAX);
             else
                 jash_writef(jash_stderr_writer, 0,
                             "jash: %s: unable to store positional parameters — refusing\n",
-                            name);
+                            diagnostic_name);
             return 1;
         }
     }
@@ -5081,7 +5132,35 @@ int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
     jash_env_set_nomirror(s, "__LOCAL_VARS__", "");
     /* Depth + FUNCNAME push/pop live in the native frame now (pushed by
      * jash_frame_enter above); the table is untouched. */
-    int frc = jash_eval_line(s, w, ctx, bodybuf);
+    unsigned caller_depth = s->bash_lineno_depth;
+    int frc;
+    if (caller_depth >= JASH_SOURCE_FRAME_MAX) {
+        jash_writes(jash_stderr_writer, 0, "jash: source frame limit exceeded\n");
+        frc = 2;
+    } else {
+        s->bash_lineno[s->bash_lineno_depth++] = (unsigned)jash_get_lineno();
+        const unsigned* body_map = jash_function_source_map(s->functions, name);
+        size_t body_len = strlen(bodybuf);
+        char* body_copy = malloc(body_len + 1);
+        unsigned* map_copy = body_len <= SIZE_MAX / sizeof(unsigned) - 1 ?
+                             malloc((body_len + 1) * sizeof(unsigned)) : NULL;
+        if (!body_copy || !map_copy) {
+            jash_writes(jash_stderr_writer, 0, "jash: function source allocation failed\n");
+            s->exit_requested = 1; frc = 2;
+        } else {
+            /* Redefinition/unset during a call must not invalidate active text
+             * or provenance stored in the mutable function registry. */
+            memcpy(body_copy, bodybuf, body_len + 1);
+            unsigned physical = 1;
+            for (size_t i = 0; i <= body_len; ++i) {
+                map_copy[i] = body_map ? body_map[i] : physical;
+                if (i < body_len && bodybuf[i] == '\n') ++physical;
+            }
+            frc = jash_eval_line_mapped(s, w, ctx, body_copy, map_copy, map_copy[0]);
+        }
+        free(map_copy);
+        free(body_copy);
+    }
     /* BUG-012: consume the `return` signal at this function boundary so
      * it does not leak into the caller's command list; the function's
      * status becomes the return code. This is what makes early `return`
@@ -5193,6 +5272,7 @@ int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
 
     /* Run RETURN trap after function body. */
     jash_run_trap_return(s, w, ctx);
+    s->bash_lineno_depth = caller_depth;
     /* Restore positionals (skipped with the frame when both sides are
      * empty: nothing was saved, replaced, or reserved). */
     if (need_frame) {
@@ -5203,6 +5283,24 @@ int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
     return frc;
 }
 
+int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
+                       const char* name, const char* body, const char* args) {
+    return eval_function_with_diagnostic(s, w, ctx, name, body, args, name);
+}
+
 int jash_get_lineno(void) {
     return g_lineno;
+}
+
+int jash_eval_function_at(jash_state_t* s, jash_writer_t w, void* ctx,
+                          const char* name, const char* body, const char* args,
+                          unsigned line) {
+    int saved = g_lineno;
+    g_lineno = (int)line;
+    /* Pipeline calls retain their established argument-limit diagnostic.
+     * The real name still identifies the function and its source metadata. */
+    int rc = eval_function_with_diagnostic(s, w, ctx, name, body, args,
+                                            "pipeline function");
+    g_lineno = saved;
+    return rc;
 }

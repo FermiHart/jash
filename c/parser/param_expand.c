@@ -600,7 +600,7 @@ static const char* jash_special_var(jash_state_t* s, const char* name,
         buf[cap - 1] = 0;
         return buf;
     }
-    if (strcmp(name, "BASH_LINENO") == 0 || strcmp(name, "LINENO") == 0) {
+    if (strcmp(name, "LINENO") == 0) {
         snprintf(buf, cap, "%d", jash_get_lineno());
         return buf;
     }
@@ -682,6 +682,22 @@ int jash_array_count(jash_state_t* s, const char* base) {
  * o resultado caber num buffer (BUG-065). */
 static int jash_array_collect(jash_state_t* s, const char* base,
                               char* out, size_t cap, int want_keys, int at_sign, int in_dq) {
+    if (!strcmp(base, "BASH_LINENO")) {
+        unsigned count = s ? s->bash_lineno_depth : 0;
+        size_t used = 0;
+        const char* ifs = s ? jash_env_get(s, "IFS") : NULL;
+        char sep = at_sign && in_dq ? '\x1e' :
+                   (!at_sign && in_dq && ifs ? *ifs : ' ');
+        for (unsigned i = 0; out && i < count; ++i) {
+            char number[16];
+            snprintf(number, sizeof number, "%u", want_keys ? i :
+                     s->bash_lineno[count - 1 - i]);
+            if (i && sep && used + 1 < cap) out[used++] = sep;
+            for (const char* p = number; *p && used + 1 < cap; ++p) out[used++] = *p;
+        }
+        if (out && cap) out[used] = 0;
+        return (int)count;
+    }
     size_t base_len = strlen(base);
     if (!out) cap = 0;                    /* nenhuma escrita cabe: so conta */
     /* Gather matching entries.
@@ -1163,7 +1179,7 @@ static int jash_expand_array_form(jash_state_t* s, const char* full,
             out[cap - 1] = 0;
             return 1;
         }
-        if (strcmp(base, "BASH_LINENO") == 0 || strcmp(base, "LINENO") == 0) {
+        if (strcmp(base, "LINENO") == 0) {
             strncpy(out, "0", cap - 1);
             out[cap - 1] = 0;
             return 1;
@@ -1193,6 +1209,23 @@ static int jash_expand_array_form(jash_state_t* s, const char* full,
                     if (bc != '_' && !isalnum(bc)) { base_ok = 0; break; }
                 }
                 if (!base_ok) goto after_arr_subscript;
+                if (lb - full == 11 && !strncmp(full, "BASH_LINENO", 11)) {
+                    size_t expression_len = (size_t)(full + fl - 1 - (lb + 1));
+                    char* expression = malloc(expression_len + 1);
+                    if (!expression) {
+                        jash_writes(jash_stderr_writer, 0, "jash: array index allocation failed\n");
+                        out[0] = 0; return 1;
+                    }
+                    memcpy(expression, lb + 1, expression_len);
+                    expression[expression_len] = 0;
+                    long index = jash_eval_arithmetic(expression, s);
+                    free(expression);
+                    char key[64];
+                    snprintf(key, sizeof key, "BASH_LINENO[%ld]", index);
+                    const char* value = jash_env_get(s, key);
+                    snprintf(out, cap, "%s", value ? value : "");
+                    return 1;
+                }
 
                 /* Check index is purely numeric (positive or negative) */
                 const char* idx = lb + 1;
@@ -1205,6 +1238,11 @@ static int jash_expand_array_form(jash_state_t* s, const char* full,
                         if (*q < '0' || *q > '9') { all_digits = 0; break; }
                     }
                     if (all_digits) {
+                        if (!strncmp(full, "BASH_LINENO[", 12)) {
+                            const char* value = jash_env_get(s, full);
+                            snprintf(out, cap, "%s", value ? value : "");
+                            return 1;
+                        }
                         /* Parse the magnitude */
                         long idx_mag = 0;
                         for (const char* q = idx_start; q < idxend; q++)
@@ -1221,7 +1259,7 @@ static int jash_expand_array_form(jash_state_t* s, const char* full,
                             out[cap - 1] = 0;
                             return 1;
                         }
-                        if (strcmp(base, "BASH_LINENO") == 0 || strcmp(base, "LINENO") == 0) {
+                        if (strcmp(base, "LINENO") == 0) {
                             strncpy(out, "0", cap - 1);
                             out[cap - 1] = 0;
                             return 1;

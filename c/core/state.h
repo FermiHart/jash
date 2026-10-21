@@ -311,6 +311,10 @@ typedef struct jash_state {
      * builders) sees exactly what the table version showed. Positionals
      * and `local` scope stay table-managed. */
 #define JASH_FRAME_MAX 32
+    /* Caller lines, oldest first; expansion presents newest first. */
+#define JASH_SOURCE_FRAME_MAX 128
+    unsigned bash_lineno[JASH_SOURCE_FRAME_MAX];
+    unsigned bash_lineno_depth;
     int func_depth;
     char func_depth_str[16];
     char* funcname_stack[JASH_FRAME_MAX];

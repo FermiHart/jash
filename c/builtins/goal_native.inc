@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 #include "memory_output.h"
 #include "memory_store.h"
 #include "memory_receipt.h"
@@ -127,8 +128,8 @@ static int goal_native_provider(semantic_builtin_t* call, jash_state_t* state, i
                 else reserved = 1;
             }
             if (!status) {
-                strcpy(checkpoint.kind, operation); strcpy(checkpoint.text, closing ? "goal closed" : text);
-                strcpy(checkpoint.cwd, cwd); checkpoint.ts_sec = now_sec(); checkpoint.rc_hint = closing ? 0 : -1;
+                if (jash_copy_cstr(checkpoint.kind, sizeof(checkpoint.kind), operation)) { saved = errno; error = "checkpoint_field_limit"; status = 1; } if (jash_copy_cstr(checkpoint.text, sizeof(checkpoint.text), closing ? "goal closed" : text)) { saved = errno; error = "checkpoint_field_limit"; status = 1; }
+                if (jash_copy_cstr(checkpoint.cwd, sizeof(checkpoint.cwd), cwd)) { saved = errno; error = "checkpoint_field_limit"; status = 1; } checkpoint.ts_sec = now_sec(); checkpoint.rc_hint = closing ? 0 : -1;
                 if (checkpoint.ts_sec <= 0) { saved = EIO; error = "clock_unavailable"; status = 1; }
             }
             char name[64]; char* log = NULL; size_t log_size = 0; int log_exists = 0;

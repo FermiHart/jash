@@ -120,6 +120,7 @@ size_t jash_rtrim_unquoted(const char* s);
  * texto de programa e pior do que nao consertar comentario nenhum.
  * Gate: tests/test_jinv070_block_comment.sh, tests/test_jinv071_block_cont.sh */
 int jash_strip_comments_and_joins(const char* in, char* out, size_t cap);
+int jash_strip_comments_and_joins_mapped(const char*, char*, size_t, unsigned*);
 
 /* ═══ JINV-094 — o OPERADOR no fim da linha PEDE a linha seguinte ══════════
  *
@@ -173,6 +174,7 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap);
  * Devolve quantas junções fez (0 = nada a fazer).
  * Gate: tests/test_jinv094_operator_continuation.sh */
 int jash_join_operator_lines(char* buf, int* pending_eof);
+int jash_join_operator_lines_mapped(char* buf, unsigned* lines, int* pending_eof);
 
 /* JINV-116/117 — THE scanner. One quote state machine, not N.
  *

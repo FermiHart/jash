@@ -378,12 +378,17 @@ add_custom_target(cppcheck
 # clang-tidy target (if available)
 find_program(CLANG_TIDY clang-tidy)
 if(CLANG_TIDY)
+    # clang-tidy itself has no -j option. Avoid shell substitution/globbing:
+    # an unescaped $(nproc) invalidates the entire Ninja manifest.
+    file(GLOB_RECURSE JASH_TIDY_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_SOURCE_DIR}/c/*.c")
     add_custom_target(clang-tidy
-        COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -j$(nproc)
-            -checks='*,-llvmlibc-*,-modernize-*,-readability-*,-google-*,-llvm-*,-misc-unused-parameters'
-            c/*.c c/**/*.c
+        COMMAND "${CLANG_TIDY}" -p "${CMAKE_BINARY_DIR}"
+            "-checks=*,-llvmlibc-*,-modernize-*,-readability-*,-google-*,-llvm-*,-misc-unused-parameters"
+            ${JASH_TIDY_SOURCES}
         COMMENT "Running clang-tidy static analysis"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        VERBATIM
     )
 endif()
 
@@ -468,6 +473,7 @@ set(JASH_SOURCES
     c/core/agent_json.c
     c/core/token_tracker.c
     c/parser/eval.c
+    c/parser/source_location.c
     c/parser/exec.c
     c/parser/pipeline.c
     c/parser/expand.c
@@ -1033,6 +1039,14 @@ if(BUILD_TESTING)
         COMMAND bash ${CMAKE_SOURCE_DIR}/tests/test_array_index.sh
                      ${CMAKE_BINARY_DIR})
 
+    add_executable(test_agent_process_portability
+        tests/test_agent_process_portability.c
+        c/core/execution_ir.c
+        c/core/agent_cgroup.c)
+    target_include_directories(test_agent_process_portability PRIVATE c)
+    add_test(NAME agent_process_portability COMMAND test_agent_process_portability)
+    set_tests_properties(agent_process_portability PROPERTIES TIMEOUT 90)
+
     add_executable(test_agent_process_ir
         tests/test_agent_process_ir.c
         c/core/execution_ir.c
@@ -1146,6 +1160,20 @@ if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
     target_link_libraries(${JASH_AGENT_BINARY_NAME} pthread)
 endif()
 if(BUILD_TESTING)
+    add_executable(test_checked_string tests/test_checked_string.c)
+    target_include_directories(test_checked_string PRIVATE c)
+    target_compile_options(test_checked_string PRIVATE -UNDEBUG)
+    add_test(NAME checked_string COMMAND test_checked_string)
+    find_package(Python3 3.9 COMPONENTS Interpreter)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME bash_lineno_contract
+            COMMAND ${Python3_EXECUTABLE} -B
+                ${CMAKE_SOURCE_DIR}/tests/test_bash_lineno.py
+                --jash $<TARGET_FILE:jash>)
+        add_test(NAME no_unbounded_string_copy
+            COMMAND ${Python3_EXECUTABLE} -B
+                ${CMAKE_SOURCE_DIR}/tests/test_no_unbounded_string_copy.py)
+    endif()
     add_test(NAME agent_jobs_protocol
         COMMAND ${CMAKE_COMMAND} -E env
             JASH_AGENTD_BIN=$<TARGET_FILE:${JASH_AGENT_BINARY_NAME}>

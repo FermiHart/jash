@@ -3,6 +3,7 @@
 import copy
 import json
 import os
+import re
 from pathlib import Path
 import shlex
 import subprocess
@@ -184,6 +185,27 @@ class ChangeNative(f.NativeQueryCase):
         receipt = next(row for row in rows if row['record'] == 'receipt' and row['phase'] == 'publish')
         self.assertEqual(receipt['detail'], (change / 'notes with space.md').stat().st_size)
         self.assertTrue(receipt['applied'] and receipt['durable'])
+
+    def test_all_owned_templates_preserve_exact_bytes(self):
+        source = (Path(__file__).resolve().parents[1] / 'c/builtins/builtin_change.c').read_text()
+        templates = {}
+        for key, body in re.findall(r'static const char\* CHG_TPL_(\w+) =\n(.*?);', source, re.S):
+            text = ''.join(json.loads(literal) for literal in re.findall(r'"(?:\\.|[^"\\])*"', body))
+            self.assertEqual(text.count('%'), 1)
+            self.assertIn('%s', text)
+            templates[key] = text
+        schemas = {
+            'spec-driven': {'proposal.md': 'PROPOSAL', 'specs/spec.md': 'SPEC',
+                            'design.md': 'DESIGN', 'tasks.md': 'TASKS'},
+            'bugfix': {'reproduce.md': 'REPRODUCE', 'fix.md': 'FIX', 'verify.md': 'VERIFY_BUGFIX'},
+            'spike': {'findings.md': 'FINDINGS'},
+        }
+        self.assertEqual(len(templates), 8)
+        for schema, files in schemas.items():
+            name = 'template-' + schema
+            change = self.seed(name=name, schema=schema, complete=True)
+            for filename, key in files.items():
+                self.assertEqual((change / filename).read_bytes(), (templates[key] % name).encode())
 
     def test_fast_forward_apply_and_actual_checkpoint_receipts(self):
         change = self.seed()

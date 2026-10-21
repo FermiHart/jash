@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 /* Checked readers of recorded chain/sidecar fields. Parsing a record does not
  * verify its hash/signature, nor restore information lost by its writer. */
 #ifndef JASH_BUILTINS_MEMORY_CHAIN_H
@@ -84,11 +85,11 @@ static inline void memory_chain_free(memory_chain_t* chain) {
 static inline int memory_chain_load(memory_chain_t* chain, int global, int sidecar) {
     memset(chain, 0, sizeof(*chain));
     char filename[128]; const char* key = jash_repo_key();
-    if (sidecar) strcpy(filename, "journal.tags");
+    if (sidecar) { if (jash_copy_cstr(filename, sizeof(filename), "journal.tags")) { chain->error = errno; return -1; } }
     else if (!global && key && *key && *key != '-') {
         int n = snprintf(filename, sizeof(filename), "chain-%s.log", key);
         if (n < 0 || (size_t)n >= sizeof(filename)) { chain->error = ENAMETOOLONG; return -1; }
-    } else strcpy(filename, "chain.log");
+    } else if (jash_copy_cstr(filename, sizeof(filename), "chain.log")) { chain->error = errno; return -1; }
     const char* home = getenv("HOME");
     int n = snprintf(chain->path, sizeof(chain->path), "%s/.jash/%s", home ? home : "", filename);
     if (n < 0 || (size_t)n >= sizeof(chain->path)) { chain->error = ENAMETOOLONG; return -1; }

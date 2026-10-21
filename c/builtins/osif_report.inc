@@ -15,6 +15,9 @@ typedef struct {
     size_t length;
 } osif_report_t;
 
+static int osif_report_append(osif_report_t* report, const char* format, ...)
+    __attribute__((format(printf, 2, 3)));
+
 static int osif_report_append(osif_report_t* report, const char* format, ...) {
     va_list args; va_start(args, format);
     int n = vsnprintf(report->bytes + report->length, sizeof report->bytes - report->length, format, args);

@@ -52,13 +52,42 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
       - name: dependências (macOS)
         if: runner.os == 'macOS'
-        run: brew install ninja || true
+        run: brew install ninja bash
       - name: build com -Werror
         run: |
           cmake -B build-werror -G Ninja -DCMAKE_BUILD_TYPE=Release -DJASH_WERROR=ON
-          cmake --build build-werror --target jash
+          cmake --build build-werror --target jash modules
+      - name: portability primitives (native host)
+        run: |
+          cmake --build build-werror --target test_agent_process_portability
+          ctest --test-dir build-werror -R '^agent_process_portability$' --no-tests=error --output-on-failure
+      - name: checked string copies (native host)
+        run: |
+          cmake --build build-werror --target test_checked_string
+          ctest --test-dir build-werror -R '^checked_string$' --no-tests=error --output-on-failure
+          python3 tests/test_no_unbounded_string_copy.py
+      - name: BASH_LINENO differential (native host)
+        run: |
+          oracle="$(command -v bash)"
+          if [ "$RUNNER_OS" = macOS ]; then
+            oracle="$(brew --prefix bash)/bin/bash"
+          fi
+          "$oracle" --version
+          python3 tests/test_bash_lineno.py --jash "$PWD/build-werror/jash" --bash "$oracle"
+      - name: legacy Bash stdin and file compatibility (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          /bin/bash --version
+          python3 tests/test_bash_lineno.py --jash "$PWD/build-werror/jash" \
+            --bash /bin/bash --mode stdin --mode file
       - name: o binário funciona
-        run: ./build-werror/jash -c 'echo werror-ok' | grep -qx werror-ok
+        run: |
+          ./build-werror/jash -c 'echo werror-ok' | grep -qx werror-ok
+          status=0; output=$(./build-werror/jash -c 'exit 7; echo should-not-run') || status=$?
+          test "$status" -eq 7
+          test -z "$output"
+          status=0; ./build-werror/jash -c 'exit 300' || status=$?
+          test "$status" -eq 44
       # A camada osif L0 do Linux e um .S. Com project(LANGUAGES C) o CMake
       # DESCARTA .S em silencio e o alvo linka mesmo assim, porque nada em c/
       # referencia bear_osif_syscall6 diretamente — a camada de portabilidade
@@ -78,7 +107,7 @@ jobs:
       - name: dependências
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
       - name: build
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash modules
       - name: o binário funciona
         run: ./build/jash -c 'echo ci-ok' | grep -qx ci-ok
       # JINV-001/002: este é o teste que impede o build de voltar a mentir.
@@ -103,7 +132,7 @@ jobs:
       - name: dependências
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
       - name: build
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash modules
       - name: lint de asserção infalsificável
         run: bash tools/mutation-check.sh lint
       - name: mutante nulo mata todos os gates declarados
@@ -113,13 +142,39 @@ jobs:
     name: suíte de testes
     runs-on: ubuntu-latest
     needs: build
+    timeout-minutes: 120
+    env:
+      # Explicit kernel backend for exactly the existing autonomy gate.
+      # All other registrations still run natively; local default is native.
+      JASH_AUTONOMY_BACKEND: qemu-tcg
     steps:
       - uses: actions/checkout@v4
+      - name: configure disposable-VM paths on the runner
+        run: |
+          printf 'JASH_AUTONOMY_VM_CACHE=%s/jash-autonomy-vm-cache\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'JASH_AUTONOMY_VM_OUTPUT=%s/jash-autonomy-vm-result\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - name: dependências
-        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build bubblewrap python3 python3-jsonschema python3-referencing time
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build bubblewrap python3 python3-venv time \
+            qemu-system-x86 qemu-utils genisoimage e2fsprogs
+      - name: isolated backend regression tests (no VM qualification)
+        run: python3 -B tests/test_autonomy_vm_runner.py
+      - name: verified disposable-VM assets (tests run in the suite)
+        timeout-minutes: 20
+        run: |
+          python3 -B tools/run_autonomy_vm.py --prepare \
+            --output "$RUNNER_TEMP/jash-autonomy-vm-prepare"
+      - name: dependências Python qualificadas
+        run: |
+          python3 -m venv "$RUNNER_TEMP/jash-test-venv"
+          "$RUNNER_TEMP/jash-test-venv/bin/python3" -m pip install -r tests/requirements-agent-json.txt
+          "$RUNNER_TEMP/jash-test-venv/bin/python3" -c 'from jsonschema import Draft202012Validator; from referencing import Registry; Draft202012Validator({}, registry=Registry()).validate(None)'
+          echo "$RUNNER_TEMP/jash-test-venv/bin" >> "$GITHUB_PATH"
       - name: build
         run: |
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DJASH_WERROR=ON
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DJASH_WERROR=ON \
+            -DPython3_EXECUTABLE="$RUNNER_TEMP/jash-test-venv/bin/python3"
           cmake --build build --parallel 2
           cmake --build build --target modules --parallel 2
       - name: contratos gerados e denominador qualificado
@@ -131,7 +186,19 @@ jobs:
             --output-junit "$PWD/build/builtin-contracts.xml"
           python3 tools/check_builtin_conformance.py --junit "$PWD/build/builtin-contracts.xml"
       - name: suíte
-        run: bash tests/test_suite.sh
+        # The offline TCG gate includes a fresh guest build. This explicit bound
+        # changes no gate registrations, expectations, or default local timeout.
+        run: bash tests/test_suite.sh --timeout 4200 --output "$RUNNER_TEMP/jash-suite-evidence"
+      - name: complete suite and guest evidence (including failures)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: suite-and-autonomy-vm-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/jash-suite-evidence
+            ${{ runner.temp }}/jash-autonomy-vm-prepare
+            ${{ runner.temp }}/jash-autonomy-vm-result
+          if-no-files-found: error
 
   asan:
     name: ASAN + UBSAN
@@ -156,7 +223,7 @@ jobs:
       - name: dependências
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
       - name: build
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash modules
       # O runner do GitHub tem bash 5.x — mais rigoroso que o bash 3.2 do
       # macOS, onde vários casos bash-4+ nem existem para comparar.
       - name: diferencial vs bash

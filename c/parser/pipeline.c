@@ -199,6 +199,9 @@ typedef struct {
 /* ---- segment: one command in a pipeline ---- */
 
 typedef struct {
+    unsigned* source_map;
+    unsigned* args_map;
+    unsigned source_line;
     const char* cmd;       /* command name (first token)           */
     const char* args;      /* rest-of-line after first token       */
     char fullpath[256];    /* resolved PATH (filled by lookup)     */
@@ -213,6 +216,28 @@ typedef struct {
     int     is_absorbed;   /* ADR-0040 W3: bash-c segment re-exec'd as jash */
     const char* assigns;   /* inline env prefix (NAME=VAL\x1F...) or NULL */
 } seg_t;
+
+static const char* segment_expand_args(const seg_t* seg, jash_state_t* state,
+                                       char* buffer, size_t capacity) {
+    const char* args = seg->args ? seg->args : "";
+    jash_source_span span;
+    jash_source_push(&span, args, strlen(args), seg->args_map, seg->source_line);
+    const char* expanded = seg_expand(args, state, buffer, capacity);
+    jash_source_pop(&span);
+    return expanded;
+}
+
+/* Reconstruct provenance in exactly the same cmd + space + args layout as
+ * jash_compound_join and the group paths. args_map already follows redirect
+ * compaction, including newlines after removed redirection tokens. */
+static unsigned* segment_join_map(const seg_t* seg, size_t length) {
+    unsigned* map = malloc((length + 1) * sizeof(*map));
+    if (!map) return NULL;
+    size_t command_len = strlen(seg->cmd);
+    for (size_t k = 0; k <= length; ++k)
+        map[k] = k <= command_len ? seg->source_line : seg->args_map[k - command_len - 1];
+    return map;
+}
 
 /* ---- small utilities ---- */
 
@@ -360,7 +385,7 @@ static void parse_redirs(seg_t* seg, char* args_mut) {
         const char* quoted_end = jash_quote_step(r, &quote);
         if (quoted_end) {
             if (quote || *r != '\\' || r[1] != '\n') word_start = 0;
-            while (r < quoted_end) *w++ = *r++;
+            while (r < quoted_end) { seg->args_map[w - args_mut] = seg->args_map[r - args_mut]; *w++ = *r++; }
             continue;
         }
 
@@ -619,6 +644,7 @@ static void parse_redirs(seg_t* seg, char* args_mut) {
         }
 
         word_start = *r == ' ' || *r == '\t' || *r == '\n';
+        seg->args_map[w - args_mut] = seg->args_map[r - args_mut];
         *w++ = *r++;
     }
     /* Trim trailing whitespace left from a redirect that consumed `>|`/`>>`/etc
@@ -627,6 +653,7 @@ static void parse_redirs(seg_t* seg, char* args_mut) {
      * that captures the redirect output.
      * JINV-063: era cego e comia tambem o espaco ESCAPADO, que e DADO
      * (`echo x\  | cat` imprimia `x\`). Termina primeiro, corta depois. */
+    seg->args_map[w - args_mut] = seg->args_map[r - args_mut];
     *w = '\0';
     args_mut[jash_rtrim_unquoted(args_mut)] = '\0';
 }
@@ -999,8 +1026,18 @@ static int split_pipeline(const char* line, seg_t* segs, int max) {
                     "jash: segmento de %u bytes excede o teto de %d "
                     "(recusando em vez de truncar em silencio)\n",
                     slen, PIPE_SEG_MAX - 1);
-            return 0;
+            close_prepared_fds(segs, n);
+            for (int k = 0; k < n; ++k) free(segs[k].source_map);
+            return -1;
         }
+        segs[n].source_map = jash_source_map_slice(seg_start, slen);
+        if (!segs[n].source_map) {
+            close_prepared_fds(segs, n);
+            for (int k = 0; k < n; ++k) free(segs[k].source_map);
+            jash_writes(jash_stderr_writer, 0, "jash: pipeline source allocation failed\n");
+            return -1;
+        }
+        segs[n].source_line = segs[n].source_map[0];
         for (unsigned i = 0; i < slen; i++) seg_buf[n][i] = seg_start[i];
         seg_buf[n][slen] = '\0';
         slen = (unsigned)jash_rtrim_unquoted(seg_buf[n]);   /* JINV-063 */
@@ -1011,6 +1048,7 @@ static int split_pipeline(const char* line, seg_t* segs, int max) {
          * so the forked child can apply them to its own env (scoped to this
          * pipeline segment, matching POSIX — never leaks to the parent). */
         const char* cmd_text = scan_assign_prefix(seg_buf[n], assign_buf[n], 1024);
+        segs[n].source_line = segs[n].source_map[cmd_text - seg_buf[n]];
         segs[n].assigns = (cmd_text != seg_buf[n]) ? assign_buf[n] : NULL;
 
         /* Extract first token (cmd) from the (post-assignment) segment text. */
@@ -1024,6 +1062,7 @@ static int split_pipeline(const char* line, seg_t* segs, int max) {
         segs[n].pipe_stderr = 0;
         /* args points to the rest inside seg_buf[n] (after the cmd). */
         segs[n].args = after_cmd;
+        segs[n].args_map = segs[n].source_map + (after_cmd - seg_buf[n]);
 
         /* BUG-028: POSIX quote removal on the command WORD of a pipeline segment
          * (`echo x | "$GREP" y`). Done AFTER args offset above so args still
@@ -1207,15 +1246,8 @@ static int decode_wait_status(int status) {
  * `evil &` is policed exactly like `evil`. Memo/budget/err_digest are
  * skipped: there is no parent left to flush/serve them, and a
  * background daemon must really run (bash parity). */
-void jash_pipeline_bg_exec(jash_state_t* s, jash_writer_t w, void* ctx,
-                           const char* line) {
-    if (!s || !line || !*line) return;
-    seg_t segs[PIPE_MAX_CMDS];
-    /* BUG-157 class: split_pipeline does NOT clear the classification
-     * flags (the engine resets them after splitting for the same
-     * reason) — stack garbage here caused nondeterministic fallback. */
-    memset(segs, 0, sizeof segs);
-    int nseg = split_pipeline(line, segs, PIPE_MAX_CMDS);
+static void pipeline_bg_exec_segments(jash_state_t* s, jash_writer_t w, void* ctx,
+                                      const char* line, seg_t* segs, int nseg) {
     if (nseg != 1) return;                    /* pipeline: subshell path */
     if (!segs[0].cmd[0]) return;              /* redirect-only: subshell */
     if (segs[0].cmd[0] == '(') return;        /* subshell segment */
@@ -1255,7 +1287,7 @@ void jash_pipeline_bg_exec(jash_state_t* s, jash_writer_t w, void* ctx,
 
     char exp_args[16384];
     /* JINV-124: cmdsub → aritmética → parâmetro, uma regra só. */
-    const char* final_args = seg_expand(segs[0].args, s, exp_args, sizeof exp_args);
+    const char* final_args = segment_expand_args(&segs[0], s, exp_args, sizeof exp_args);
 
     static jash_argvbuf_t bg_ab;
     if (build_argv_local(&bg_ab, segs[0].fullpath, final_args) != 0) {
@@ -1302,15 +1334,9 @@ void jash_pipeline_bg_exec(jash_state_t* s, jash_writer_t w, void* ctx,
 
 /* ---- pipeline executor ---- */
 
-int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
-                       const char* line) {
-
-    s_pipeline_state = s;  /* For heredoc variable expansion */
-    seg_t segs[PIPE_MAX_CMDS];
-    int nseg = split_pipeline(line, segs, PIPE_MAX_CMDS);
-
-    if (nseg == 0) return 0;
-
+static int exec_pipeline_segments(jash_state_t* s, jash_writer_t w, void* ctx,
+                                  const char* line, seg_t* segs, int nseg) {
+    s_pipeline_state = s;
     /* Relocate enclosing in-process backups before any user fd is touched. */
     int operands[2 * PIPE_MAX_CMDS * PIPE_MAX_REDIRS];
     size_t operand_count = 0;
@@ -1538,7 +1564,7 @@ int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
         if (can_spawn) {
             char exp_sp[16384];
             /* JINV-124: cmdsub → aritmética → parâmetro, uma regra só. */
-            const char* sp_args = seg_expand(segs[i].args, s, exp_sp, sizeof(exp_sp));
+            const char* sp_args = segment_expand_args(&segs[i], s, exp_sp, sizeof(exp_sp));
 
             if (build_argv_local(&sp_ab, segs[i].fullpath, sp_args) == 0) {
 
@@ -1657,7 +1683,7 @@ int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
                  * Global expansion was skipped for pipelines with compound commands. */
                 char exp_args[16384];
                 /* JINV-124: cmdsub → aritmética → parâmetro, uma regra só. */
-                const char* final_args = seg_expand(segs[i].args, s, exp_args, sizeof(exp_args));
+                const char* final_args = segment_expand_args(&segs[i], s, exp_args, sizeof(exp_args));
                 if (final_args) {
                     /* JINV-090: o builtin não passa por build_argv_local, então
                      * o restauro adiado por eval.c tem que acontecer AQUI —
@@ -1731,7 +1757,13 @@ int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
                     if (bl >= sizeof(body)) bl = sizeof(body) - 1;
                     for (unsigned k = 0; k < bl; k++) body[k] = bs[k];
                     body[bl] = '\0';
-                    int erc = jash_eval_line(s, w, ctx, body);
+                    unsigned* group_map = segment_join_map(&segs[i], strlen(sub_line));
+                    if (!group_map) {
+                        jash_writes(jash_stderr_writer, 0, "jash: pipeline source allocation failed\n");
+                        sys_exit(2);
+                    }
+                    int erc = jash_eval_line_mapped(s, w, ctx, body, group_map + (bs - sub_line), segs[i].source_line);
+                    free(group_map);
                     sys_exit(erc);
                     for (;;) { }
                 }
@@ -1766,7 +1798,13 @@ int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
                     if (bl >= sizeof(body)) bl = sizeof(body) - 1;
                     for (unsigned k = 0; k < bl; k++) body[k] = bs[k];
                     body[bl] = '\0';
-                    int erc = jash_eval_line(s, w, ctx, body);
+                    unsigned* group_map = segment_join_map(&segs[i], strlen(brace_line));
+                    if (!group_map) {
+                        jash_writes(jash_stderr_writer, 0, "jash: pipeline source allocation failed\n");
+                        sys_exit(2);
+                    }
+                    int erc = jash_eval_line_mapped(s, w, ctx, body, group_map + (bs - brace_line), segs[i].source_line);
+                    free(group_map);
                     sys_exit(erc);
                     for (;;) { }
                 }
@@ -1784,36 +1822,13 @@ int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
                      * unquote each field. The old code unquoted the whole
                      * string first, collapsing "a b" to `a b` and splitting it
                      * into two positionals. */
-                    int arg_count = 0;
-                    char* new_pos[JASH_POS_MAX] = {0};
                     static char func_exp_args[PIPE_SEG_MAX];
-                    const char* wp = seg_expand(segs[i].args ? segs[i].args : "",
-                                                s, func_exp_args,
-                                                sizeof func_exp_args);
+                    const char* wp = segment_expand_args(&segs[i],
+                                                s, func_exp_args, sizeof func_exp_args);
                     if (jash_cmdsub_error() || jash_arith_error() ||
-                        jash_param_expand_error()) {
-                        sys_exit(1);
-                    }
-                    int parse_rc = jash_parse_function_positionals(wp, new_pos,
-                                                                    &arg_count);
-                    if (parse_rc != 0) {
-                        if (parse_rc == -2)
-                            jash_writes(jash_stderr_writer, 0,
-                                        "jash: pipeline function: more than 384 positional parameters — refusing\n");
-                        else
-                            jash_writes(jash_stderr_writer, 0,
-                                        "jash: pipeline function: unable to store positional parameters — refusing\n");
-                        for (int pi = 0; pi < JASH_POS_MAX; pi++) free(new_pos[pi]);
-                        sys_exit(1);
-                    }
-                    if (jash_env_replace_positionals_owned(s, new_pos,
-                                                           arg_count) != 0) {
-                        for (int pi = 0; pi < JASH_POS_MAX; pi++) free(new_pos[pi]);
-                        sys_exit(1);
-                    }
-
-                    /* Evaluate function body in child process */
-                    int erc = jash_eval_line(s, w, ctx, fbody);
+                        jash_param_expand_error()) sys_exit(1);
+                    int erc = jash_eval_function_at(s, w, ctx, segs[i].cmd,
+                                    fbody, wp, segs[i].source_line);
 
                     sys_exit(erc);
                     for (;;) { }
@@ -1838,6 +1853,14 @@ int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
                     for (;;) { }
                 }
 
+                size_t full_len = strlen(full_line);
+                unsigned* full_map = segment_join_map(&segs[i], full_len);
+                if (!full_map) {
+                    jash_writes(jash_stderr_writer, 0, "jash: pipeline source allocation failed\n");
+                    free(fl_heap); sys_exit(2);
+                }
+                jash_source_span full_span;
+                jash_source_push(&full_span, full_line, full_len, full_map, full_map[0]);
                 int erc;
                 const char* cmd = segs[i].cmd;
                 if (strcmp(cmd, "while") == 0 || strcmp(cmd, "until") == 0) {
@@ -1858,6 +1881,8 @@ int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
                 } else {
                     erc = 1;
                 }
+                jash_source_pop(&full_span);
+                free(full_map);
                 if (fl_heap) free(fl_heap);   /* JINV-082 */
                 sys_exit(erc);
                 for (;;) { }
@@ -1867,7 +1892,7 @@ int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
 
             char exp_args[16384];
             /* JINV-124: cmdsub → aritmética → parâmetro, uma regra só. */
-            const char* final_args = seg_expand(segs[i].args, s, exp_args, sizeof(exp_args));
+            const char* final_args = segment_expand_args(&segs[i], s, exp_args, sizeof(exp_args));
 
             int rc = build_argv_local(&child_ab, segs[i].fullpath, final_args);
             if (rc != 0) {
@@ -1943,7 +1968,7 @@ int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
                 /* External command in lastpipe: spawn directly (no fork). */
                 char exp_args[16384];
                 /* JINV-124: cmdsub → aritmética → parâmetro, uma regra só. */
-                const char* sp_args = seg_expand(segs[last].args, s, exp_args, sizeof(exp_args));
+                const char* sp_args = segment_expand_args(&segs[last], s, exp_args, sizeof(exp_args));
                 static jash_argvbuf_t l_ab;
                 if (build_argv_local(&l_ab, segs[last].fullpath, sp_args) == 0) {
                     posix_spawn_file_actions_t fa;
@@ -2019,7 +2044,7 @@ compound_join_oom: ;                          /* JINV-082: recusa alta */
                  * Global expansion was skipped for pipelines with compound commands. */
                 char exp_args[16384];
                 /* JINV-124: cmdsub → aritmética → parâmetro, uma regra só. */
-                const char* final_args = seg_expand(segs[last].args, s, exp_args, sizeof(exp_args));
+                const char* final_args = segment_expand_args(&segs[last], s, exp_args, sizeof(exp_args));
                 if (final_args) {
                     /* JINV-090: idem ao builtin forkado acima — este caminho
                      * (builtin do ÚLTIMO segmento, no processo pai) também não
@@ -2192,3 +2217,24 @@ static int line_has_op(const char* line, int want_pipe) {
 
 int jash_line_has_pipe(const char* line)  { return line_has_op(line, 1); }
 int jash_line_has_redir(const char* line) { return line_has_op(line, 0); }
+
+void jash_pipeline_bg_exec(jash_state_t* s, jash_writer_t w, void* ctx,
+                           const char* line) {
+    if (!s || !line || !*line) return;
+    s_pipeline_state = s;
+    seg_t segs[PIPE_MAX_CMDS] = {0};
+    int count = split_pipeline(line, segs, PIPE_MAX_CMDS);
+    if (count < 0) { s->exit_requested = 1; s->last_status.code = 2; return; }
+    pipeline_bg_exec_segments(s, w, ctx, line, segs, count);
+    for (int i = 0; i < count; ++i) free(segs[i].source_map);
+}
+int jash_exec_pipeline(jash_state_t* s, jash_writer_t w, void* ctx,
+                       const char* line) {
+    s_pipeline_state = s;
+    seg_t segs[PIPE_MAX_CMDS] = {0};
+    int count = split_pipeline(line, segs, PIPE_MAX_CMDS);
+    if (count < 0) { s->exit_requested = 1; s->last_status.code = 2; return 2; }
+    int rc = count ? exec_pipeline_segments(s, w, ctx, line, segs, count) : 0;
+    for (int i = 0; i < count; ++i) free(segs[i].source_map);
+    return rc;
+}

@@ -96,10 +96,11 @@ run_out   'BASH_SOURCE scalar'      'echo ${BASH_SOURCE}' 'jash'
 run_out   'BASH_SOURCE array'       'echo "${BASH_SOURCE[@]}"' 'jash'
 run_out   'BASH_SOURCE indexed'     'echo "${BASH_SOURCE[0]}"' 'jash'
 
-# ── BASH_LINENO array ──
-run_out   'BASH_LINENO scalar'      'echo ${BASH_LINENO}' '0'
-run_out   'BASH_LINENO array'       'echo "${BASH_LINENO[@]}"' '0'
-run_out   'BASH_LINENO indexed'     'echo "${BASH_LINENO[0]}"' '0'
+# ── BASH_LINENO: Bash stdin has no caller frame (unlike script-file main0).
+# Full physical-line/call-stack differential coverage: test_bash_lineno.py.
+run_out   'BASH_LINENO scalar'      'echo ${BASH_LINENO}' ''
+run_out   'BASH_LINENO array'       'echo "${BASH_LINENO[@]}"' ''
+run_out   'BASH_LINENO indexed'     'echo "${BASH_LINENO[0]}"' ''
 run_out   'LINENO array'            'echo "${LINENO[@]}"' '0'
 
 # ── time keyword ──

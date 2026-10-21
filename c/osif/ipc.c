@@ -20,6 +20,7 @@ int jash_ipc_data_pair(int endpoints[2])
 { (void)endpoints; errno = ENOSYS; return -1; }
 int jash_ipc_send_data_endpoint(int connection, int endpoint)
 { (void)connection; (void)endpoint; errno = ENOSYS; return -1; }
+
 int jash_ipc_data_send(int lane, const char* id, uint64_t size, int fd)
 { (void)lane; (void)id; (void)size; (void)fd; errno = ENOSYS; return -1; }
 int jash_ipc_data_receive(int lane, const char* id, uint64_t* size, int* fd)
@@ -95,6 +96,7 @@ static int ipc_send_endpoint(int connection, int endpoint, char marker) {
 int jash_ipc_send_control(int connection, int endpoint) { return ipc_send_endpoint(connection, endpoint, 'C'); }
 int jash_ipc_send_data_endpoint(int connection, int endpoint) { return ipc_send_endpoint(connection, endpoint, 'D'); }
 
+#if defined(__linux__) || defined(__minix)
 static int ipc_data_type(int lane) {
     int type = 0; socklen_t length = sizeof(type);
     if (getsockopt(lane, SOL_SOCKET, SO_TYPE, &type, &length) || type != SOCK_SEQPACKET) { errno = EPROTOTYPE; return -1; }
@@ -110,6 +112,7 @@ static uint64_t ipc_get_u64(const unsigned char* in) {
     for (int i = 0; i < 8; i++) value = (value << 8) | in[i];
     return value;
 }
+#endif
 
 int jash_ipc_data_send(int lane, const char* id, uint64_t size, int fd) {
 #if defined(__linux__) || defined(__minix)

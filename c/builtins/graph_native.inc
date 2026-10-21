@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 #include "graph_native_engine.inc"
 
 typedef struct {
@@ -193,7 +194,7 @@ static int gn_build(semantic_builtin_t* call, const gn_options_t* options) {
     int error = gn_store_open(&store, 0, 0) || gn_names(name, lock_name, 0);
     onN = onE = onF = 0;
     if (!error && gn_read(&store, name, 1, &present, NULL)) error = 1;
-    if (!error) strcpy(fingerprint, gn_control->last_hash);
+    if (!error) if (jash_copy_cstr(fingerprint, sizeof(fingerprint), gn_control->last_hash)) { error = 1; }
     if (gn_store_close(&store)) error = 1;
     lg_build_observation_t observed = {0}; lg_truncated = 0;
     memset(lg_seen, 0, LG_CAP_NODES * sizeof *lg_seen); seen_stamp = 0;
@@ -219,9 +220,9 @@ static int gn_merge(semantic_builtin_t* call, const gn_options_t* options) {
     if (gn_names(name, lock_name, 0) || gn_store_open(&local, 0, 0) || gn_store_open(&fleet, 1, 0)) error = "graph_store_unavailable";
     if (!error && fleet.directory < 0) error = "mesh_inactive";
     if (!error && gn_read(&local, name, 0, &local_present, NULL)) error = "local_graph_invalid";
-    if (!error) strcpy(local_hash, gn_control->last_hash);
+    if (!error) if (jash_copy_cstr(local_hash, sizeof(local_hash), gn_control->last_hash)) { error = "graph_fingerprint_limit"; }
     if (!error && gn_read(&fleet, name, 1, &fleet_present, NULL)) error = "fleet_graph_invalid";
-    if (!error) strcpy(fleet_hash, gn_control->last_hash);
+    if (!error) if (jash_copy_cstr(fleet_hash, sizeof(fleet_hash), gn_control->last_hash)) { error = "graph_fingerprint_limit"; }
     if (gn_store_close(&local) && !error) error = "graph_close_failed";
     if (gn_store_close(&fleet) && !error) error = "graph_close_failed";
     if (!error && (push ? !local_present : !fleet_present)) error = "graph_unavailable";

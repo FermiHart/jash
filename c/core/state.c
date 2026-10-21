@@ -148,6 +148,8 @@ void jash_state_cleanup(jash_state_t* s) {
     }
     if (s->functions) {
         for (int i = 0; i < s->functions->count; i++) {
+            free(s->functions->funcs[i].source_map);
+            s->functions->funcs[i].source_map = NULL;
             free(s->functions->funcs[i].body_heap);
             s->functions->funcs[i].body_heap = NULL;
         }

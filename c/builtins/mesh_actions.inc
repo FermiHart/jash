@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 static int mesh_prepare_worker(mesh_call_t* c,mesh_worker_t* worker,int reset) {
     int found=mesh_worker_read(&c->store,c->options.self,worker);
     if(found<0) return mesh_fail(c,"worker_source_invalid",1);
     if(!found) {
         memset(worker,0,sizeof *worker); memcpy(worker->id,c->options.self,strlen(c->options.self)+1);
-        strcpy(worker->provider,"?"); strcpy(worker->model,"?"); strcpy(worker->status,"idle");
-        strcpy(worker->headroom,"-"); strcpy(worker->task,"-");
+        if (jash_copy_cstr(worker->provider, sizeof(worker->provider), "?")) { return mesh_fail(c,"field_byte_limit",75); } if (jash_copy_cstr(worker->model, sizeof(worker->model), "?")) { return mesh_fail(c,"field_byte_limit",75); } if (jash_copy_cstr(worker->status, sizeof(worker->status), "idle")) { return mesh_fail(c,"field_byte_limit",75); }
+        if (jash_copy_cstr(worker->headroom, sizeof(worker->headroom), "-")) { return mesh_fail(c,"field_byte_limit",75); } if (jash_copy_cstr(worker->task, sizeof(worker->task), "-")) { return mesh_fail(c,"field_byte_limit",75); }
     }
     const char* const* values=c->options.value;
     if(reset) {
-        strcpy(worker->provider,values[M_PROVIDER]?values[M_PROVIDER]:"?");
-        strcpy(worker->model,values[M_MODEL]?values[M_MODEL]:"?");
-        strcpy(worker->status,"idle"); strcpy(worker->headroom,"-"); strcpy(worker->task,"-");
+        if (jash_copy_cstr(worker->provider, sizeof(worker->provider), values[M_PROVIDER]?values[M_PROVIDER]:"?")) { return mesh_fail(c,"field_byte_limit",75); }
+        if (jash_copy_cstr(worker->model, sizeof(worker->model), values[M_MODEL]?values[M_MODEL]:"?")) { return mesh_fail(c,"field_byte_limit",75); }
+        if (jash_copy_cstr(worker->status, sizeof(worker->status), "idle")) { return mesh_fail(c,"field_byte_limit",75); } if (jash_copy_cstr(worker->headroom, sizeof(worker->headroom), "-")) { return mesh_fail(c,"field_byte_limit",75); } if (jash_copy_cstr(worker->task, sizeof(worker->task), "-")) { return mesh_fail(c,"field_byte_limit",75); }
     } else {
-        if(values[M_PROVIDER]) strcpy(worker->provider,values[M_PROVIDER]);
-        if(values[M_MODEL]) strcpy(worker->model,values[M_MODEL]);
-        if(values[M_STATUS]) strcpy(worker->status,values[M_STATUS]);
-        if(values[M_HEADROOM]) strcpy(worker->headroom,values[M_HEADROOM]);
-        if(values[M_TASK]) strcpy(worker->task,values[M_TASK]);
+        if(values[M_PROVIDER]) if (jash_copy_cstr(worker->provider, sizeof(worker->provider), values[M_PROVIDER])) { return mesh_fail(c,"field_byte_limit",75); }
+        if(values[M_MODEL]) if (jash_copy_cstr(worker->model, sizeof(worker->model), values[M_MODEL])) { return mesh_fail(c,"field_byte_limit",75); }
+        if(values[M_STATUS]) if (jash_copy_cstr(worker->status, sizeof(worker->status), values[M_STATUS])) { return mesh_fail(c,"field_byte_limit",75); }
+        if(values[M_HEADROOM]) if (jash_copy_cstr(worker->headroom, sizeof(worker->headroom), values[M_HEADROOM])) { return mesh_fail(c,"field_byte_limit",75); }
+        if(values[M_TASK]) if (jash_copy_cstr(worker->task, sizeof(worker->task), values[M_TASK])) { return mesh_fail(c,"field_byte_limit",75); }
     }
     if(!worker->pid) worker->pid=c->options.pid;
     worker->timestamp=c->now; return 0;
@@ -89,9 +90,9 @@ static int mesh_add(mesh_call_t* c) {
         next=tasks[count-1].id+1;
     }
     if(next==INT_MAX) { rc=mesh_fail(c,"task_id_exhausted",75); goto done; }
-    mesh_task_t task={.id=next}; strcpy(task.state,"ready"); strcpy(task.owner,"-");
-    strcpy(task.tag,c->options.value[M_TAG]?c->options.value[M_TAG]:"-");
-    strcpy(task.deps,c->options.value[M_NEEDS]?c->options.value[M_NEEDS]:"-"); strcpy(task.desc,c->options.operand);
+    mesh_task_t task={.id=next}; if (jash_copy_cstr(task.state, sizeof(task.state), "ready")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } if (jash_copy_cstr(task.owner, sizeof(task.owner), "-")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; }
+    if (jash_copy_cstr(task.tag, sizeof(task.tag), c->options.value[M_TAG]?c->options.value[M_TAG]:"-")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; }
+    if (jash_copy_cstr(task.deps, sizeof(task.deps), c->options.value[M_NEEDS]?c->options.value[M_NEEDS]:"-")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } if (jash_copy_cstr(task.desc, sizeof(task.desc), c->options.operand)) { rc=mesh_fail(c,"field_byte_limit",75); goto done; }
     jdv_record_input_t result[]={mesh_field("id",jdv_value_u64((uint64_t)next)),mesh_field("desc",mesh_text(c,task.desc)),mesh_field("tag",mesh_text(c,task.tag))};
     mesh_result(c,result,sizeof result/sizeof *result);
     if(c->rows.error) { rc=mesh_fail(c,"response_limit",75); goto done; }
@@ -176,8 +177,8 @@ static int mesh_claim_action(mesh_call_t* c,int remove) {
             index=count++;
         }
         jash_claim_t* claim=&claims[index]; memset(claim,0,sizeof *claim);
-        strcpy(claim->path,normalized); strcpy(claim->owner,c->options.self); claim->claim_ts=c->now; claim->ttl=(long)c->options.ttl;
-        strcpy(claim->note,c->options.value[M_NOTE]?c->options.value[M_NOTE]:"-"); changed=1;
+        if (jash_copy_cstr(claim->path, sizeof(claim->path), normalized)) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } if (jash_copy_cstr(claim->owner, sizeof(claim->owner), c->options.self)) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } claim->claim_ts=c->now; claim->ttl=(long)c->options.ttl;
+        if (jash_copy_cstr(claim->note, sizeof(claim->note), c->options.value[M_NOTE]?c->options.value[M_NOTE]:"-")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } changed=1;
     }
     if(changed) rc=mesh_claims_receipt(c,claims,count,remove?"release_claim":"claim_path",1,&applied);
     if(!rc&&!c->options.mode) jash_writef(c->writer,c->context,"mesh: %s %s\n",remove?(changed?"released":"no claim by you on"):"claimed",normalized);

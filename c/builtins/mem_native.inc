@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 #include "memory_chain.h"
 #include "gap_snapshot.h"
 #include "mesh_snapshot.h"
@@ -196,7 +197,7 @@ static int mem_native_search(const mem_native_store_t* store, const char* query,
             if ((type && strcmp(type, item->type)) || (failed_only && strcmp(item->type, "bugfix"))) continue;
             snprintf(hay, sizeof(hay), "%s %s", item->type, item->detail);
         }
-        mem_lower(hay, lower, sizeof(lower)); strcpy(query_copy, query_lower);
+        mem_lower(hay, lower, sizeof(lower)); if (jash_copy_cstr(query_copy, sizeof(query_copy), query_lower)) { return -1; }
         int score = mem_score(lower, query_copy);
         if (score) matches[count++] = (mem_native_match_t){score, !card, index, i};
     }
@@ -274,7 +275,7 @@ static jdv_value_t mem_native_brief(semantic_builtin_t* call, jash_state_t* stat
         size_t index = 0; while (index < distinct && strcmp(signature, signatures[index].signature)) index++;
         if (index == distinct) {
             if (distinct == 4096) { if (!*error) *error = E2BIG; break; }
-            strcpy(signatures[index].signature, signature); distinct++;
+            if (jash_copy_cstr(signatures[index].signature, sizeof(signatures[index].signature), signature)) { if (!*error) *error = errno; break; } distinct++;
         }
         signatures[index].count++;
         if (signatures[index].count > top_count) { top_count = signatures[index].count; top = signatures[index].signature; }
@@ -475,6 +476,7 @@ static int mem_native_provider(semantic_builtin_t* call, jash_state_t* state, in
         if (search) matched = mem_native_search(&store, operand, failed, type, matches);
         else for (int i = 0; i < store.card_count; i++) if (!show || !strcmp(store.cards[i].id, operand))
             matches[matched++] = (mem_native_match_t){0, 0, i, i};
+        if (matched < 0) { error = errno; failure = "query_copy_limit"; matched = 0; }
         report.matched = (size_t)matched;
         if (show && !matched) { error = ENOENT; failure = "card_not_found"; }
         for (size_t i = (size_t)offset; i < (size_t)matched && report.count < limit; i++) {
@@ -498,7 +500,7 @@ static int mem_native_provider(semantic_builtin_t* call, jash_state_t* state, in
                 if (event->seq < card->first_seq || event->seq > card->last_seq) continue;
                 observed++; failures += event->rc != 0; result.claims++;
                 if (strcmp(event->sess, card->sess)) {
-                    result.drift_sequence = event->seq; strcpy(result.reason, "intermediate sequence session mismatch");
+                    result.drift_sequence = event->seq; if (jash_copy_cstr(result.reason, sizeof(result.reason), "intermediate sequence session mismatch")) { error = errno; failure = "verification_reason_limit"; }
                 }
             }
             if (!result.drift_sequence) {
@@ -507,7 +509,7 @@ static int mem_native_provider(semantic_builtin_t* call, jash_state_t* state, in
                 const mem_ev_t* last = mem_find_seq(events, (int)event_count, card->last_seq);
                 if (observed != (uint64_t)card->ncmds || failures != (uint64_t)card->fails || !first || !last ||
                     first->ts != card->first_ts || last->ts != card->last_ts) {
-                    result.drift_sequence = card->first_seq; strcpy(result.reason, "recorded card counts or timestamps differ");
+                    result.drift_sequence = card->first_seq; if (jash_copy_cstr(result.reason, sizeof(result.reason), "recorded card counts or timestamps differ")) { error = errno; failure = "verification_reason_limit"; }
                 }
             }
             jdv_record_input_t fields[] = {

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <osif/osif_stat.h>
 /* Structured projections of the owned awk AST. Values come from evaluation,
  * never from parsing text/JSON output. The numeric model is explicitly IEEE
  * binary64; formatting never feeds a rounded accumulator back into evaluation. */
@@ -266,9 +267,9 @@ static void awk_query_block(awk_query_t* query, awk_runtime_t* runtime, const aw
 
 static int awk_query_same_file(const struct stat* left, const struct stat* right) {
     return left->st_dev == right->st_dev && left->st_ino == right->st_ino &&
-        left->st_size == right->st_size && left->st_mtim.tv_sec == right->st_mtim.tv_sec &&
-        left->st_mtim.tv_nsec == right->st_mtim.tv_nsec && left->st_ctim.tv_sec == right->st_ctim.tv_sec &&
-        left->st_ctim.tv_nsec == right->st_ctim.tv_nsec;
+        left->st_size == right->st_size && BEAR_ST_MTIM(*left).tv_sec == BEAR_ST_MTIM(*right).tv_sec &&
+        BEAR_ST_MTIM(*left).tv_nsec == BEAR_ST_MTIM(*right).tv_nsec && BEAR_ST_CTIM(*left).tv_sec == BEAR_ST_CTIM(*right).tv_sec &&
+        BEAR_ST_CTIM(*left).tv_nsec == BEAR_ST_CTIM(*right).tv_nsec;
 }
 
 /* Materialize one bounded descriptor-stable regular source before evaluating

@@ -1,3 +1,4 @@
+#include "source_location.h"
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
 // jash — Josh shell (ring 3)
 // Part of Josh OS — author F E R M I ∞ H A R T <contact@fermihart.com>
@@ -323,7 +324,7 @@ size_t jash_rtrim_unquoted(const char* s) {
  * na nova-linha; `echo a \`+`# x` continua ANTES de existir comentario) e so
  * um unico caminhante do texto pode respeitar as duas ao mesmo tempo. Foi
  * exatamente essa dependencia que dois analisadores separados erravam. */
-int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
+int jash_strip_comments_and_joins_mapped(const char* in, char* out, size_t cap, unsigned* lines) {
     if (!in || !out || cap == 0) return 0;
 
     /* Saida rapida: sem `#` e sem `\` nao ha comentario nem continuacao —
@@ -351,6 +352,7 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
      * abre comentario. */
     int prev_boundary = 1;
 
+    #define STRIP_PUT(ch, src) do { if (lines) lines[o] = jash_source_line_at(src); out[o++] = (ch); } while (0)
     while (*p) {
         char c = *p;
 
@@ -360,7 +362,7 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
             if (c == '\n') {
                 in_cmt = 0;
                 /* A nova-linha SEPARA enunciados: ela fica. */
-                if (o + 1 < cap) out[o++] = '\n';
+                if (o + 1 < cap) STRIP_PUT('\n', p);
                 prev_boundary = 1;
             }
             p++;
@@ -370,7 +372,7 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
         /* ── aspas simples: literal, sem escape, sem comentario ───────────── */
         if (sq) {
             if (c == '\'') sq = 0;
-            if (o + 1 < cap) out[o++] = c;
+            if (o + 1 < cap) STRIP_PUT(c, p);
             p++; prev_boundary = 0;
             continue;
         }
@@ -382,8 +384,8 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
                 continue;
             }
             if (c == '\\' && p[1]) {
-                if (o + 1 < cap) out[o++] = c;
-                if (o + 1 < cap) out[o++] = p[1];
+                if (o + 1 < cap) STRIP_PUT(c, p);
+                if (o + 1 < cap) STRIP_PUT(p[1], p + 1);
                 p += 2; prev_boundary = 0;
                 continue;
             }
@@ -391,8 +393,8 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
             if (c == '$' && p[1] == '(' && p[2] != '(') {
                 if (cdep < (int)sizeof(cdq)) cdq[cdep] = 1;
                 cdep++; dq = 0;
-                if (o + 1 < cap) out[o++] = c;
-                if (o + 1 < cap) out[o++] = p[1];
+                if (o + 1 < cap) STRIP_PUT(c, p);
+                if (o + 1 < cap) STRIP_PUT(p[1], p + 1);
                 p += 2; prev_boundary = 1;
                 continue;
             }
@@ -400,13 +402,13 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
             if (c == '$' && p[1] == '{') {
                 if (cdep < (int)sizeof(cdq)) cdq[cdep] = 1;
                 cdep++; dq = 0;
-                if (o + 1 < cap) out[o++] = c;
-                if (o + 1 < cap) out[o++] = p[1];
+                if (o + 1 < cap) STRIP_PUT(c, p);
+                if (o + 1 < cap) STRIP_PUT(p[1], p + 1);
                 p += 2; prev_boundary = 1;
                 continue;
             }
             if (c == '"') dq = 0;
-            if (o + 1 < cap) out[o++] = c;
+            if (o + 1 < cap) STRIP_PUT(c, p);
             p++; prev_boundary = 0;
             continue;
         }
@@ -420,28 +422,28 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
             continue;
         }
         if (c == '\\' && p[1]) {
-            if (o + 1 < cap) out[o++] = c;
-            if (o + 1 < cap) out[o++] = p[1];
+            if (o + 1 < cap) STRIP_PUT(c, p);
+            if (o + 1 < cap) STRIP_PUT(p[1], p + 1);
             p += 2; prev_boundary = 0;
             continue;
         }
         if (c == '\'') {
             sq = 1;
-            if (o + 1 < cap) out[o++] = c;
+            if (o + 1 < cap) STRIP_PUT(c, p);
             p++; prev_boundary = 0;
             continue;
         }
         if (c == '"') {
             dq = 1;
-            if (o + 1 < cap) out[o++] = c;
+            if (o + 1 < cap) STRIP_PUT(c, p);
             p++; prev_boundary = 0;
             continue;
         }
         if (c == '$' && (p[1] == '(' || p[1] == '{')) {
             if (cdep < (int)sizeof(cdq)) cdq[cdep] = 0;
             cdep++;
-            if (o + 1 < cap) out[o++] = c;
-            if (o + 1 < cap) out[o++] = p[1];
+            if (o + 1 < cap) STRIP_PUT(c, p);
+            if (o + 1 < cap) STRIP_PUT(p[1], p + 1);
             p += 2; prev_boundary = 1;
             continue;
         }
@@ -457,7 +459,7 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
             }
             prev_boundary = (c == ' ' || c == '\t' || c == '\n' || c == ';' ||
                              c == '&' || c == '|' || c == '(');
-            if (o + 1 < cap) out[o++] = c;
+            if (o + 1 < cap) STRIP_PUT(c, p);
             p++;
             continue;
         }
@@ -475,12 +477,14 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
         }
         prev_boundary = (c == ' ' || c == '\t' || c == '\n' || c == ';' ||
                          c == '&' || c == '|' || c == '(' || c == ')');
-        if (o + 1 < cap) out[o++] = c;
+        if (o + 1 < cap) STRIP_PUT(c, p);
         p++;
     }
 
     if (o >= cap) o = cap - 1;
     out[o] = '\0';
+    if (lines) lines[o] = jash_source_line_at(p);
+    #undef STRIP_PUT
     return changes;
 }
 
@@ -495,7 +499,7 @@ int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
  * programa inteiro invadiria o corpo de `$( )`, que tem passada própria
  * (BUG-100). Aqui o comentário é lido mas NÃO removido — só some quando ele
  * está no meio de uma junção, porque senão engoliria a linha continuada. */
-int jash_join_operator_lines(char* buf, int* pending_eof) {
+int jash_join_operator_lines_mapped(char* buf, unsigned* lines, int* pending_eof) {
     if (pending_eof) *pending_eof = 0;
     if (!buf || !*buf) return 0;
 
@@ -526,6 +530,7 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
     size_t o = 0;
 
 /* Qualquer byte de DADO apaga o operador pendente. */
+#define JOIN_PUT(ch, src) do { if (lines) lines[o] = lines[(src) - buf]; buf[o++] = (ch); } while (0)
 #define JOIN_DATA() do { pipe_run = 0; amp_run = 0; op = 0; } while (0)
 
     while (*p) {
@@ -543,7 +548,7 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
                 /* O operador FICA; entra um branco para que ele continue tendo
                  * fronteira à direita (`|tr` e `| tr` são a mesma coisa para o
                  * tokenizador, mas `&&x` não é `&& x` em toda leitura). */
-                buf[o++] = ' ';
+                JOIN_PUT(' ', p);
                 joins++;
                 prev_boundary = 1;
                 p++;
@@ -552,25 +557,25 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
                 continue;
             }
             in_cmt = 0;
-            buf[o++] = c; p++;
+            JOIN_PUT(c, p); p++;
             prev_boundary = 1; JOIN_DATA();
             continue;
         }
 
         /* ── dentro de comentário: tudo inerte até a nova-linha ─────────── */
-        if (in_cmt) { buf[o++] = c; p++; continue; }
+        if (in_cmt) { JOIN_PUT(c, p); p++; continue; }
 
         /* ── aspas simples: literal, sem escape ─────────────────────────── */
         if (sq) {
             if (c == '\'') sq = 0;
-            buf[o++] = c; p++; prev_boundary = 0; JOIN_DATA();
+            JOIN_PUT(c, p); p++; prev_boundary = 0; JOIN_DATA();
             continue;
         }
 
         /* ── aspas duplas ──────────────────────────────────────────────── */
         if (dq) {
             if (c == '\\' && p[1]) {
-                buf[o++] = c; buf[o++] = p[1]; p += 2;
+                JOIN_PUT(c, p); JOIN_PUT(p[1], p + 1); p += 2;
                 prev_boundary = 0; JOIN_DATA();
                 continue;
             }
@@ -578,7 +583,7 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
             if (c == '$' && p[1] == '(' && p[2] != '(') {
                 if (cdep < (int)sizeof(cdq)) cdq[cdep] = 1;
                 cdep++; dq = 0;
-                buf[o++] = c; buf[o++] = p[1]; p += 2;
+                JOIN_PUT(c, p); JOIN_PUT(p[1], p + 1); p += 2;
                 prev_boundary = 1; JOIN_DATA();
                 continue;
             }
@@ -586,12 +591,12 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
             if (c == '$' && p[1] == '{') {
                 if (cdep < (int)sizeof(cdq)) cdq[cdep] = 1;
                 cdep++; dq = 0;
-                buf[o++] = c; buf[o++] = p[1]; p += 2;
+                JOIN_PUT(c, p); JOIN_PUT(p[1], p + 1); p += 2;
                 prev_boundary = 1; JOIN_DATA();
                 continue;
             }
             if (c == '"') dq = 0;
-            buf[o++] = c; p++; prev_boundary = 0; JOIN_DATA();
+            JOIN_PUT(c, p); p++; prev_boundary = 0; JOIN_DATA();
             continue;
         }
 
@@ -601,16 +606,16 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
              * de linha lógica já a honra, e refazê-la neste ponto seria a
              * segunda implementação da mesma regra. Aqui a barra só precisa
              * NÃO ser confundida com estrutura — `\|` é dado. */
-            buf[o++] = c; buf[o++] = p[1]; p += 2;
+            JOIN_PUT(c, p); JOIN_PUT(p[1], p + 1); p += 2;
             prev_boundary = 0; JOIN_DATA();
             continue;
         }
-        if (c == '\'') { sq = 1; buf[o++] = c; p++; prev_boundary = 0; JOIN_DATA(); continue; }
-        if (c == '"')  { dq = 1; buf[o++] = c; p++; prev_boundary = 0; JOIN_DATA(); continue; }
+        if (c == '\'') { sq = 1; JOIN_PUT(c, p); p++; prev_boundary = 0; JOIN_DATA(); continue; }
+        if (c == '"')  { dq = 1; JOIN_PUT(c, p); p++; prev_boundary = 0; JOIN_DATA(); continue; }
         if (c == '$' && (p[1] == '(' || p[1] == '{')) {
             if (cdep < (int)sizeof(cdq)) cdq[cdep] = 0;
             cdep++;
-            buf[o++] = c; buf[o++] = p[1]; p += 2;
+            JOIN_PUT(c, p); JOIN_PUT(p[1], p + 1); p += 2;
             prev_boundary = 1; JOIN_DATA();
             continue;
         }
@@ -624,7 +629,7 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
              * `$( )`/`${ }` o texto passa intacto, a passada é do cmdsub). */
             in_cmt = 1; cmt_at = o;
             /* `op` NÃO muda: `echo a | # nota` segue com o cano pendente. */
-            buf[o++] = c; p++;
+            JOIN_PUT(c, p); p++;
             continue;
         }
         if (c == '(' || c == '{') {
@@ -632,7 +637,7 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
                 if (cdep < (int)sizeof(cdq)) cdq[cdep] = 0;
                 cdep++;
             }
-            buf[o++] = c; p++; prev_boundary = 1; JOIN_DATA();
+            JOIN_PUT(c, p); p++; prev_boundary = 1; JOIN_DATA();
             continue;
         }
         if (c == ')' || c == '}') {
@@ -640,7 +645,7 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
                 cdep--;
                 if (cdep < (int)sizeof(cdq)) dq = cdq[cdep];
             }
-            buf[o++] = c; p++; prev_boundary = 1; JOIN_DATA();
+            JOIN_PUT(c, p); p++; prev_boundary = 1; JOIN_DATA();
             continue;
         }
         if (c == '|') {
@@ -648,7 +653,7 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
             /* `|` continua, `||` continua. `|||` não é operador nenhum no bash
              * (erro de sintaxe) — não juntamos, para que o erro apareça. */
             op = (pipe_run == 1) ? 1 : (pipe_run == 2 ? 2 : 0);
-            buf[o++] = c; p++; prev_boundary = 1;
+            JOIN_PUT(c, p); p++; prev_boundary = 1;
             continue;
         }
         if (c == '&') {
@@ -657,24 +662,26 @@ int jash_join_operator_lines(char* buf, int* pending_eof) {
              * /bin/bash: `echo a &` + `echo b` roda os dois). Só `&&` pede a
              * linha seguinte. */
             op = (amp_run == 2) ? 2 : 0;
-            buf[o++] = c; p++; prev_boundary = 1;
+            JOIN_PUT(c, p); p++; prev_boundary = 1;
             continue;
         }
         if (c == ' ' || c == '\t') {
             /* Branco não é dado: NÃO apaga o operador pendente. Mas quebra a
              * corrida — `a | | b` são dois canos, não um `||`. */
             pipe_run = 0; amp_run = 0;
-            buf[o++] = c; p++; prev_boundary = 1;
+            JOIN_PUT(c, p); p++; prev_boundary = 1;
             continue;
         }
 
         /* Qualquer outro byte é DADO. (`;` fecha o enunciado e é fronteira.) */
         prev_boundary = (c == ';');
-        buf[o++] = c; p++; JOIN_DATA();
+        JOIN_PUT(c, p); p++; JOIN_DATA();
     }
 
+#undef JOIN_PUT
 #undef JOIN_DATA
 
+    if (lines) lines[o] = lines[p - buf];
     buf[o] = '\0';
     if (pending_eof) *pending_eof = (op > 0);
     return joins;
@@ -744,4 +751,12 @@ const char* jash_scan_unquoted(const char* s, const char* stops) {
     }
     /* Nunca NULL: o chamador testa *p. */
     return s + strlen(s);
+}
+
+int jash_join_operator_lines(char* buf, int* pending_eof) {
+    return jash_join_operator_lines_mapped(buf, NULL, pending_eof);
+}
+
+int jash_strip_comments_and_joins(const char* in, char* out, size_t cap) {
+    return jash_strip_comments_and_joins_mapped(in, out, cap, NULL);
 }

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 #include "memory_output.h"
 #include "memory_chain.h"
 
@@ -14,7 +15,7 @@ static int blame_native_path(const char* path, char out[PATH_MAX]) {
     size_t size = strlen(absolute);
     while (size > 1 && absolute[size - 1] == '/') absolute[--size] = 0;
     char* slash = strrchr(absolute, '/');
-    char basename[PATH_MAX]; strcpy(basename, slash ? slash + 1 : absolute);
+    char basename[PATH_MAX]; if (jash_copy_cstr(basename, sizeof(basename), slash ? slash + 1 : absolute)) { errno = ENAMETOOLONG; return -1; }
     if (!*basename || !strcmp(basename, ".") || !strcmp(basename, "..")) {
         return realpath(absolute, out) ? 0 : -1;
     }

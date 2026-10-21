@@ -4,6 +4,7 @@
 
 #include "builtin.h"
 #include <parser/eval.h>
+#include <parser/source_location.h>
 #include <sys/syscalls.h>
 #include <string.h>
 
@@ -53,7 +54,23 @@ int jash_b_source(jash_state_t* s, jash_writer_t w, void* ctx, const char* args)
     int saved_exit_requested = s->exit_requested;
     int saved_status = s->last_status.code;
 
+    int saved_return_requested = s->return_requested;
+    int saved_return_code = s->return_code;
+    unsigned saved_depth = s->bash_lineno_depth;
+    if (saved_depth >= JASH_SOURCE_FRAME_MAX) {
+        jash_writes(jash_stderr_writer, 0, "source: call stack limit exceeded\n");
+        return 1;
+    }
+    s->return_requested = 0;
+    s->bash_lineno[s->bash_lineno_depth++] = (unsigned)jash_get_lineno();
+    jash_source_span source_span;
+    jash_source_push(&source_span, buf, len, NULL, 1);
     int rc = jash_run_multiline(s, sp);
+    jash_source_pop(&source_span);
+    s->bash_lineno_depth = saved_depth;
+    if (s->return_requested) rc = s->return_code;
+    s->return_requested = saved_return_requested;
+    s->return_code = saved_return_code;
 
     /* Always swallow the exit_requested leak (the sourced script may have
      * hit syntax errors, but we don't tear down the calling shell). */

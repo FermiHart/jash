@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 #include "analysis_output.h"
 #include "semantic_builtin.h"
 #include "memory_store.h"
@@ -76,7 +77,7 @@ static int contract_native_provider(semantic_builtin_t* call, jash_state_t* stat
                 assertion->rc = (int)rc;
             } else {
                 if (strlen(argv[first]) >= sizeof(assertion->str)) return semantic_error(call, "expectation_byte_limit", 75);
-                strcpy(assertion->str, argv[first]);
+                if (jash_copy_cstr(assertion->str, sizeof(assertion->str), argv[first])) { return semantic_error(call, "expectation_byte_limit", 75); }
                 if (assertion->kind == EXP_STDOUT_MATCHES) {
                     regex_t regex;
                     if (regcomp(&regex, assertion->str, REG_EXTENDED | REG_NOSUB))

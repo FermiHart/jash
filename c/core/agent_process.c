@@ -24,6 +24,9 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
+#ifdef __APPLE__
+#include <pthread.h>
+#endif
 
 #ifdef JASH_BLIBC
 /* Tina blibc declares PTY operations in its explicit POSIX pty header. */
@@ -539,7 +542,7 @@ static int close_worker_fds(void) {
         return close_worker_fds_loop();
     errno = saved;
     return result == 0 ? 0 : close_worker_fds_loop();
-#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || \
+#elif defined(__FreeBSD__) || defined(__OpenBSD__) || \
     defined(__NetBSD__)
     closefrom(3);
     return 0;
@@ -2006,20 +2009,48 @@ int jash_agent_process_write_pty(jash_agent_process_t* process,
     return 0;
 }
 
+/* sigprocmask is unspecified in a multi-threaded POSIX process. Darwin's
+ * libSystem supplies pthread_sigmask without an additional link dependency. */
+static int stdin_signal_mask(int how, const sigset_t* set, sigset_t* old) {
+#ifdef __APPLE__
+    int error = pthread_sigmask(how, set, old);
+    if (error) { errno = error; return -1; }
+    return 0;
+#else
+    return sigprocmask(how, set, old);
+#endif
+}
+
 static ssize_t write_without_sigpipe(int fd, const void* data, size_t length) {
     sigset_t blocked, prior, pending;
     sigemptyset(&blocked);
     sigaddset(&blocked, SIGPIPE);
-    if (sigprocmask(SIG_BLOCK, &blocked, &prior) != 0) return -1;
-    int was_pending = sigpending(&pending) == 0 && sigismember(&pending, SIGPIPE);
+    if (stdin_signal_mask(SIG_BLOCK, &blocked, &prior) != 0) return -1;
+    if (sigpending(&pending) != 0) {
+        int error = errno;
+        if (stdin_signal_mask(SIG_SETMASK, &prior, NULL) != 0) return -1;
+        errno = error;
+        return -1;
+    }
+    int was_pending = sigismember(&pending, SIGPIPE);
     ssize_t written;
     do { written = write(fd, data, length); } while (written < 0 && errno == EINTR);
     int saved = errno;
     if (written < 0 && saved == EPIPE && !was_pending) {
+#if defined(__APPLE__) || defined(JASH_AGENT_PROCESS_TEST_PORTABLE_SIGWAIT)
+        /* Darwin has sigwait, not sigtimedwait. Check pending first: an
+         * ignored SIGPIPE can yield EPIPE without queuing any signal. Never
+         * consume a signal that was already pending before our write. */
+        if (sigpending(&pending) == 0 && sigismember(&pending, SIGPIPE)) {
+            int signo;
+            (void)sigwait(&blocked, &signo);
+        }
+#else
         struct timespec no_wait = {0, 0};
         while (sigtimedwait(&blocked, NULL, &no_wait) < 0 && errno == EINTR) {}
+#endif
     }
-    if (sigprocmask(SIG_SETMASK, &prior, NULL) != 0 && written >= 0) return -1;
+    if (stdin_signal_mask(SIG_SETMASK, &prior, NULL) != 0) return -1;
     errno = saved;
     return written;
 }

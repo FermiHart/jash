@@ -121,8 +121,15 @@ static inline int jash_mesh_store_close(jash_mesh_store_t* store) {
 static inline int jash_mesh_same_file(const struct stat* left, const struct stat* right) {
     return left->st_dev == right->st_dev && left->st_ino == right->st_ino &&
         left->st_size == right->st_size && left->st_mode == right->st_mode &&
+#ifdef __APPLE__
+        left->st_mtimespec.tv_sec == right->st_mtimespec.tv_sec &&
+        left->st_mtimespec.tv_nsec == right->st_mtimespec.tv_nsec &&
+        left->st_ctimespec.tv_sec == right->st_ctimespec.tv_sec &&
+        left->st_ctimespec.tv_nsec == right->st_ctimespec.tv_nsec;
+#else
         left->st_mtim.tv_sec == right->st_mtim.tv_sec && left->st_mtim.tv_nsec == right->st_mtim.tv_nsec &&
         left->st_ctim.tv_sec == right->st_ctim.tv_sec && left->st_ctim.tv_nsec == right->st_ctim.tv_nsec;
+#endif
 }
 
 /* One complete immutable regular-file observation. No short successful reads,
