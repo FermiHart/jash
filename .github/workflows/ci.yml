@@ -68,16 +68,18 @@ jobs:
           python3 tests/test_no_unbounded_string_copy.py
       - name: BASH_LINENO differential (native host)
         run: |
-          if [[ "$RUNNER_OS" == "macOS" ]]; then
+          oracle="$(command -v bash)"
+          if [ "$RUNNER_OS" = macOS ]; then
             oracle="$(brew --prefix bash)/bin/bash"
-          else
-            oracle="$(command -v bash)"
           fi
           "$oracle" --version
           python3 tests/test_bash_lineno.py --jash "$PWD/build-werror/jash" --bash "$oracle"
       - name: legacy Bash stdin and file compatibility (macOS)
         if: runner.os == 'macOS'
-        run: python3 tests/test_bash_lineno.py --jash "$PWD/build-werror/jash" --bash /bin/bash --mode stdin --mode file
+        run: |
+          /bin/bash --version
+          python3 tests/test_bash_lineno.py --jash "$PWD/build-werror/jash" \
+            --bash /bin/bash --mode stdin --mode file
       - name: o binário funciona
         run: |
           ./build-werror/jash -c 'echo werror-ok' | grep -qx werror-ok
@@ -140,14 +142,27 @@ jobs:
     name: suíte de testes
     runs-on: ubuntu-latest
     needs: build
+    timeout-minutes: 120
+    env:
+      # Explicit kernel backend for exactly the existing autonomy gate.
+      # All other registrations still run natively; local default is native.
+      JASH_AUTONOMY_BACKEND: qemu-tcg
+      JASH_AUTONOMY_VM_CACHE: ${{ runner.temp }}/jash-autonomy-vm-cache
+      JASH_AUTONOMY_VM_OUTPUT: ${{ runner.temp }}/jash-autonomy-vm-result
     steps:
       - uses: actions/checkout@v4
       - name: dependências
-        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build bubblewrap python3 python3-venv time
-      - name: isolamento nativo disponível (sem SKIP silencioso)
         run: |
-          /usr/bin/bwrap --version
-          python3 -B tests/test_autonomy_sandbox.py
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build bubblewrap python3 python3-venv time \
+            qemu-system-x86 qemu-utils genisoimage e2fsprogs
+      - name: isolated backend regression tests (no VM qualification)
+        run: python3 -B tests/test_autonomy_vm_runner.py
+      - name: verified disposable-VM assets (tests run in the suite)
+        timeout-minutes: 20
+        run: |
+          python3 -B tools/run_autonomy_vm.py --prepare \
+            --output "$RUNNER_TEMP/jash-autonomy-vm-prepare"
       - name: dependências Python qualificadas
         run: |
           python3 -m venv "$RUNNER_TEMP/jash-test-venv"
@@ -169,7 +184,19 @@ jobs:
             --output-junit "$PWD/build/builtin-contracts.xml"
           python3 tools/check_builtin_conformance.py --junit "$PWD/build/builtin-contracts.xml"
       - name: suíte
-        run: bash tests/test_suite.sh
+        # The offline TCG gate includes a fresh guest build. This explicit bound
+        # changes no gate registrations, expectations, or default local timeout.
+        run: bash tests/test_suite.sh --timeout 4200 --output "$RUNNER_TEMP/jash-suite-evidence"
+      - name: complete suite and guest evidence (including failures)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: suite-and-autonomy-vm-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/jash-suite-evidence
+            ${{ runner.temp }}/jash-autonomy-vm-prepare
+            ${{ runner.temp }}/jash-autonomy-vm-result
+          if-no-files-found: error
 
   asan:
     name: ASAN + UBSAN

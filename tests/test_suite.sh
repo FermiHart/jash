@@ -8,6 +8,13 @@ if [[ ${1-} != --suite-export-v1 ]]; then
     exit 1
 fi
 set -e
+# Only this integration gate may explicitly select a disposable Linux kernel.
+# No fallback: native remains the default; unknown values fail before export.
+case ${JASH_AUTONOMY_BACKEND:-native} in
+    native) autonomy_gate=(bash tests/test_autonomy.sh) ;;
+    qemu-tcg) autonomy_gate=(python3 -B tools/run_autonomy_vm.py) ;;
+    *) printf 'Unknown JASH_AUTONOMY_BACKEND: %s\n' "$JASH_AUTONOMY_BACKEND" >&2; exit 2 ;;
+esac
 # Wire format: repeated NUL-terminated field count, label, then argv fields.
 # This is trusted repository code, not a shell parser or a sandbox.
 run() {
@@ -129,7 +136,7 @@ run "shared world and fschange startup snapshot" bash tests/test_shared_snapshot
 run "independent job receipt verification" bash tests/test_libjef_job_receipt.sh
 run "independent job specification verification" bash tests/test_libjef_job_spec.sh
 run "libjef bounded parsing and sanitized Ed25519" env JEF_SANITIZE=1 JEF_ADJACENT=1 python3 -B tests/test_libjef_input_bounds.py
-run "experimental verifiable autonomy (Linux integration)" bash tests/test_autonomy.sh
+run "experimental verifiable autonomy (Linux integration)" "${autonomy_gate[@]}"
 run "static musl agent dependency closure" bash tests/test_static_agent_runtime.sh
 run "agent structured read fast path (JINV-135)" bash tests/test_jinv135_agent_read_fastpath.sh
 run "agent durable completion append (JINV-136)" bash tests/test_jinv136_agent_durable_append.sh

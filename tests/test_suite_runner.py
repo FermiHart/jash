@@ -809,7 +809,8 @@ class SuiteRunnerTests(unittest.TestCase):
 
     def test_master_list_preserves_reviewed_registry_and_multiline_gate(self):
         result = subprocess.run(["bash", str(MASTER), "--list"], cwd=self.root,
-                                env=self.env, capture_output=True, timeout=10)
+                                env=dict(self.env, JASH_AUTONOMY_BACKEND="native"),
+                                capture_output=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
         gates = [json.loads(line) for line in result.stdout.splitlines()]
         self.assertEqual(len(gates), 351)
