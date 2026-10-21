@@ -52,7 +52,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
       - name: dependências (macOS)
         if: runner.os == 'macOS'
-        run: brew install ninja || true
+        run: brew install ninja bash
       - name: build com -Werror
         run: |
           cmake -B build-werror -G Ninja -DCMAKE_BUILD_TYPE=Release -DJASH_WERROR=ON
@@ -67,7 +67,17 @@ jobs:
           ctest --test-dir build-werror -R '^checked_string$' --no-tests=error --output-on-failure
           python3 tests/test_no_unbounded_string_copy.py
       - name: BASH_LINENO differential (native host)
-        run: python3 tests/test_bash_lineno.py --jash "$PWD/build-werror/jash"
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            oracle="$(brew --prefix bash)/bin/bash"
+          else
+            oracle="$(command -v bash)"
+          fi
+          "$oracle" --version
+          python3 tests/test_bash_lineno.py --jash "$PWD/build-werror/jash" --bash "$oracle"
+      - name: legacy Bash stdin and file compatibility (macOS)
+        if: runner.os == 'macOS'
+        run: python3 tests/test_bash_lineno.py --jash "$PWD/build-werror/jash" --bash /bin/bash --mode stdin --mode file
       - name: o binário funciona
         run: |
           ./build-werror/jash -c 'echo werror-ok' | grep -qx werror-ok

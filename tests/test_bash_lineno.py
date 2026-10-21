@@ -6,10 +6,13 @@ JASH_BIN (then JASH, then build/jash) supplies the default binary. Both shells
 receive identical source bytes and isolated temporary homes. Bundled native
 modules must already be built; attestation is not disabled for this test.
 --case NAME and --mode c|stdin|file restrict diagnostic runs, not CI coverage.
-The shell cases deliberately use syntax available in macOS's Bash 3.2.
+The full contract uses Bash 5 or newer as the oracle. Bash 3.2 numbers -c
+input from zero; use --mode stdin --mode file for its additional legacy checks.
+No oracle values or Jash source maps are adjusted to hide that difference.
 """
 import argparse
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -179,6 +182,21 @@ def arguments():
         parser.error('--timeout must be positive')
     options.jash = options.jash.resolve()
     options.bash = options.bash.resolve()
+    try:
+        version_result = subprocess.run(
+            [str(options.bash), '--version'], text=True, capture_output=True,
+            env={**os.environ, 'LC_ALL': 'C'}, timeout=options.timeout)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        parser.error('Cannot identify Bash reference: ' + str(error))
+    version = version_result.stdout.splitlines()
+    match = re.search(r'version (\d+)\.(\d+)', version[0] if version else '')
+    if version_result.returncode or not match:
+        parser.error('Reference must identify itself as GNU Bash with --version')
+    print('Bash reference: ' + str(options.bash) + '\n' + version[0], flush=True)
+    if int(match.group(1)) < 5 and ('c' in (options.mode or ('c', 'stdin', 'file'))):
+        parser.error('Bash 5 or newer is required for the -c physical-line oracle; '
+                     'legacy Bash 3.2 uses zero-based -c lines. For legacy coverage '
+                     'select --mode stdin --mode file explicitly.')
     return options
 
 

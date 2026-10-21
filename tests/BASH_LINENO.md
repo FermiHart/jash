@@ -14,15 +14,21 @@ retain their origin after the defining source file returns. Function and source
 frames are restored on return; subshells and command substitutions inherit the
 active stack. No frame is invented from the number of evaluator invocations.
 
-`test_bash_lineno.py` compares identical scripts against the installed Bash in
+`test_bash_lineno.py` compares identical scripts against an explicitly selected
+modern Bash (5.x or later) in
 `-c`, stdin and file modes. It checks scalar, indexed, all-elements, count,
 length, default and setness expansions; quoted array cardinality; physical
 call sites; nested functions and sources; retained sourced definitions;
 pipelines, subshells and command substitution; return/error unwinding;
-heredocs, continuations and a function RETURN trap. The native CI workflow invokes it on Linux
-and macOS, using each host's Bash reference.
+heredocs, continuations and a function RETURN trap. The native CI workflow uses the system modern Bash on Linux and Homebrew Bash
+on macOS, recording the selected executable and version. macOS additionally
+runs stdin/file comparisons against its legacy system Bash.
 
 ## Deliberate limits
+
+- Bash 3.2 uses a zero-based caller-line convention for `-c`, unlike modern
+  Bash and Jash. This is a general `-c` difference, not shebang removal. The
+  harness rejects that oracle for `-c`; legacy stdin/file checks remain active.
 
 - The diagnostic view is authoritative: assigning or unsetting a shell variable
   named `BASH_LINENO` does not replace the native stack. This is not Bash's
