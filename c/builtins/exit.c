@@ -14,7 +14,10 @@
 #endif
 
 #ifdef __APPLE__
-extern void sys_exit_or_loop_break(int code) __attribute__((weak_import));
+/* Supply a concrete fallback for native executable/LTO linking. A strong
+ * platform hook can replace it; exit_requested remains authoritative. */
+void sys_exit_or_loop_break(int code) __attribute__((weak));
+void sys_exit_or_loop_break(int code) { (void)code; }
 #else
 extern void sys_exit_or_loop_break(int code) __attribute__((weak));
 #endif
