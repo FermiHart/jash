@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 /* Checked storage and source observations for the same graph inventory,
  * extraction, resolution and community engines used by the text frontend. */
 #include "memory_chain.h"
@@ -133,7 +134,7 @@ static int gn_read(memory_store_t* store, const char* name, int old, int* presen
                 memory_unsigned(fields[2], LONG_MAX, &a) || memory_unsigned(fields[3], LONG_MAX, &b)) { error = EINVAL; break; }
             for (int i = hash[bucket]; i >= 0; i = next[i]) if (!strcmp(files[i].path, fields[1])) error = EINVAL;
             if (error) break;
-            strcpy(files[nf].path, fields[1]); files[nf].mtime = (long)a; files[nf].size = (long)b;
+            if (jash_copy_cstr(files[nf].path, sizeof(files[nf].path), fields[1])) { error = errno; break; } files[nf].mtime = (long)a; files[nf].size = (long)b;
             next[nf] = hash[bucket]; hash[bucket] = nf++;
         } else if (!strcmp(fields[0], "N") && fields_count == 6 && phase < 2 && nn < LG_CAP_NODES) {
             phase = 1;
@@ -143,7 +144,7 @@ static int gn_read(memory_store_t* store, const char* name, int old, int* presen
             int file = -1; unsigned bucket = lg_fnv(fields[3]) & (LG_HFILE - 1);
             for (int i = hash[bucket]; i >= 0; i = next[i]) if (!strcmp(files[i].path, fields[3])) { file = i; break; }
             if (file < 0) { error = EINVAL; break; }
-            memset(&nodes[nn], 0, sizeof nodes[nn]); strcpy(nodes[nn].name, fields[1]);
+            memset(&nodes[nn], 0, sizeof nodes[nn]); if (jash_copy_cstr(nodes[nn].name, sizeof(nodes[nn].name), fields[1])) { error = errno; break; }
             nodes[nn].type = fields[2][0]; nodes[nn].fidx = file;
             nodes[nn].line = (long)a; nodes[nn++].community = (int)b;
         } else if (!strcmp(fields[0], "E") && fields_count == 5 && ne < LG_CAP_EDGES) {
@@ -234,7 +235,7 @@ static int gn_walk(const char* root, const char* relative) {
 
 static int gn_extract(const char* root, int index) {
     (void)root;
-    char path[384]; strcpy(path, F[index].path);
+    char path[384]; if (jash_copy_cstr(path, sizeof(path), F[index].path)) { gn_control->error = errno; return 0; }
     int directory = dup(gn_control->source_root), fd = -1, error = 0;
     if (directory < 0) return 0;
     for (char* part = path; part && *part;) {

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 static int mesh_next(mesh_call_t* c) {
     mesh_task_t* tasks=calloc(MESH_TASKS_MAX,sizeof *tasks);
     mesh_worker_t* workers=calloc(MESH_WORKERS_MAX,sizeof *workers);
@@ -27,10 +28,10 @@ static int mesh_next(mesh_call_t* c) {
         goto done;
     }
     mesh_task_t* selected=&tasks[picked];
-    strcpy(selected->state,"claimed"); strcpy(selected->owner,c->options.self); selected->claim_ts=c->now;
+    if (jash_copy_cstr(selected->state, sizeof(selected->state), "claimed")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } if (jash_copy_cstr(selected->owner, sizeof(selected->owner), c->options.self)) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } selected->claim_ts=c->now;
     rc=mesh_write_task_receipt(c,selected,"claim_task",&claimed);
     if(!rc) {
-        strcpy(self.status,"working"); snprintf(self.task,sizeof self.task,"%d",selected->id);
+        if (jash_copy_cstr(self.status, sizeof(self.status), "working")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } snprintf(self.task,sizeof self.task,"%d",selected->id);
         rc=mesh_write_worker_receipt(c,&self,"assign_worker",&registry_updated);
     }
     if(!rc&&!c->options.mode) jash_writef(c->writer,c->context,"#%d [%s] %s\n",selected->id,selected->tag,selected->desc);
@@ -74,12 +75,12 @@ static int mesh_finish_task(mesh_call_t* c) {
         return mesh_fail(c,"task_owned_by_another_worker",1);
     }
     mesh_worker_t worker; int rc=mesh_prepare_worker(c,&worker,0); if(rc) return rc;
-    char description[sizeof task.desc]; strcpy(description,task.desc);
+    char description[sizeof task.desc]; if (jash_copy_cstr(description, sizeof(description), task.desc)) { return mesh_fail(c,"field_byte_limit",75); }
     if(c->options.value[M_ARTIFACT]) {
         int n=snprintf(description,sizeof description,"%s  [→%s]",task.desc,c->options.value[M_ARTIFACT]);
         if(n<0||(size_t)n>=sizeof description) return mesh_fail(c,"artifact_description_limit",2);
     }
-    char original_state[sizeof task.state]; strcpy(original_state,task.state);
+    char original_state[sizeof task.state]; if (jash_copy_cstr(original_state, sizeof(original_state), task.state)) { return mesh_fail(c,"field_byte_limit",75); }
     int proof_executed=0,proof_status=0,applied=0,attestation_requested=0;
     const char* proof=c->options.value[M_PROVE];
     if(proof) {
@@ -107,9 +108,9 @@ static int mesh_finish_task(mesh_call_t* c) {
             goto done;
         }
     }
-    strcpy(task.desc,description); strcpy(task.state,c->options.operation==M_DONE?"done":"failed");
+    if (jash_copy_cstr(task.desc, sizeof(task.desc), description)) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } if (jash_copy_cstr(task.state, sizeof(task.state), c->options.operation==M_DONE?"done":"failed")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; }
     rc=mesh_write_task_receipt(c,&task,"finish_task",&applied);
-    if(!rc) { strcpy(worker.status,"idle"); strcpy(worker.task,"-"); rc=mesh_write_worker_receipt(c,&worker,"idle_worker",NULL); }
+    if(!rc) { if (jash_copy_cstr(worker.status, sizeof(worker.status), "idle")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } if (jash_copy_cstr(worker.task, sizeof(worker.task), "-")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } rc=mesh_write_worker_receipt(c,&worker,"idle_worker",NULL); }
     if(!rc) { rc=mesh_attest_task(c,c->options.operation==M_DONE?"mesh-done":"mesh-fail",&task,worker.model); attestation_requested=!rc; }
     if(!rc&&foreign&&c->options.force) jash_writef(jash_stderr_writer,NULL,"mesh: WARNING — task #%d closed by %s via --force\n",task.id,c->options.self);
     if(!rc&&!c->options.mode) jash_writef(c->writer,c->context,"mesh: task #%d → %s%s\n",task.id,task.state,proof?" (proven)":"");
@@ -142,7 +143,7 @@ static int mesh_sweep(mesh_call_t* c) {
         for(size_t j=0;j<task_count;j++) if(!strcmp(tasks[j].state,"claimed")&&!strcmp(tasks[j].owner,worker->id)) pending=1;
         for(int j=0;j<claim_count;j++) if(!strcmp(claims[j].owner,worker->id)) pending=1;
         if(already_dead&&!pending) continue;
-        char previous_task[256]; strcpy(previous_task,worker->task);
+        char previous_task[256]; if (jash_copy_cstr(previous_task, sizeof(previous_task), worker->task)) { rc=mesh_fail(c,"field_byte_limit",75); goto done; }
         uint64_t silent=worker->timestamp<c->now?(uint64_t)c->now-(uint64_t)worker->timestamp:0;
         /* Bound the callback detail before the first effect for this worker.
          * The existing Sigil API accepts at most 899 detail bytes. */
@@ -152,12 +153,12 @@ static int mesh_sweep(mesh_call_t* c) {
         if(n<0||n>=900) { rc=mesh_fail(c,"attestation_field_limit",75); break; }
         agents[agents_count++]=mesh_text(c,worker->id);
         if(!already_dead) {
-            strcpy(worker->status,"dead"); strcpy(worker->task,"-"); worker->timestamp=c->now;
+            if (jash_copy_cstr(worker->status, sizeof(worker->status), "dead")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } if (jash_copy_cstr(worker->task, sizeof(worker->task), "-")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } worker->timestamp=c->now;
             int applied=0; rc=mesh_write_worker_receipt(c,worker,"mark_dead_worker",&applied); if(applied) dead++;
         }
         size_t owner_reclaimed=0;
         for(size_t j=0;j<task_count&&!rc;j++) if(!strcmp(tasks[j].state,"claimed")&&!strcmp(tasks[j].owner,worker->id)) {
-            strcpy(tasks[j].state,"ready"); strcpy(tasks[j].owner,"-"); tasks[j].claim_ts=0;
+            if (jash_copy_cstr(tasks[j].state, sizeof(tasks[j].state), "ready")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } if (jash_copy_cstr(tasks[j].owner, sizeof(tasks[j].owner), "-")) { rc=mesh_fail(c,"field_byte_limit",75); goto done; } tasks[j].claim_ts=0;
             int applied=0; rc=mesh_write_task_receipt(c,&tasks[j],"reclaim_dead_task",&applied);
             if(applied) { reclaimed++; owner_reclaimed++; }
         }

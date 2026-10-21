@@ -61,6 +61,11 @@ jobs:
         run: |
           cmake --build build-werror --target test_agent_process_portability
           ctest --test-dir build-werror -R '^agent_process_portability$' --no-tests=error --output-on-failure
+      - name: checked string copies (native host)
+        run: |
+          cmake --build build-werror --target test_checked_string
+          ctest --test-dir build-werror -R '^checked_string$' --no-tests=error --output-on-failure
+          python3 tests/test_no_unbounded_string_copy.py
       - name: BASH_LINENO differential (native host)
         run: python3 tests/test_bash_lineno.py --jash "$PWD/build-werror/jash"
       - name: o binário funciona

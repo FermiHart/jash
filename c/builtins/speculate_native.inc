@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 /* Match the supervisor fallback on hosts without Linux EUCLEAN. */
 #ifndef EUCLEAN
 #define EUCLEAN EIO
@@ -292,7 +293,7 @@ static int sp_changes(const sp_snapshot_t* before,const sp_snapshot_t* after,sp_
     return 0;
 }
 static int sp_workspace_create(sp_workspace_t* work) {
-    strcpy(work->path,"/tmp/jash-speculate-native-XXXXXX");
+    if (jash_copy_cstr(work->path, sizeof(work->path), "/tmp/jash-speculate-native-XXXXXX")) { return -1; }
     if(!mkdtemp(work->path))return -1;
     work->created=1;
     work->root=open(work->path,O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);
@@ -313,17 +314,17 @@ static void sp_workspace_cleanup(sp_workspace_t* work,int keep,int may_clean) {
         work->cleanup_error=errno?errno:ESTALE;return;
     }
     if(keep||!may_clean) {
-        strcpy(work->retained,work->path);work->retained_verified=1;work->kept=keep;
+        if (jash_copy_cstr(work->retained, sizeof(work->retained), work->path)) { work->cleanup_error=errno; work->retained_verified=0; return; }work->retained_verified=1;work->kept=keep;
         if(!may_clean)work->cleanup_error=EBUSY;
         return;
     }
     int parent=open("/tmp",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);
-    if(parent<0){work->cleanup_error=errno;strcpy(work->retained,work->path);work->retained_verified=1;return;}
+    if(parent<0){work->cleanup_error=errno;if (jash_copy_cstr(work->retained, sizeof(work->retained), work->path)) { work->cleanup_error=errno; work->retained_verified=0; return; }work->retained_verified=1;return;}
     const char* name=strrchr(work->path,'/')+1;char hold[64]="";
     if(spec_capture_owned(parent,name,&work->owned,hold,sizeof hold)) {
         work->cleanup_error=errno;
         if(hold[0])spec_hold_path(work->path,hold,work->retained,sizeof work->retained);
-        else strcpy(work->retained,work->path);
+        else if (jash_copy_cstr(work->retained, sizeof(work->retained), work->path)) { work->cleanup_error=errno; work->retained_verified=0; close(parent); return; }
     } else {
         char captured[SPEC_MAX_PATH];spec_hold_path(work->path,hold,captured,sizeof captured);
         spec_cleanup_limits_t limits={SP_ENTRIES*2u+4u,SP_DEPTH+2u};

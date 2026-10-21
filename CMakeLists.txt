@@ -1160,12 +1160,19 @@ if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
     target_link_libraries(${JASH_AGENT_BINARY_NAME} pthread)
 endif()
 if(BUILD_TESTING)
+    add_executable(test_checked_string tests/test_checked_string.c)
+    target_include_directories(test_checked_string PRIVATE c)
+    target_compile_options(test_checked_string PRIVATE -UNDEBUG)
+    add_test(NAME checked_string COMMAND test_checked_string)
     find_package(Python3 3.9 COMPONENTS Interpreter)
     if(Python3_Interpreter_FOUND)
         add_test(NAME bash_lineno_contract
             COMMAND ${Python3_EXECUTABLE} -B
                 ${CMAKE_SOURCE_DIR}/tests/test_bash_lineno.py
                 --jash $<TARGET_FILE:jash>)
+        add_test(NAME no_unbounded_string_copy
+            COMMAND ${Python3_EXECUTABLE} -B
+                ${CMAKE_SOURCE_DIR}/tests/test_no_unbounded_string_copy.py)
     endif()
     add_test(NAME agent_jobs_protocol
         COMMAND ${CMAKE_COMMAND} -E env

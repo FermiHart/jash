@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 /* Strict bounded JSONL operators and explicit JTV2 adapters.
  * JSONL is the default. --data/--data-v2 select JTV2 in and out;
  * --from-data selects JTV2 -> JSONL; --to-data selects JSONL -> JTV2.
@@ -394,7 +395,7 @@ static int options(dataset_t* d, int op, const char* args, options_t* o) {
             if (word(&p, token, sizeof(token))) return -1;
         }
         if (token[0] == '-' || *p) return bad(EINVAL);
-        strcpy(o->fields[0], token); o->nfields = 1; return 0;
+        if (jash_copy_cstr(o->fields[0], sizeof(o->fields[0]), token)) { return bad(E2BIG); } o->nfields = 1; return 0;
     }
     if (op == OP_SUM || op == OP_AVG) {
         if (word(&p, o->fields[0], PIPE_FIELD_MAX) || o->fields[0][0] == '-') return bad(EINVAL);

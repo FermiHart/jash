@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <core/checked_string.h>
 /* Shared publication engine for the report and scaffold adapters. Receipts
  * describe the named target; temporary cleanup is a separate observation.
  * A checked observer failure stops the engine before the next effect. */
@@ -66,7 +67,7 @@ static inline int osif_publish_open(osif_publish_store_t* store,
     memset(store, 0, sizeof *store); store->observe = observe; store->context = context;
     int fd = open(".", O_RDONLY | O_CLOEXEC | O_DIRECTORY);
     if (fd < 0) return osif_publish_error(store, "open-directory", ".", "directory_open_failed", errno);
-    store->descriptors[0] = fd; strcpy(store->paths[0], "."); store->depth = 1;
+    store->descriptors[0] = fd; if (jash_copy_cstr(store->paths[0], sizeof(store->paths[0]), ".")) { int saved = errno; close(fd); store->descriptors[0] = -1; return osif_publish_error(store, "open-directory", ".", "path_limit", saved); } store->depth = 1;
     return 0;
 }
 
