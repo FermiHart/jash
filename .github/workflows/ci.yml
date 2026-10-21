@@ -56,7 +56,7 @@ jobs:
       - name: build com -Werror
         run: |
           cmake -B build-werror -G Ninja -DCMAKE_BUILD_TYPE=Release -DJASH_WERROR=ON
-          cmake --build build-werror --target jash
+          cmake --build build-werror --target jash modules
       - name: portability primitives (native host)
         run: |
           cmake --build build-werror --target test_agent_process_portability
@@ -82,7 +82,7 @@ jobs:
       - name: dependências
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
       - name: build
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash modules
       - name: o binário funciona
         run: ./build/jash -c 'echo ci-ok' | grep -qx ci-ok
       # JINV-001/002: este é o teste que impede o build de voltar a mentir.
@@ -107,7 +107,7 @@ jobs:
       - name: dependências
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
       - name: build
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash modules
       - name: lint de asserção infalsificável
         run: bash tools/mutation-check.sh lint
       - name: mutante nulo mata todos os gates declarados
@@ -160,7 +160,7 @@ jobs:
       - name: dependências
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build
       - name: build
-        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build --target jash modules
       # O runner do GitHub tem bash 5.x — mais rigoroso que o bash 3.2 do
       # macOS, onde vários casos bash-4+ nem existem para comparar.
       - name: diferencial vs bash
