@@ -62,7 +62,13 @@ jobs:
           cmake --build build-werror --target test_agent_process_portability
           ctest --test-dir build-werror -R '^agent_process_portability$' --no-tests=error --output-on-failure
       - name: o binário funciona
-        run: ./build-werror/jash -c 'echo werror-ok' | grep -qx werror-ok
+        run: |
+          ./build-werror/jash -c 'echo werror-ok' | grep -qx werror-ok
+          status=0; output=$(./build-werror/jash -c 'exit 7; echo should-not-run') || status=$?
+          test "$status" -eq 7
+          test -z "$output"
+          status=0; ./build-werror/jash -c 'exit 300' || status=$?
+          test "$status" -eq 44
       # A camada osif L0 do Linux e um .S. Com project(LANGUAGES C) o CMake
       # DESCARTA .S em silencio e o alvo linka mesmo assim, porque nada em c/
       # referencia bear_osif_syscall6 diretamente — a camada de portabilidade
