@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+/* Match the supervisor fallback on hosts without Linux EUCLEAN. */
+#ifndef EUCLEAN
+#define EUCLEAN EIO
+#endif
 /* Native speculative observations: a bounded directory copy, supervised exact
  * argv, a comparison against that copy, and the existing guarded cleanup. The
  * copy provides no kernel, network, environment, or pathname isolation. */
