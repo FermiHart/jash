@@ -4985,8 +4985,9 @@ static int jash_bg_spawn(jash_state_t* s, jash_writer_t w, void* ctx,
     return 0;
 }
 
-int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
-                       const char* name, const char* fbody, const char* args) {
+static int eval_function_with_diagnostic(jash_state_t* s, jash_writer_t w, void* ctx,
+                       const char* name, const char* fbody, const char* args,
+                       const char* diagnostic_name) {
     /* Parse $1..$N from already-expanded, quoted args first: when the
      * callee takes no args and the caller has no positionals, the whole
      * snapshot/replace/restore frame is provably a no-op and is skipped
@@ -5005,11 +5006,11 @@ int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
             if (parse_rc == -2)
                 jash_writef(jash_stderr_writer, 0,
                             "jash: %s: more than %d positional parameters — refusing\n",
-                            name, JASH_POS_MAX);
+                            diagnostic_name, JASH_POS_MAX);
             else
                 jash_writef(jash_stderr_writer, 0,
                             "jash: %s: unable to store positional parameters — refusing\n",
-                            name);
+                            diagnostic_name);
             return 1;
         }
     }
@@ -5282,6 +5283,11 @@ int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
     return frc;
 }
 
+int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
+                       const char* name, const char* body, const char* args) {
+    return eval_function_with_diagnostic(s, w, ctx, name, body, args, name);
+}
+
 int jash_get_lineno(void) {
     return g_lineno;
 }
@@ -5291,7 +5297,10 @@ int jash_eval_function_at(jash_state_t* s, jash_writer_t w, void* ctx,
                           unsigned line) {
     int saved = g_lineno;
     g_lineno = (int)line;
-    int rc = jash_eval_function(s, w, ctx, name, body, args);
+    /* Pipeline calls retain their established argument-limit diagnostic.
+     * The real name still identifies the function and its source metadata. */
+    int rc = eval_function_with_diagnostic(s, w, ctx, name, body, args,
+                                            "pipeline function");
     g_lineno = saved;
     return rc;
 }
