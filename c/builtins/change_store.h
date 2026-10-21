@@ -59,6 +59,9 @@ static inline int cn_fail(cn_store_t* store, const char* error, int number) {
     store->error = error; store->error_number = number ? number : EIO;
     errno = store->error_number; return -1;
 }
+static inline int cn_format(char* buffer, size_t capacity, const char* format, ...)
+    __attribute__((format(printf, 3, 4)));
+
 static inline int cn_format(char* buffer, size_t capacity, const char* format, ...) {
     va_list args; va_start(args, format);
     int size = vsnprintf(buffer, capacity, format, args); va_end(args);
