@@ -147,10 +147,12 @@ jobs:
       # Explicit kernel backend for exactly the existing autonomy gate.
       # All other registrations still run natively; local default is native.
       JASH_AUTONOMY_BACKEND: qemu-tcg
-      JASH_AUTONOMY_VM_CACHE: ${{ runner.temp }}/jash-autonomy-vm-cache
-      JASH_AUTONOMY_VM_OUTPUT: ${{ runner.temp }}/jash-autonomy-vm-result
     steps:
       - uses: actions/checkout@v4
+      - name: configure disposable-VM paths on the runner
+        run: |
+          printf 'JASH_AUTONOMY_VM_CACHE=%s/jash-autonomy-vm-cache\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
+          printf 'JASH_AUTONOMY_VM_OUTPUT=%s/jash-autonomy-vm-result\n' "$RUNNER_TEMP" >> "$GITHUB_ENV"
       - name: dependências
         run: |
           sudo apt-get update
