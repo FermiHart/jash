@@ -138,12 +138,12 @@ int jash_b_cd_argv(jash_state_t* state, jash_writer_t writer, void* context, int
     return result;
 }
 
-typedef struct { char* paths[DIRECTORY_MAX]; size_t count; } stack_t;
-static void stack_free(stack_t* stack) {
+typedef struct { char* paths[DIRECTORY_MAX]; size_t count; } jash_directory_stack_t;
+static void stack_free(jash_directory_stack_t* stack) {
     for (size_t i = 0; i < stack->count; i++) free(stack->paths[i]);
     memset(stack, 0, sizeof(*stack));
 }
-static int stack_load(jash_state_t* state, stack_t* stack) {
+static int stack_load(jash_state_t* state, jash_directory_stack_t* stack) {
     memset(stack, 0, sizeof(*stack));
     jash_argv_t parsed;
     if (jash_argv_build(jash_env_get(state, "_DIRSTACK"), &parsed) < 0) return -1;
@@ -169,7 +169,7 @@ static int index_value(const char* text, size_t count, size_t* result) {
 }
 
 static int stack_output(jash_state_t* state, jash_writer_t writer, void* context,
-                         const char* command, int mode, const stack_t* stack,
+                         const char* command, int mode, const jash_directory_stack_t* stack,
                          int verbose, int per_line, int full, size_t first,
                          size_t count, int changed, const char* before,
                          jash_discovery_rows_t* admitted, const char* error) {
@@ -229,7 +229,7 @@ static int stack_command(jash_state_t* state, jash_writer_t writer, void* contex
         operand = arg;
     }
     if (clear && operand) return directory_error(writer, context, command, mode, "invalid_options", 2);
-    stack_t stack;
+    jash_directory_stack_t stack;
     if (stack_load(state, &stack)) return directory_error(writer, context, command, mode, "invalid_or_oversized_stack", 1);
     char* before = strdup(state->cwd);
     if (!before) { stack_free(&stack); return directory_error(writer, context, command, mode, "allocation_failed", 125); }
