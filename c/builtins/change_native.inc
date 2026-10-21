@@ -23,6 +23,14 @@ static const char* cn_template(const char* id) {
     if (!strcmp(id, "findings")) return CHG_TPL_FINDINGS;
     return NULL;
 }
+/* The owned templates contain exactly one name placeholder. Keep template
+ * bytes out of the printf format position so compiler checking stays enabled. */
+static int cn_render_template(char* bytes, size_t capacity, const char* body, const char* name) {
+    const char* slot = strstr(body, "%s");
+    if (!slot || strchr(body, '%') != slot || strchr(slot + 2, '%') ||
+        (size_t)(slot - body) > INT_MAX) { errno = EINVAL; return -1; }
+    return cn_format(bytes, capacity, "%.*s%s%s", (int)(slot - body), body, name, slot + 2);
+}
 static int cn_failure(semantic_builtin_t* call, const char* operation, const cn_store_t* store, int status) {
     semantic_value_t* sem = &call->values;
     jdv_record_input_t fields[] = {
@@ -228,7 +236,7 @@ static int cn_plan_artifacts(cn_store_t* store, cn_plan_t* plan, cn_change_t* ch
             if (!body) return cn_fail(store, "artifact_template_unavailable", ENOTSUP);
             char path[CN_PATH], bytes[8192];
             if (cn_format(path, sizeof path, "%s/%s", change->path, !strcmp(artifact->id, "specs") ? "specs/spec.md" : artifact->generates) ||
-                cn_format(bytes, sizeof bytes, body, change->meta.name)) return cn_fail(store, "artifact_output_limit", errno);
+                cn_render_template(bytes, sizeof bytes, body, change->meta.name)) return cn_fail(store, "artifact_output_limit", errno);
             if (cn_plan_publish(store, plan, path, bytes, strlen(bytes), NULL)) return -1;
             done[i] = 1; created++;
             if (!all) {
