@@ -126,10 +126,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: dependências
-        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build bubblewrap python3 python3-jsonschema python3-referencing time
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build bubblewrap python3 python3-venv time
+      - name: dependências Python qualificadas
+        run: |
+          python3 -m venv "$RUNNER_TEMP/jash-test-venv"
+          "$RUNNER_TEMP/jash-test-venv/bin/python3" -m pip install -r tests/requirements-agent-json.txt
+          "$RUNNER_TEMP/jash-test-venv/bin/python3" -c 'from jsonschema import Draft202012Validator; from referencing import Registry; Draft202012Validator({}, registry=Registry()).validate(None)'
+          echo "$RUNNER_TEMP/jash-test-venv/bin" >> "$GITHUB_PATH"
       - name: build
         run: |
-          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DJASH_WERROR=ON
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DJASH_WERROR=ON \
+            -DPython3_EXECUTABLE="$RUNNER_TEMP/jash-test-venv/bin/python3"
           cmake --build build --parallel 2
           cmake --build build --target modules --parallel 2
       - name: contratos gerados e denominador qualificado
