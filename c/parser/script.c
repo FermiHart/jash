@@ -436,7 +436,8 @@ int jash_eval_if_statement(jash_state_t* s, jash_writer_t w, void* ctx,
     cond_buf[i] = 0;
 
     /* Evaluate condition */
-    int cond_true = jash_eval_if_condition(s, w, ctx, cond_buf);
+    int cond_true = (jash_eval_line_from(s, w, ctx, cond_buf, p) == 0);
+    if (s->exit_requested) return s->last_status.code;
 
     /* Parse "then" body and optional "else" body */
     p = trim_ws(after_then);   /* JINV-072: sem aritmetica de `+5` a adivinhar */
@@ -500,10 +501,10 @@ int jash_eval_if_statement(jash_state_t* s, jash_writer_t w, void* ctx,
     /* Execute appropriate branch */
     int rc = 0;
     if (cond_true) {
-        rc = jash_eval_line(s, w, ctx, then_buf);
+        rc = jash_eval_line_from(s, w, ctx, then_buf, p);
     } else if (else_buf[0]) {
-        rc = jash_eval_line(s, w, ctx, else_buf);
+        rc = jash_eval_line_from(s, w, ctx, else_buf, else_body);
     }
-    if (rc == 255 || rc == 254 || !*rest) return rc;
+    if (s->exit_requested || rc == 255 || rc == 254 || !*rest) return rc;
     return jash_eval_line(s, w, ctx, rest);
 }

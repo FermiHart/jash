@@ -156,7 +156,7 @@ int jash_eval_select_loop(jash_state_t* s, jash_writer_t w, void* ctx,
     if (choice >= 1 && choice <= item_count) jash_env_set(s, varname, items[choice - 1]);
     else jash_env_set(s, varname, "");
 
-    int rc = jash_eval_line(s, w, ctx, body);
+    int rc = jash_eval_line_from(s, w, ctx, body, body_start);
     /* BUG-012: return/exit bubbles up (leave the flag set for the boundary). */
     if (s->return_requested || s->exit_requested) return rc;
     /* Handle break (255) and continue (254) like while/for loops do.

@@ -414,7 +414,22 @@ int jash_eval_case_stmt(jash_state_t* s, jash_writer_t w, void* ctx,
             memcpy(expr_value, tmp, len + 1);
         } else {
             /* First: command substitution $(cmd) and `cmd` */
-            const char* cs_expanded = jash_expand_cmdsub(s, tmp);
+            const char* cs_expanded = tmp;
+            if (jash_has_cmdsub(tmp)) {
+                /* Quote stripping only advances the exact source origin. */
+                unsigned* expr_map = jash_source_map_slice(expr_start + (src - expr), len);
+                if (!expr_map) {
+                    jash_writes(jash_stderr_writer, 0, "jash: source location allocation failed\n");
+                    s->exit_requested = 1;
+                    s->last_status.code = 2;
+                    return 2;
+                }
+                jash_source_span expr_span;
+                jash_source_push(&expr_span, tmp, len, expr_map, expr_map[0]);
+                cs_expanded = jash_expand_cmdsub(s, tmp);
+                jash_source_pop(&expr_span);
+                free(expr_map);
+            }
             if (cs_expanded && cs_expanded != tmp) {
                 size_t cslen = strlen(cs_expanded);
                 if (cslen >= sizeof(tmp)) cslen = sizeof(tmp) - 1;
@@ -517,7 +532,19 @@ int jash_eval_case_stmt(jash_state_t* s, jash_writer_t w, void* ctx,
         if (strchr(pattern, '$') || strchr(pattern, '`')) {
             const char* px = pattern;
             if (jash_has_cmdsub(px)) {
+                unsigned* pattern_map = jash_source_map_slice(pattern_start, pattern_len);
+                if (!pattern_map) {
+                    jash_writes(jash_stderr_writer, 0, "jash: source location allocation failed\n");
+                    s->exit_requested = 1;
+                    s->last_status.code = 2;
+                    return 2;
+                }
+                jash_source_span pattern_span;
+                jash_source_push(&pattern_span, pattern, pattern_len,
+                                  pattern_map, pattern_map[0]);
                 const char* x = jash_expand_cmdsub_known(s, px);
+                jash_source_pop(&pattern_span);
+                free(pattern_map);
                 if (x) px = x;
             }
             if (jash_has_param_expansion(px)) {
@@ -736,7 +763,7 @@ int jash_eval_case_stmt(jash_state_t* s, jash_writer_t w, void* ctx,
             /* JINV-082: o corpo pode ser um composto que reentra neste
              * avaliador — libera ANTES de despachar não dá (o texto ainda é
              * lido), então guarda o rc e libera logo depois, sempre. */
-            exit_code = jash_eval_line(s, w, ctx, cmd);
+            exit_code = jash_eval_line_from(s, w, ctx, cmd, cmd_start);
 
             if (p[0] == ';' && p[1] == '&') {
                 fall_into = 1;              /* ;&  → next clause runs blind */
@@ -747,6 +774,7 @@ int jash_eval_case_stmt(jash_state_t* s, jash_writer_t w, void* ctx,
             }
         }
         if (cmd_heap) free(cmd_heap);   /* JINV-082: por ramo, nada acumula */
+        if (s->exit_requested) return exit_code;
 
         /* Skip the terminator we just classified: `;;&` is three bytes. */
         p += (p[0] == ';' && p[1] == ';' && p[2] == '&') ? 3 : 2;

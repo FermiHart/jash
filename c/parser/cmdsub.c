@@ -971,6 +971,7 @@ static const char* expand_cmdsub_impl(jash_state_t* s, const char* line,
              * — sem o `|`, sem o `> arquivo`, sem o `&&` do fim. */
             char inner_stack[JASH_CMDSUB_INNER_STACK];
             char* inner_heap = NULL;
+            unsigned* inner_map = NULL;
             char* cleaned_heap = NULL;
             char* inner = inner_stack;
             size_t inner_cap = sizeof(inner_stack);
@@ -982,6 +983,8 @@ static const char* expand_cmdsub_impl(jash_state_t* s, const char* line,
             }
             for (unsigned i = 0; i < ilen; i++) inner[i] = start[i];
             inner[ilen] = 0;
+            inner_map = jash_source_map_slice(start, ilen);
+            if (!inner_map) { cmdsub_refuse_oom(ilen); goto cs_paren_done; }
             p++;
 
             /* BUG-100: strip the unquoted #-comments from the inner text —
@@ -1014,42 +1017,44 @@ static const char* expand_cmdsub_impl(jash_state_t* s, const char* line,
                     cleaned_cap = cleaned_need;
                 }
                 unsigned ci = 0;
+#define CS_PUT(ch) do { inner_map[ci] = inner_map[i]; cleaned[ci++] = (ch); } while (0)
                 char q2 = 0; int cm = 0; char pv = ' ';
                 int ndep = 0; char ndq[64];
                 for (unsigned i = 0; inner[i] && ci + 2 < cleaned_cap; i++) {
                     char cc = inner[i];
-                    if (cm) { if (cc == '\n') { cm = 0; cleaned[ci++] = cc; pv = cc; } continue; }
-                    if (q2 == '\'') { if (cc == '\'') q2 = 0; cleaned[ci++] = cc; pv = cc; continue; }
+                    if (cm) { if (cc == '\n') { cm = 0; CS_PUT(cc); pv = cc; } continue; }
+                    if (q2 == '\'') { if (cc == '\'') q2 = 0; CS_PUT(cc); pv = cc; continue; }
                     if (q2 == '"') {
-                        if (cc == '\\' && inner[i+1]) { cleaned[ci++] = cc; cleaned[ci++] = inner[++i]; pv = inner[i]; continue; }
+                        if (cc == '\\' && inner[i+1]) { CS_PUT(cc); ++i; CS_PUT(inner[i]); pv = inner[i]; continue; }
                         if (cc == '$' && inner[i+1] == '(' && inner[i+2] != '(') {
                             if (ndep < (int)sizeof(ndq)) ndq[ndep] = 1;
                             ndep++; q2 = 0;
-                            cleaned[ci++] = cc; cleaned[ci++] = inner[++i]; pv = '('; continue;
+                            CS_PUT(cc); ++i; CS_PUT(inner[i]); pv = '('; continue;
                         }
                         if (cc == '"') q2 = 0;
-                        cleaned[ci++] = cc; pv = cc; continue;
+                        CS_PUT(cc); pv = cc; continue;
                     }
-                    if (cc == '\\' && inner[i+1]) { cleaned[ci++] = cc; cleaned[ci++] = inner[++i]; pv = inner[i]; continue; }
-                    if (cc == '\'' || cc == '"') { q2 = cc; cleaned[ci++] = cc; pv = cc; continue; }
+                    if (cc == '\\' && inner[i+1]) { CS_PUT(cc); ++i; CS_PUT(inner[i]); pv = inner[i]; continue; }
+                    if (cc == '\'' || cc == '"') { q2 = cc; CS_PUT(cc); pv = cc; continue; }
                     if (cc == '(') {
                         if (ndep < (int)sizeof(ndq)) ndq[ndep] = 0;
-                        ndep++; cleaned[ci++] = cc; pv = cc; continue;
+                        ndep++; CS_PUT(cc); pv = cc; continue;
                     }
                     if (cc == ')') {
                         if (ndep > 0) { ndep--; if (ndep < (int)sizeof(ndq)) q2 = ndq[ndep] ? '"' : 0; }
-                        cleaned[ci++] = cc; pv = cc; continue;
+                        CS_PUT(cc); pv = cc; continue;
                     }
                     if (ndep == 0 && cc == '#' &&
                         (pv == ' ' || pv == '\t' || pv == '\n' ||
                          pv == ';' || pv == '(' || pv == '|' ||
                          pv == '&')) { cm = 1; continue; }
-                    cleaned[ci++] = cc; pv = cc;
+                    CS_PUT(cc); pv = cc;
                 }
                 /* trim trailing whitespace left by a stripped comment */
                 while (ci > 0 && (cleaned[ci-1] == ' ' || cleaned[ci-1] == '\t' ||
                                   cleaned[ci-1] == '\n')) ci--;
                 cleaned[ci] = 0;
+#undef CS_PUT
                 memcpy(inner, cleaned, ci + 1);
             }
 
@@ -1063,7 +1068,10 @@ static const char* expand_cmdsub_impl(jash_state_t* s, const char* line,
             int mark_saved = jash_ifs_word_mark_state();
             g_jash_cmdsub_field_split = 0;
             jash_ifs_word_mark_enable(0);
+            jash_source_span inner_span;
+            jash_source_push(&inner_span, inner, strlen(inner), inner_map, inner_map[0]);
             const char* captured = run_and_capture(s, inner);
+            jash_source_pop(&inner_span);
             g_jash_cmdsub_field_split = fld_saved;
             jash_ifs_word_mark_enable(mark_saved);
             /* Unquoted $(...) is subject to word splitting: bash collapses
@@ -1105,6 +1113,7 @@ static const char* expand_cmdsub_impl(jash_state_t* s, const char* line,
             if (fld) { jash_ifs_field_flush(out, out_cap, &fo); jash_ifs_field_end(); }
             o = (unsigned)fo;
 cs_paren_done:                       /* JINV-088: porta de saída ÚNICA */
+            free(inner_map);
             free(inner_heap);
             free(cleaned_heap);
             /* Recusa alta: pare de montar a linha AGORA. O avaliador consulta
@@ -1190,6 +1199,7 @@ cs_paren_done:                       /* JINV-088: porta de saída ÚNICA */
             }
             char inner_stack[JASH_CMDSUB_INNER_STACK];
             char* inner_heap = NULL;
+            unsigned* inner_map = NULL;
             char* inner = inner_stack;
             size_t inner_cap = sizeof(inner_stack);
             if ((size_t)need + 1 > inner_cap) {
@@ -1198,19 +1208,22 @@ cs_paren_done:                       /* JINV-088: porta de saída ÚNICA */
                 inner = inner_heap;
                 inner_cap = (size_t)need + 1;
             }
+            inner_map = malloc(((size_t)need + 1) * sizeof(*inner_map));
+            if (!inner_map) { cmdsub_refuse_oom(need); goto cs_tick_done; }
             unsigned ilen = 0;
             while (*p && *p != '`') {
                 if (p[0] == '\\' && (p[1] == '`' || p[1] == '\\' || p[1] == '$')) {
-                    if (ilen + 1 < inner_cap) inner[ilen++] = p[1];
+                    if (ilen + 1 < inner_cap) { inner_map[ilen] = jash_source_line_at(p + 1); inner[ilen++] = p[1]; }
                     p += 2; continue;
                 }
-                if (ilen + 1 < inner_cap) inner[ilen++] = *p;
+                if (ilen + 1 < inner_cap) { inner_map[ilen] = jash_source_line_at(p); inner[ilen++] = *p; }
                 p++;
             }
             /* Crase não fechada: `p` parou no NUL. Sai pela porta única para
              * não vazar o buffer de heap desta volta. */
             if (!*p) { cs_tick_unterminated = 1; goto cs_tick_done; }
             inner[ilen] = 0;
+            inner_map[ilen] = jash_source_line_at(p);
             p++;
 
             /* JINV-087: o comando INTERNO roda com a divisão de campos
@@ -1223,7 +1236,10 @@ cs_paren_done:                       /* JINV-088: porta de saída ÚNICA */
             int mark_saved = jash_ifs_word_mark_state();
             g_jash_cmdsub_field_split = 0;
             jash_ifs_word_mark_enable(0);
+            jash_source_span inner_span;
+            jash_source_push(&inner_span, inner, strlen(inner), inner_map, inner_map[0]);
             const char* captured = run_and_capture(s, inner);
+            jash_source_pop(&inner_span);
             g_jash_cmdsub_field_split = fld_saved;
             jash_ifs_word_mark_enable(mark_saved);
             /* Unquoted $(...) is subject to word splitting: bash collapses
@@ -1265,6 +1281,7 @@ cs_paren_done:                       /* JINV-088: porta de saída ÚNICA */
             if (fld) { jash_ifs_field_flush(out, out_cap, &fo); jash_ifs_field_end(); }
             o = (unsigned)fo;
 cs_tick_done:                        /* JINV-088: porta de saída ÚNICA */
+            free(inner_map);
             free(inner_heap);
             if (cs_tick_unterminated) break;   /* crase sem fecho: como antes */
             if (g_cmdsub_err) break;           /* recusa alta: nada roda */

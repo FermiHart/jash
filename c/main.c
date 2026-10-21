@@ -53,6 +53,7 @@
 #include "theme/banner.h"
 #include "readline/loop.h"
 #include "parser/eval.h"
+#include "parser/source_location.h"
 #include "parser/exec.h"
 #include "parser/script.h"   /* JINV-083: jash_find_keyword_set */
 #include "parser/quotes.h"
@@ -1007,6 +1008,21 @@ static void hd_cleanup_temps(void) {
     }
 }
 
+/* Source maps grow independently of text buffers and follow every reader copy. */
+static int jash_line_map_room(unsigned **map, size_t *capacity, size_t needed) {
+    if (needed <= *capacity) return 1;
+    if (needed > SIZE_MAX / sizeof(**map)) return 0;
+    size_t cap = *capacity ? *capacity : 256;
+    while (cap < needed) {
+        if (cap > SIZE_MAX / 2) { cap = needed; break; }
+        cap *= 2;
+    }
+    if (cap > SIZE_MAX / sizeof(**map)) return 0;
+    unsigned *next = realloc(*map, cap * sizeof(**map));
+    if (!next) return 0;
+    *map = next; *capacity = cap; return 1;
+}
+
 int jash_run_multiline(jash_state_t* state, const char* sp) {
     /* Registry is stack-disciplined so `source` re-entering this function
      * (see the reentrancy note below) frees only what THIS call registered. */
@@ -1047,7 +1063,14 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
     jash_accum_init(&sacc);
     jash_accum_init(&pacc);
     int accum_oom = 0;
-    int syntax_eof = 0;   /* JINV-094: operador pendente no FIM do programa */
+    unsigned *input_lines = NULL, *processed_lines = NULL, *statement_lines = NULL;
+    size_t processed_lines_cap = 0, statement_lines_cap = 0;
+    jash_source_span input_span;
+    int syntax_eof = 0;   /* pending operator at end of program */
+    input_lines = jash_source_map_slice(sp, strlen(sp));
+    jash_source_push(&input_span, sp, strlen(sp), input_lines,
+                     input_lines ? input_lines[0] : 1);
+    if (!input_lines) { accum_oom = 1; goto multiline_done; }
 /* JINV-081 — `pbuf` guardava o script PRÉ-PROCESSADO e parava em
  * JASH_SCRIPT_PROC_CAP (128 KiB) em silêncio: `while (*rp && pb < CAP - 1)`.
  * Acima disso a cauda do script simplesmente não existia. Penhasco medido com
@@ -1059,13 +1082,18 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
  * teto do SCRIPT INTEIRO era um erro de categoria: um script não é uma linha.
  * Ele continua sendo o tamanho INICIAL (nenhuma alocação a mais no caso
  * comum); o que deixa de existir é o teto. */
-#define PBUF_ROOM(extra)                                                       \
+#define PBUF_TEXT_ROOM(extra)                                                       \
     ((size_t)pb + (size_t)(extra) + 1 <= pcap                                  \
        ? 1                                                                     \
        : (jash_buf_grow(&pbuf, &pcap, (size_t)pb + (size_t)(extra) + 1)        \
             ? ((use_static ? (void)(processed_buf = pbuf, processed_cap = pcap)\
                            : (void)(heap_buf = pbuf)), 1)                      \
             : (accum_oom = 1, 0)))
+#define PBUF_ROOM(extra) (PBUF_TEXT_ROOM(extra) && \
+    (jash_line_map_room(&processed_lines, &processed_lines_cap, (size_t)pb + (extra) + 1) \
+       ? 1 : (accum_oom = 1, 0)))
+#define PCOPY() do { processed_lines[pb] = input_lines[rp - sp]; pbuf[pb++] = *rp++; } while (0)
+#define PWRITE(ch, origin) do { processed_lines[pb] = input_lines[(origin) - sp]; pbuf[pb++] = (ch); } while (0)
     unsigned pb = 0;
     const char* rp = sp;
     while (*rp && PBUF_ROOM(1)) {
@@ -1078,7 +1106,7 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
          * (like an unquoted heredoc body), so a var set earlier in the same script
          * still resolves. A fully single-quoted word is literal (no expansion). */
         if (hd && hd[2] == '<' && (hd == rp || hd[-1] == ' ' || hd[-1] == '\t')) {
-            while (rp < hd && PBUF_ROOM(1)) pbuf[pb++] = *rp++;   /* JINV-081 */
+            while (rp < hd && PBUF_ROOM(1)) PCOPY();   /* JINV-081 */
             rp += 3;  /* skip <<< */
             while (*rp == ' ' || *rp == '\t') rp++;
             /* read ONE shell word (quotes group; ends at unquoted ws/metachar) */
@@ -1103,6 +1131,7 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
             hw[hwi] = '\0';
             (void)hs_no_expand;   /* expansion respects single quotes; unquote runs in the deferred pass */
             /* trailing rest-of-line (other args/redirs/pipe) after the word */
+            const char *hstrail_origin = rp;
             char hstrail[512]; unsigned hti = 0;
             while (*rp && *rp != '\n' && hti + 1 < sizeof(hstrail)) hstrail[hti++] = *rp++;
             hstrail[hti] = '\0';
@@ -1135,17 +1164,17 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
                 /* JINV-081: reserva o bloco inteiro de uma vez — prefixo,
                  * nome do temporario, cauda da linha e o '\n'. */
                 if (PBUF_ROOM(strlen(pfx) + qlen + strlen(hstrail) + 1)) {
-                    for (unsigned k = 0; pfx[k]; k++)     pbuf[pb++] = pfx[k];
-                    for (unsigned k = 0; quoted[k]; k++)  pbuf[pb++] = quoted[k];
-                    for (unsigned k = 0; hstrail[k]; k++) pbuf[pb++] = hstrail[k];
-                    pbuf[pb++] = '\n';
+                    for (unsigned k = 0; pfx[k]; k++)     PWRITE(pfx[k], hd);
+                    for (unsigned k = 0; quoted[k]; k++)  PWRITE(quoted[k], hd);
+                    for (unsigned k = 0; hstrail[k]; k++) PWRITE(hstrail[k], hstrail_origin + k);
+                    PWRITE('\n', rp > sp ? rp - 1 : rp);
                 }
             }
             continue;
         }
         if (hd && hd[2] != '(' && hd[2] != '<' && (hd == rp || hd[-1] == ' ' || hd[-1] == '\t')) {
             while (rp < hd && PBUF_ROOM(1))   /* JINV-081 */
-                pbuf[pb++] = *rp++;
+                PCOPY();
             /* ══ JINV-095 — UMA LINHA PODE ABRIR VÁRIOS HEREDOCS ═══════════
              *
              * POSIX XCU 2.7: os operadores `<<` de uma linha lógica são
@@ -1204,7 +1233,7 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
                 at_first = 0;
                 if (!is_op || nhdq >= JASH_HD_PER_LINE) {
                     if (!PBUF_ROOM(1)) break;
-                    pbuf[pb++] = *rp++;
+                    PCOPY();
                     continue;
                 }
                 rp += 2;                       /* JINV-062: sempre anda */
@@ -1256,12 +1285,12 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
                 if (!PBUF_ROOM(strlen(pfx) + qlen)) {
                     close(q->fd); q->fd = -1; break;
                 }
-                for (unsigned k = 0; pfx[k]; k++)     pbuf[pb++] = pfx[k];
-                for (unsigned k = 0; quoted[k]; k++)  pbuf[pb++] = quoted[k];
+                for (unsigned k = 0; pfx[k]; k++)     PWRITE(pfx[k], hd);
+                for (unsigned k = 0; quoted[k]; k++)  PWRITE(quoted[k], hd);
                 nhdq++;
             }
             if (*rp == '\n') rp++;
-            if (PBUF_ROOM(1)) pbuf[pb++] = '\n';
+            if (PBUF_ROOM(1)) PWRITE('\n', rp > sp ? rp - 1 : rp);
             /* ── FASE 2: os corpos, na ordem ─────────────────────────── */
             for (int qi = 0; qi < nhdq; qi++) {
             hd_req_t* q = &hdq[qi];
@@ -1353,9 +1382,12 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
             }   /* FASE 2 */
             }   /* JINV-095 */
         } else {
-            pbuf[pb++] = *rp++;
+            PCOPY();
         }
     }
+    if (accum_oom) goto multiline_done;
+    if (!PBUF_ROOM(0)) goto multiline_done;
+    processed_lines[pb] = input_lines[rp - sp];
     pbuf[pb] = '\0';
     /* JINV-081: se faltou memória no pré-processamento, NADA roda — nem a
      * parte que coube. Executar meio script com rc 0 é exatamente o defeito
@@ -1377,14 +1409,14 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
      * Reescreve `pbuf` no lugar (a transformação nunca cresce — contrato em
      * parser/quotes.h). */
     {
-        jash_join_operator_lines(pbuf, &syntax_eof);
+        jash_join_operator_lines_mapped(pbuf, processed_lines, &syntax_eof);
         if (syntax_eof) goto multiline_done;
     }
 
     rp = pbuf;
 /* Garante espaço para mais `extra` bytes em `sline` (NUL incluso) e ressincroniza
  * o ponteiro local depois de um eventual realloc. 0 = sem memória (recusa alta). */
-#define SLINE_ROOM(extra)                                                      \
+#define SLINE_TEXT_ROOM(extra)                                                      \
     ((size_t)si + (size_t)(extra) + 1 <= sacc.cap                              \
        ? 1                                                                     \
        : (jash_accum_reserve(&sacc, si, (size_t)si + (size_t)(extra) + 1)      \
@@ -1396,6 +1428,13 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
        : (jash_accum_reserve(&pacc, pi, (size_t)pi + (size_t)(extra) + 1)      \
             ? (ppeek = pacc.buf, 1)                                            \
             : (accum_oom = 1, 0)))
+#define SLINE_ROOM(extra) (SLINE_TEXT_ROOM(extra) && \
+    (jash_line_map_room(&statement_lines, &statement_lines_cap, (size_t)si + (extra) + 1) \
+       ? 1 : (accum_oom = 1, 0)))
+#define SWRITE(ch, origin) do { statement_lines[si] = processed_lines[(origin) - pbuf]; sline[si++] = (ch); } while (0)
+#define SCOPY() do { SWRITE(*rp, rp); rp++; } while (0)
+#define EVAL_STATEMENT() do { statement_lines[si] = processed_lines[rp - pbuf]; \
+    jash_eval_line_mapped(state, jash_highlighted_stdout_writer, 0, sline, statement_lines, statement_lines[0]); } while (0)
     while (*rp) {
         char* sline = sacc.buf;   /* JINV-081 */
         unsigned si = 0;
@@ -1438,16 +1477,16 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
             if (!sq && !in_cmt && dq && ch == '$' && rp[1] == '{') {
                 if (bd < (int)sizeof(bdq)) bdq[bd] = 1;
                 bd++; dq = 0;
-                sline[si++] = ch;
-                if (si < sacc.cap - 1) sline[si++] = rp[1];   /* JINV-081 */
+                SWRITE(ch, rp);
+                if (si < sacc.cap - 1) SWRITE(rp[1], rp + 1);   /* JINV-081 */
                 pchar = '{'; rp += 2;
                 continue;
             }
             if (!sq && !in_cmt && dq && ch == '$' && rp[1] == '(') {
                 if (pd < (int)sizeof(pdq)) pdq[pd] = 1;   /* BUG-154 */
                 pd++; dq = 0;
-                sline[si++] = ch;
-                if (si < sacc.cap - 1) sline[si++] = rp[1];   /* JINV-081 */
+                SWRITE(ch, rp);
+                if (si < sacc.cap - 1) SWRITE(rp[1], rp + 1);   /* JINV-081 */
                 pchar = '('; rp += 2;
                 continue;
             }
@@ -1459,10 +1498,10 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
                  * backslash-newline and never joined. NOT inside a comment —
                  * `# foo \` does not continue (bash). */
                 if (rp[1] == '\n') { rp += 2; continue; }
-                sline[si++] = ch;
+                SWRITE(ch, rp);
                 pchar = *rp;
                 rp++;
-                if (si < sacc.cap - 1) { pchar = *rp; sline[si++] = *rp++; }  /* JINV-081 */
+                if (si < sacc.cap - 1) { pchar = *rp; SCOPY(); }  /* JINV-081 */
                 continue;
             }
             /* BUG-114: everything in a comment is inert — an apostrophe in
@@ -1497,7 +1536,7 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
                 }
             }
             pchar = ch;
-            sline[si++] = ch;
+            SWRITE(ch, rp);
             rp++;
         }
         sline[si] = '\0';
@@ -1516,7 +1555,7 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
             si--;
             sline[si] = '\0';
             while (*rp && *rp != '\n' && SLINE_ROOM(1))   /* JINV-081 */
-                sline[si++] = *rp++;
+                SCOPY();
             sline[si] = '\0';
             if (*rp == '\n') rp++;
         }
@@ -1553,20 +1592,20 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
                     else if (sline[k] == '}') bdepth--;
                 }
                 while (*rp && (bdepth > 0 || !seen) && SLINE_ROOM(1)) {  /* JINV-081 */
-                    sline[si++] = '\n';
+                    SWRITE('\n', rp > pbuf ? rp - 1 : rp);
                     while (*rp && *rp != '\n' && SLINE_ROOM(1)) {        /* JINV-081 */
                         char ch = *rp++;
                         if (ch == '{') { bdepth++; seen = 1; }
                         else if (ch == '}') bdepth--;
-                        sline[si++] = ch;
+                        SWRITE(ch, rp - 1);
                     }
                     sline[si] = '\0';
                     if (*rp == '\n') rp++;
                 }
                 if (accum_oom) break;   /* JINV-081 */
                 sline[si] = '\0';
-                jash_eval_line(state, jash_highlighted_stdout_writer, 0, sline);
-                if (state->exit_requested) break;
+                EVAL_STATEMENT();
+                if (state->exit_requested || state->return_requested) break;
                 continue;
             }
         }
@@ -1607,7 +1646,7 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
                     sline[si] = '\0';
                 }
                 while (*rp && pbal > 0 && SLINE_ROOM(1)) {          /* JINV-081 */
-                    sline[si++] = '\n';
+                    SWRITE('\n', rp > pbuf ? rp - 1 : rp);
                     char q2 = 0, pv2 = ' '; int skipping = 0;
                     while (*rp && *rp != '\n' && SLINE_ROOM(1)) {   /* JINV-081 */
                         char ch = *rp++;
@@ -1617,15 +1656,15 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
                         else if (ch == '#' && (pv2 == ' ' || pv2 == '\t')) { skipping = 1; continue; }
                         else if (ch == '(') pbal++;
                         else if (ch == ')') pbal--;
-                        sline[si++] = ch;
+                        SWRITE(ch, rp - 1);
                         pv2 = ch;
                     }
                     sline[si] = '\0';
                     if (*rp == '\n') rp++;
                 }
                 if (accum_oom) break;   /* JINV-081 */
-                jash_eval_line(state, jash_highlighted_stdout_writer, 0, sline);
-                if (state->exit_requested) break;
+                EVAL_STATEMENT();
+                if (state->exit_requested || state->return_requested) break;
                 continue;
             }
         }
@@ -1705,8 +1744,8 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
                  * varredura da casa para reusar a oitava. */
                 if (strcmp(close_kw, "}") == 0) {
                     if (jash_find_brace_close(trimmed + 1)) {
-                        jash_eval_line(state, jash_highlighted_stdout_writer, 0, sline);
-                        if (state->exit_requested) break;
+                        EVAL_STATEMENT();
+                        if (state->exit_requested || state->return_requested) break;
                         continue;
                     }
                     goto brace_accumulate;   /* não fecha nesta linha: acumula */
@@ -1742,8 +1781,8 @@ int jash_run_multiline(jash_state_t* state, const char* sp) {
                     lp = after;
                 }
                 if (one_line_complete) {
-                    jash_eval_line(state, jash_highlighted_stdout_writer, 0, sline);
-                    if (state->exit_requested) break;
+                    EVAL_STATEMENT();
+                    if (state->exit_requested || state->return_requested) break;
                     continue;
                 }
             }
@@ -1836,9 +1875,9 @@ brace_accumulate:   /* JINV-084 */
                 /* JINV-081: reserva de uma vez o '\n' + a linha inteira, então
                  * a cópia abaixo não pode parar no meio. */
                 if (!SLINE_ROOM((size_t)pi + 1)) break;
-                sline[si++] = '\n';
+                SWRITE('\n', rp > pbuf ? rp - 1 : rp);
                 for (unsigned k = 0; ppeek[k]; k++)
-                    sline[si++] = ppeek[k];
+                    SWRITE(ppeek[k], rp + k);
                 sline[si] = '\0';
                 rp = peek;
                 if (*rp == '\n') rp++;
@@ -1861,13 +1900,22 @@ brace_accumulate:   /* JINV-084 */
             if (accum_oom) break;   /* JINV-081 */
         }
 
-        jash_eval_line(state, jash_highlighted_stdout_writer, 0, sline);
-        if (state->exit_requested) break;
+        EVAL_STATEMENT();
+        if (state->exit_requested || state->return_requested) break;
     }
 #undef SLINE_ROOM
 #undef PPEEK_ROOM
 #undef PBUF_ROOM
+#undef PBUF_TEXT_ROOM
+#undef PCOPY
+#undef PWRITE
+#undef SLINE_TEXT_ROOM
+#undef SWRITE
+#undef SCOPY
+#undef EVAL_STATEMENT
 multiline_done:                      /* JINV-081: porta única de saída */
+    free(input_lines); free(processed_lines); free(statement_lines);
+    jash_source_pop(&input_span);
     jash_accum_free(&sacc);
     jash_accum_free(&pacc);
     if (heap_buf) free(heap_buf);
@@ -1876,6 +1924,7 @@ multiline_done:                      /* JINV-081: porta única de saída */
     /* JINV-081: sem memória para o script/enunciado = recusa ALTA. Nunca o par
      * (rc 0, stderr vazio, programa diferente do escrito). */
     if (accum_oom) {
+        state->last_status.code = 2;
         fputs("jash: sem memoria para o script — RECUSANDO "
               "(nada foi executado pela metade)\n", stderr);
         return 2;
@@ -3253,7 +3302,15 @@ int main(int argc, const char* argv[]) {
          * original command. The prior 8KB buffer silently truncated payloads. */
         char* cmd_processed = strstr(command_str, "\\\n")
             ? (char*)malloc(strlen(command_str) + 1) : NULL;
+        unsigned *command_lines = NULL;
         if (cmd_processed) {
+            command_lines = malloc((strlen(command_str) + 1) * sizeof(*command_lines));
+            if (!command_lines) {
+                free(cmd_processed);
+                fputs("jash: -c: source map allocation failed\n", stderr);
+                return jash_main_state_return(state, 2);
+            }
+            unsigned physical_line = 1;
             const char* src = command_str;
             unsigned di = 0;
             /* BUG-114: the join must be context-aware — a backslash inside a
@@ -3266,6 +3323,7 @@ int main(int argc, const char* argv[]) {
                 if (cc == '\n') ccmt = 0;
                 if (!csq && !ccmt && cc == '\\' && src[1] == '\n') {
                     src += 2;
+                    physical_line++;
                     cprev = ' ';
                     continue;
                 }
@@ -3277,11 +3335,17 @@ int main(int argc, const char* argv[]) {
                               cprev == '&')) ccmt = 1;
                 }
                 cprev = cc;
+                command_lines[di] = physical_line;
+                if (*src == '\n') physical_line++;
                 cmd_processed[di++] = *src++;
             }
+            command_lines[di] = physical_line;
             cmd_processed[di] = '\0';
             command_str = cmd_processed;
         }
+
+        jash_source_span command_span;
+        jash_source_push(&command_span, command_str, strlen(command_str), command_lines, 1);
 
         double _t2 = _bench_now();
         int code = 0;
@@ -3560,6 +3624,8 @@ int main(int argc, const char* argv[]) {
          * delivery failure, never success or evidence that nothing ran. */
         int final_status = agent_emit_failed ? 125 : state->last_status.code;
         if (agent_result_fd >= 0) close(agent_result_fd);
+        jash_source_pop(&command_span);
+        free(command_lines);
         free(cmd_processed);
         return jash_main_state_return(state, final_status);
     }
@@ -3650,7 +3716,12 @@ int main(int argc, const char* argv[]) {
             }
         }
 
+        jash_source_span script_span;
+        jash_source_push(&script_span, script_buf, strlen(script_buf), NULL, 1);
+        state->bash_lineno[0] = 0;
+        state->bash_lineno_depth = 1;
         jash_run_multiline(state, sp);
+        jash_source_pop(&script_span);
         jash_run_trap_exit(state, jash_stdout_writer, 0);
         /* ADR-0050: the -c path saved the journal at exit; script mode never
          * did, so mutations from a script were invisible to the next call
@@ -3720,7 +3791,10 @@ int main(int argc, const char* argv[]) {
             while (*pp && *pp != '\n') pp++;
             if (*pp == '\n') pp++;
         }
+        jash_source_span stdin_span;
+        jash_source_push(&stdin_span, prog, strlen(prog), NULL, 1);
         jash_run_multiline(state, pp);
+        jash_source_pop(&stdin_span);
         jash_run_trap_exit(state, jash_stdout_writer, 0);
         if (jash_sigil_get() >= SIGIL_LOG || jash_agent_enabled())
             jash_timeline_save();   /* ADR-0050: same journal discipline as -c */

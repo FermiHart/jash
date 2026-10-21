@@ -473,6 +473,7 @@ set(JASH_SOURCES
     c/core/agent_json.c
     c/core/token_tracker.c
     c/parser/eval.c
+    c/parser/source_location.c
     c/parser/exec.c
     c/parser/pipeline.c
     c/parser/expand.c
@@ -1159,6 +1160,13 @@ if(CMAKE_SYSTEM_NAME STREQUAL "NetBSD")
     target_link_libraries(${JASH_AGENT_BINARY_NAME} pthread)
 endif()
 if(BUILD_TESTING)
+    find_package(Python3 3.9 COMPONENTS Interpreter)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME bash_lineno_contract
+            COMMAND ${Python3_EXECUTABLE} -B
+                ${CMAKE_SOURCE_DIR}/tests/test_bash_lineno.py
+                --jash $<TARGET_FILE:jash>)
+    endif()
     add_test(NAME agent_jobs_protocol
         COMMAND ${CMAKE_COMMAND} -E env
             JASH_AGENTD_BIN=$<TARGET_FILE:${JASH_AGENT_BINARY_NAME}>

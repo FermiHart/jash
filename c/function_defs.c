@@ -7,6 +7,7 @@
 // Module: function_defs — user-defined functions, function registry, return
 
 #include "function_defs.h"
+#include "parser/source_location.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -42,7 +43,7 @@ static int jash_function_store_body(jash_function* f, const char* body) {
     return 1;
 }
 
-int jash_function_define(jash_function_table* table, const char* name, const char* body) {
+static int function_define_body(jash_function_table* table, const char* name, const char* body) {
     if (!table || !name || !body) return JASH_FUNC_EFULL;
     if (table->count >= 32) return JASH_FUNC_EFULL;  /* Table full */
 
@@ -105,6 +106,8 @@ void jash_function_delete(jash_function_table* table, const char* name) {
                 free(table->funcs[i].body_heap);
                 table->funcs[i].body_heap = NULL;
             }
+            free(table->funcs[i].source_map);
+            table->funcs[i].source_map = NULL;
             /* Shift remaining functions down */
             for (int j = i; j < table->count - 1; j++) {
                 table->funcs[j] = table->funcs[j + 1];
@@ -119,4 +122,27 @@ void jash_function_delete(jash_function_table* table, const char* name) {
             return;
         }
     }
+}
+
+int jash_function_define_from(jash_function_table* table, const char* name,
+                              const char* body, const char* origin) {
+    if (!table || !name || !body) return JASH_FUNC_EFULL;
+    unsigned* map = jash_source_map_slice(origin ? origin : body, strlen(body));
+    if (!map) return JASH_FUNC_ENOMEM;
+    int rc = function_define_body(table, name, body);
+    if (rc != JASH_FUNC_OK) { free(map); return rc; }
+    for (int i = 0; i < table->count; ++i) if (!strcmp(table->funcs[i].name, name)) {
+        free(table->funcs[i].source_map);
+        table->funcs[i].source_map = map;
+        return rc;
+    }
+    free(map); return JASH_FUNC_EFULL;
+}
+int jash_function_define(jash_function_table* table, const char* name, const char* body) {
+    return jash_function_define_from(table, name, body, body);
+}
+const unsigned* jash_function_source_map(jash_function_table* table, const char* name) {
+    if (table && name) for (int i = 0; i < table->count; ++i)
+        if (!strcmp(table->funcs[i].name, name)) return table->funcs[i].source_map;
+    return NULL;
 }

@@ -19,17 +19,22 @@
 
 #include <theme/io.h>
 #include <core/state.h>
+#include "source_location.h"
 
 /* Evaluate one command line. Updates s->last_status.code.
  * Returns the same exit code. Empty / comment-only lines return 0. */
 int jash_eval_line(jash_state_t* s, jash_writer_t w, void* ctx, const char* line);
 int jash_get_lineno(void);
+int jash_eval_line_mapped(jash_state_t*, jash_writer_t, void*, const char*, const unsigned*, unsigned);
+int jash_eval_line_from(jash_state_t*, jash_writer_t, void*, const char*, const char*);
 
 /* Execute a resolved function in the current shell, including scope setup and
  * restoration. args must already be expanded, with quote boundaries intact;
  * only the body is evaluated, not the call line. name/fbody remain caller-owned. */
 int jash_eval_function(jash_state_t* s, jash_writer_t w, void* ctx,
                        const char* name, const char* fbody, const char* args);
+
+int jash_eval_function_at(jash_state_t*, jash_writer_t, void*, const char*, const char*, const char*, unsigned);
 
 /* Quote-aware function argument parsing shared by direct, redirected and
  * pipeline calls. Values are heap-owned on success. */

@@ -25,12 +25,18 @@ typedef enum {
 typedef struct token {
     token_type_t type;
     char* text;           // For TOK_CMD: the command text. For keywords: NULL or the keyword.
+    const char* origin;  // Exact borrowed slice in the enclosing source.
     struct token* next;
 } token_t;
 
 // ── AST nodes ───────────────────────────────────────────────────────────────
 typedef struct {
-    char** stmts;         // Array of command strings
+    char* text;
+    const char* origin;
+} stmt_t;
+
+typedef struct {
+    stmt_t* stmts;        // Command strings and their lexical origins
     int count;
     int cap;
 } stmt_list_t;
@@ -64,6 +70,7 @@ static int at_keyword(const char* p, const char* kw, int kwlen) {
 static token_t* new_token(token_type_t type, const char* text, size_t len) {
     token_t* tok = calloc(1, sizeof(token_t));
     tok->type = type;
+    tok->origin = text;
     if (text && len > 0) {
         tok->text = malloc(len + 1);
         if (tok->text) {
@@ -309,17 +316,18 @@ static void stmt_list_init(stmt_list_t* list) {
     list->cap = 0;
 }
 
-static void stmt_list_add(stmt_list_t* list, const char* stmt) {
+static void stmt_list_add(stmt_list_t* list, const char* stmt, const char* origin) {
     if (list->count >= list->cap) {
         list->cap = list->cap ? list->cap * 2 : 4;
-        list->stmts = realloc(list->stmts, list->cap * sizeof(char*));
+        list->stmts = realloc(list->stmts, list->cap * sizeof(stmt_t));
     }
-    list->stmts[list->count++] = strdup(stmt);
+    list->stmts[list->count].text = strdup(stmt);
+    list->stmts[list->count++].origin = origin;
 }
 
 static void stmt_list_free(stmt_list_t* list) {
     for (int i = 0; i < list->count; i++) {
-        free(list->stmts[i]);
+        free(list->stmts[i].text);
     }
     free(list->stmts);
     list->stmts = NULL;
@@ -328,7 +336,7 @@ static void stmt_list_free(stmt_list_t* list) {
 
 // Split a command string into individual statements (by ; and \n).
 // Respects nested if/fi blocks - doesn't split inside them.
-static void split_statements(stmt_list_t* list, const char* text) {
+static void split_statements(stmt_list_t* list, const char* text, const char* origin) {
     if (!text || !*text) return;
     
     const char* p = text;
@@ -463,7 +471,7 @@ static void split_statements(stmt_list_t* list, const char* text) {
                  * echo x\  ; fi` imprimia `x\`). Copia primeiro, corta com a
                  * leitura consciente de aspas depois (parser/quotes.h). */
                 stmt[jash_rtrim_unquoted(stmt)] = '\0';
-                if (stmt[0]) stmt_list_add(list, stmt);
+                if (stmt[0]) stmt_list_add(list, stmt, origin + (start - text));
                 free(stmt);
             }
         }
@@ -503,7 +511,7 @@ static int build_if_ast(token_t* tokens, if_node_t* node) {
     
     // Collect condition commands until THEN
     while (tok && tok->type == TOK_CMD) {
-        split_statements(&node->cond, tok->text);
+        split_statements(&node->cond, tok->text, tok->origin);
         tok = tok->next;
     }
     
@@ -513,7 +521,7 @@ static int build_if_ast(token_t* tokens, if_node_t* node) {
     
     // Collect then-body until ELSE/ELIF/FI
     while (tok && tok->type == TOK_CMD) {
-        split_statements(&node->then_body, tok->text);
+        split_statements(&node->then_body, tok->text, tok->origin);
         tok = tok->next;
     }
     
@@ -532,7 +540,7 @@ static int build_if_ast(token_t* tokens, if_node_t* node) {
         
         // Collect condition
         while (tok && tok->type == TOK_CMD) {
-            split_statements(&branch->cond, tok->text);
+            split_statements(&branch->cond, tok->text, tok->origin);
             tok = tok->next;
         }
         
@@ -542,7 +550,7 @@ static int build_if_ast(token_t* tokens, if_node_t* node) {
         
         // Collect body
         while (tok && tok->type == TOK_CMD) {
-            split_statements(&branch->body, tok->text);
+            split_statements(&branch->body, tok->text, tok->origin);
             tok = tok->next;
         }
     }
@@ -551,7 +559,7 @@ static int build_if_ast(token_t* tokens, if_node_t* node) {
     if (tok && tok->type == TOK_ELSE) {
         tok = tok->next;  // Skip ELSE
         while (tok && tok->type == TOK_CMD) {
-            split_statements(&node->else_body, tok->text);
+            split_statements(&node->else_body, tok->text, tok->origin);
             tok = tok->next;
         }
     }
@@ -677,7 +685,16 @@ static int eval_stmt_list(jash_state_t* s, jash_writer_t w, void* ctx,
                           stmt_list_t* list) {
     int last_rc = 0;
     for (int i = 0; i < list->count; i++) {
-        const char* stmt = list->stmts[i];
+        const char* stmt = list->stmts[i].text;
+        unsigned* map = jash_source_map_slice(list->stmts[i].origin, strlen(stmt));
+        if (!map) {
+            jash_writes(jash_stderr_writer, 0, "jash: source location allocation failed\n");
+            s->exit_requested = 1;
+            s->last_status.code = 2;
+            return 2;
+        }
+        jash_source_span span;
+        jash_source_push(&span, stmt, strlen(stmt), map, map[0]);
         /* Expand $VAR in condition/body text JUST BEFORE evaluation.
          * This is needed because the if-block tokenizer extracts text from
          * the function body BEFORE local variables are set. Without this,
@@ -695,9 +712,15 @@ static int eval_stmt_list(jash_state_t* s, jash_writer_t w, void* ctx,
                 stmt = expanded;
             }
         }
-        last_rc = jash_eval_line(s, w, ctx, stmt);
+        /* An expanded simple command belongs to this statement's source
+         * line; its replacement bytes are not offsets in the raw text. */
+        last_rc = (stmt == list->stmts[i].text)
+                ? jash_eval_line(s, w, ctx, stmt)
+                : jash_eval_line_mapped(s, w, ctx, stmt, NULL, map[0]);
+        jash_source_pop(&span);
+        free(map);
         /* Propagate break (255) and continue (254) immediately */
-        if (last_rc == 255 || last_rc == 254) break;
+        if (s->exit_requested || last_rc == 255 || last_rc == 254) break;
     }
     return last_rc;
 }
@@ -728,7 +751,12 @@ int jash_eval_if_block(jash_state_t* s, jash_writer_t w, void* ctx,
     int executed = 0;
     
     // Check initial if condition
-    if (eval_condition(s, w, ctx, &node.cond)) {
+    int cond_true = eval_condition(s, w, ctx, &node.cond);
+    if (s->exit_requested) {
+        last_rc = s->last_status.code;
+        goto if_done;
+    }
+    if (cond_true) {
         last_rc = eval_stmt_list(s, w, ctx, &node.then_body);
         executed = 1;
     }
@@ -736,7 +764,12 @@ int jash_eval_if_block(jash_state_t* s, jash_writer_t w, void* ctx,
     // Check elif branches
     if (!executed) {
         for (int i = 0; i < node.elif_count; i++) {
-            if (eval_condition(s, w, ctx, &node.elifs[i].cond)) {
+            cond_true = eval_condition(s, w, ctx, &node.elifs[i].cond);
+            if (s->exit_requested) {
+                last_rc = s->last_status.code;
+                goto if_done;
+            }
+            if (cond_true) {
                 last_rc = eval_stmt_list(s, w, ctx, &node.elifs[i].body);
                 executed = 1;
                 break;
@@ -749,9 +782,11 @@ int jash_eval_if_block(jash_state_t* s, jash_writer_t w, void* ctx,
         last_rc = eval_stmt_list(s, w, ctx, &node.else_body);
     }
     
+if_done:
     // Cleanup
     free_if_node(&node);
     free_tokens(tokens);
+    if (s->exit_requested) return last_rc;
     
     /* Find position after 'fi' and execute remaining commands.
      *

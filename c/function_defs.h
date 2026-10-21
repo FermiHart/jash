@@ -73,6 +73,7 @@ typedef struct {
      * `delete`), então registrar uma função nova nunca sobrescreve um ponteiro
      * vivo nem libera um pendurado. */
     char* body_heap;
+    unsigned* source_map;
 } jash_function;
 
 /* Function table (max 32 functions). Public so callers can embed a
@@ -111,5 +112,8 @@ void jash_function_list(jash_function_table* table);
 
 /* Delete a function */
 void jash_function_delete(jash_function_table* table, const char* name);
+
+int jash_function_define_from(jash_function_table*, const char*, const char*, const char*);
+const unsigned* jash_function_source_map(jash_function_table*, const char*);
 
 #endif
