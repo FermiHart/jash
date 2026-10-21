@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <osif/osif_stat.h>
 // Native checkpoint/rewind adapters use the checked store and inverse engine.
 static int cp_native_list(jash_writer_t writer, void* context, int mode) {
     if (mode == JASH_DISCOVERY_JSON) return checkpoints_json(writer, context);
@@ -105,9 +106,9 @@ int jash_rewind_apply(jash_rewind_plan_t* plan, jash_state_t* state,
     int count = cp_snapshot(plan->path, current, CP_MAX, &invalid, &truncated, &identity, 1);
     if (count < 0 || invalid || truncated || count != plan->count ||
         identity.st_dev != plan->identity.st_dev || identity.st_ino != plan->identity.st_ino ||
-        identity.st_size != plan->identity.st_size || identity.st_mtim.tv_sec != plan->identity.st_mtim.tv_sec ||
-        identity.st_mtim.tv_nsec != plan->identity.st_mtim.tv_nsec ||
-        identity.st_ctim.tv_sec != plan->identity.st_ctim.tv_sec || identity.st_ctim.tv_nsec != plan->identity.st_ctim.tv_nsec) {
+        identity.st_size != plan->identity.st_size || BEAR_ST_MTIM(identity).tv_sec != BEAR_ST_MTIM(plan->identity).tv_sec ||
+        BEAR_ST_MTIM(identity).tv_nsec != BEAR_ST_MTIM(plan->identity).tv_nsec ||
+        BEAR_ST_CTIM(identity).tv_sec != BEAR_ST_CTIM(plan->identity).tv_sec || BEAR_ST_CTIM(identity).tv_nsec != BEAR_ST_CTIM(plan->identity).tv_nsec) {
         summary->error = "checkpoint_state_changed"; errno = ESTALE; return 1;
     }
     const char* canonical = *plan->scope ? plan->scope : NULL;

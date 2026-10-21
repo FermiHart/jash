@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <osif/osif_stat.h>
 /* Additional OSIF modes consume their actual models and recorded artifacts.
  * The legacy caps/check/score projection remains unchanged. */
 #include <stdlib.h>
@@ -286,8 +287,8 @@ static int osif_matrix_parse(char* bytes, size_t length, const char* target, osi
 
 static int osif_matrix_stable(const struct stat* a, const struct stat* b) {
     return a->st_dev == b->st_dev && a->st_ino == b->st_ino && a->st_size == b->st_size &&
-        a->st_mtim.tv_sec == b->st_mtim.tv_sec && a->st_mtim.tv_nsec == b->st_mtim.tv_nsec &&
-        a->st_ctim.tv_sec == b->st_ctim.tv_sec && a->st_ctim.tv_nsec == b->st_ctim.tv_nsec;
+        BEAR_ST_MTIM(*a).tv_sec == BEAR_ST_MTIM(*b).tv_sec && BEAR_ST_MTIM(*a).tv_nsec == BEAR_ST_MTIM(*b).tv_nsec &&
+        BEAR_ST_CTIM(*a).tv_sec == BEAR_ST_CTIM(*b).tv_sec && BEAR_ST_CTIM(*a).tv_nsec == BEAR_ST_CTIM(*b).tv_nsec;
 }
 
 /* Returns shell status, with an error code only for an observed source fault.

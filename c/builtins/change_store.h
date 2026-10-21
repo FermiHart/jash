@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LicenseRef-SPL-1.0
+#include <osif/osif_stat.h>
 /* Project-local change observations. Every path is relative to one pinned
  * project directory; symlinks in stores are refused. Bounds are failures, not
  * successful truncation. A directory flock serializes cooperating native
@@ -82,8 +83,8 @@ static inline int cn_name(const char* name) {
 static inline int cn_identity(const struct stat* a, const struct stat* b) {
     return a->st_dev == b->st_dev && a->st_ino == b->st_ino &&
         a->st_mode == b->st_mode && a->st_size == b->st_size &&
-        a->st_mtim.tv_sec == b->st_mtim.tv_sec && a->st_mtim.tv_nsec == b->st_mtim.tv_nsec &&
-        a->st_ctim.tv_sec == b->st_ctim.tv_sec && a->st_ctim.tv_nsec == b->st_ctim.tv_nsec;
+        BEAR_ST_MTIM(*a).tv_sec == BEAR_ST_MTIM(*b).tv_sec && BEAR_ST_MTIM(*a).tv_nsec == BEAR_ST_MTIM(*b).tv_nsec &&
+        BEAR_ST_CTIM(*a).tv_sec == BEAR_ST_CTIM(*b).tv_sec && BEAR_ST_CTIM(*a).tv_nsec == BEAR_ST_CTIM(*b).tv_nsec;
 }
 static inline int cn_open(cn_store_t* store, int write) {
     memset(store, 0, sizeof(*store)); store->root = -1;
