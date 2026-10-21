@@ -378,12 +378,17 @@ add_custom_target(cppcheck
 # clang-tidy target (if available)
 find_program(CLANG_TIDY clang-tidy)
 if(CLANG_TIDY)
+    # clang-tidy itself has no -j option. Avoid shell substitution/globbing:
+    # an unescaped $(nproc) invalidates the entire Ninja manifest.
+    file(GLOB_RECURSE JASH_TIDY_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_SOURCE_DIR}/c/*.c")
     add_custom_target(clang-tidy
-        COMMAND ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -j$(nproc)
-            -checks='*,-llvmlibc-*,-modernize-*,-readability-*,-google-*,-llvm-*,-misc-unused-parameters'
-            c/*.c c/**/*.c
+        COMMAND "${CLANG_TIDY}" -p "${CMAKE_BINARY_DIR}"
+            "-checks=*,-llvmlibc-*,-modernize-*,-readability-*,-google-*,-llvm-*,-misc-unused-parameters"
+            ${JASH_TIDY_SOURCES}
         COMMENT "Running clang-tidy static analysis"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        VERBATIM
     )
 endif()
 
@@ -1032,6 +1037,14 @@ if(BUILD_TESTING)
     add_test(NAME array_index_integration
         COMMAND bash ${CMAKE_SOURCE_DIR}/tests/test_array_index.sh
                      ${CMAKE_BINARY_DIR})
+
+    add_executable(test_agent_process_portability
+        tests/test_agent_process_portability.c
+        c/core/execution_ir.c
+        c/core/agent_cgroup.c)
+    target_include_directories(test_agent_process_portability PRIVATE c)
+    add_test(NAME agent_process_portability COMMAND test_agent_process_portability)
+    set_tests_properties(agent_process_portability PROPERTIES TIMEOUT 90)
 
     add_executable(test_agent_process_ir
         tests/test_agent_process_ir.c

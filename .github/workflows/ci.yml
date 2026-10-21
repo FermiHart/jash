@@ -57,6 +57,10 @@ jobs:
         run: |
           cmake -B build-werror -G Ninja -DCMAKE_BUILD_TYPE=Release -DJASH_WERROR=ON
           cmake --build build-werror --target jash
+      - name: portability primitives (native host)
+        run: |
+          cmake --build build-werror --target test_agent_process_portability
+          ctest --test-dir build-werror -R '^agent_process_portability$' --no-tests=error --output-on-failure
       - name: o binário funciona
         run: ./build-werror/jash -c 'echo werror-ok' | grep -qx werror-ok
       # A camada osif L0 do Linux e um .S. Com project(LANGUAGES C) o CMake
