@@ -127,6 +127,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: dependências
         run: sudo apt-get update && sudo apt-get install -y cmake ninja-build bubblewrap python3 python3-venv time
+      - name: isolamento nativo disponível (sem SKIP silencioso)
+        run: |
+          /usr/bin/bwrap --version
+          python3 -B tests/test_autonomy_sandbox.py
       - name: dependências Python qualificadas
         run: |
           python3 -m venv "$RUNNER_TEMP/jash-test-venv"
