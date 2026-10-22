@@ -197,9 +197,15 @@ int jash_b_times(jash_state_t* s, jash_writer_t w, void* ctx, const char* args) 
     if (structured != JASH_SHELL_TEXT) return structured;
     (void)s; (void)args;
     struct tms t;
-    times(&t);
     long hz = sysconf(_SC_CLK_TCK);
-    if (hz <= 0) hz = 100;
+    if (hz <= 0) {
+        jash_writes(w, ctx, "times: clock tick rate unavailable\n");
+        return 1;
+    }
+    if (times(&t) == (clock_t)-1) {
+        jash_writes(w, ctx, "times: CPU time unavailable\n");
+        return 1;
+    }
 
     double su = (double)t.tms_utime  / hz;
     double ss = (double)t.tms_stime  / hz;

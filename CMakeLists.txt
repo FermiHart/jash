@@ -1181,6 +1181,11 @@ if(BUILD_TESTING)
     if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         find_package(Python3 3.9 COMPONENTS Interpreter)
         if(Python3_Interpreter_FOUND)
+            add_test(NAME times_provider
+                COMMAND ${CMAKE_COMMAND} -E env
+                    JASH=$<TARGET_FILE:jash>
+                    ${Python3_EXECUTABLE} -B
+                    ${CMAKE_SOURCE_DIR}/tests/test_times_provider.py)
             add_test(NAME sigil_log_retention
                 COMMAND ${CMAKE_COMMAND} -E env
                     JASH_TEST_BINARY=$<TARGET_FILE:jash>
