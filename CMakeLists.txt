@@ -832,6 +832,14 @@ if(BUILD_TESTING)
     target_include_directories(test_jash_fastpath PRIVATE c)
     add_test(NAME jash_fastpath COMMAND test_jash_fastpath)
 
+    add_executable(test_banner_records
+        tests/test_banner_records.c
+        c/theme/banner.c
+        c/theme/io.c
+        c/core/version.c)
+    target_include_directories(test_banner_records PRIVATE c)
+    add_test(NAME banner_records COMMAND test_banner_records)
+
     add_executable(test_data_value
         tests/test_data_value.c
         c/core/data_value.c
